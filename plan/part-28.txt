@@ -1,0 +1,478 @@
+Part 28 — Admin Panel Implementation
+Objective: Build the FORGESEC ACADEMY administration interface for managing users, instructor permissions, quizzes, assignments, submissions and audit logs.
+
+The admin panel must use the permanent ADMIN_EMAILS authorization system established in Part 27.
+
+Architecture: Next.js Server Components + Server Actions + Supabase PostgreSQL. No separate admin backend, no Express server and no full CMS.
+1. Admin panel structure
+Recommended routes:
+src/app/admin/
+├── layout.tsx
+├── page.tsx
+├── users/
+│   ├── page.tsx
+│   └── [userId]/
+│       └── page.tsx
+├── permissions/
+│   └── page.tsx
+├── quizzes/
+│   ├── page.tsx
+│   ├── new/
+│   └── [quizId]/
+├── assignments/
+│   ├── page.tsx
+│   ├── new/
+│   └── [assignmentId]/
+├── submissions/
+│   ├── page.tsx
+│   └── [submissionId]/
+├── audit-logs/
+│   └── page.tsx
+└── settings/
+    └── page.tsx
+
+
+The actual permissions page manages instructor capabilities. Permanent administrator membership is managed through deployment environment configuration, not this interface.
+2. Admin dashboard
+The dashboard should provide an operational overview rather than decorative statistics.
+FORGESEC ADMIN
+Administrator
+
+Illustrative dashboard layout
+Total users
+248
+
+
+Published lessons
+32
+
+
+Published quizzes
+12
+
+
+Assignments
+18
+
+
+
+Quick actions
+Manage users
+Manage quizzes
+Manage assignments
+View audit logs
+
+Recent administrative activity
+- Instructor permission updated
+- Quiz published
+- Assignment archived
+
+The numbers above are placeholders, not actual platform data. Part 29 will define how metrics are calculated.
+3. Admin navigation
+Desktop sidebar:
+ADMINISTRATION
+
+Overview
+Users
+Permissions
+Quizzes
+Assignments
+Submissions
+Audit Logs
+Settings
+
+-----------------
+
+Back to Academy
+Sign Out
+
+
+Mobile:
+- Collapsible navigation.
+- Compact top bar.
+- Full-width content.
+- Tables become responsive cards or horizontally scrollable tables.
+Keep the admin design consistent with the Academy's dark-first visual identity.
+4. User management
+Route:
+/admin/users
+
+
+Administrators should be able to:
+- Search users by display name or email.
+- Filter by role.
+- View registration date.
+- View account status.
+- Open individual user details.
+- Promote a student to instructor.
+- Remove instructor privileges.
+- Suspend or reactivate accounts, if account suspension is implemented.
+Suggested table:
+User	Role	Joined	Status
+Student A	Student	Date	Active
+Instructor B	Instructor	Date	Active
+Student C	Student	Date	Active
+
+Use pagination rather than loading every user.
+Individual user details
+Route:
+/admin/users/[userId]
+
+
+Display:
+- Profile information.
+- Google account email.
+- Current role.
+- Registration date.
+- Learning progress summary.
+- Quiz performance summary.
+- Assignment completion summary.
+- Administrative actions.
+Do not expose OAuth tokens, session information or unnecessary personal data.
+User role changes
+When an administrator promotes a student:
+1. Verify administrator identity.
+2. Validate the target user ID.
+3. Check the target account exists.
+4. Confirm the requested role.
+5. Update user_roles.
+6. Record the change in admin_audit_logs.
+7. Return a success response.
+Use a database transaction or trusted database function so the role update and audit record succeed or fail together.
+
+Never let a student edit their own role.
+
+Important: The environment-based admin allowlist takes precedence. A person removed from ADMIN_EMAILS must not retain administrator access merely because of a database role record.
+5. Instructor permissions management
+Route:
+/admin/permissions
+
+
+This interface manages individual instructor capabilities.
+
+Example:
+Capability	Instructor A	Instructor B
+Create quizzes	Allowed	Denied
+Edit own drafts	Allowed	Allowed
+Create assignments	Allowed	Allowed
+Publish content	Denied	Denied
+Review assigned submissions	Allowed	Denied
+
+Available actions:
+- Grant permission.
+- Revoke permission.
+- Inspect permission history.
+Use explicit permission identifiers, such as:
+quiz.create
+quiz.edit_own
+assignment.create
+assignment.edit_own
+submission.review_assigned
+
+
+Do not build a complicated drag-and-drop permission editor. A straightforward table with controlled switches is sufficient.
+6. Quiz management
+Route:
+/admin/quizzes
+
+
+The admin interface should support:
+- Create quiz.
+- Edit draft quiz.
+- Preview quiz.
+- Publish quiz.
+- Archive quiz.
+- Configure passing score.
+- Configure attempt limits.
+- Manage questions and options.
+- Configure explanations.
+- Review quiz statistics.
+Quiz workflow
+Draft
+
+Editable by authorized creators
+
+
+Preview
+
+Review questions and scoring
+
+
+Published
+
+Available to students
+
+
+Archived
+
+Unavailable for new attempts; history preserved
+
+
+Published quiz protection
+Do not overwrite a published quiz version when students have already attempted it.
+
+Use immutable quiz versions or snapshots, as specified in Part 21.
+
+Historical results must remain associated with the exact quiz version attempted.
+
+The quiz editor must never expose answer keys through public endpoints.
+7. Assignment management
+Route:
+/admin/assignments
+
+
+Required operations:
+- Create assignment.
+- Edit draft assignment.
+- Preview.
+- Publish.
+- Archive.
+- Set difficulty.
+- Link a lesson.
+- Define prerequisites.
+- Set estimated completion time.
+- Add verification instructions.
+- Add safety notes.
+Assignments remain self-guided initially.
+
+The admin panel must not provide remote command execution or a hosted lab environment.
+
+For cybersecurity assignments, require:
+- Authorized target definition.
+- Permitted actions.
+- Prohibited actions.
+- Expected result.
+- Verification instructions.
+- Cleanup instructions when applicable.
+8. Submission management
+Route:
+/admin/submissions
+
+
+This is a future-ready module, not a mandatory first-release feature.
+
+When evidence submissions become available, authorized instructors should be able to:
+- View assigned student submissions.
+- Review evidence.
+- Approve completion.
+- Request corrections.
+- Add feedback.
+Students should only access their own submissions.
+
+For version 1.0, keep assignment completion self-reported. Do not introduce file uploads merely to populate this page.
+9. Audit logs
+Route:
+/admin/audit-logs
+
+
+This page is essential because administrative actions can affect the entire platform.
+
+Display:
+Field	Example
+Actor	Administrator
+Action	admin.user.role_changed
+Target	User UUID
+Timestamp	Date and time
+Details	Student → Instructor
+
+Filters:
+- Action type.
+- Actor.
+- Target.
+- Date range.
+Audit logs should be read-only from the admin interface.
+
+Never provide a button to edit or delete historical audit events.
+
+Do not record secrets or session credentials.
+10. Settings
+Route:
+/admin/settings
+
+
+Keep this intentionally small.
+
+Initial settings:
+Setting	Management
+Platform name	Environment/configuration
+Site URL	Deployment environment
+Admin email allowlist	Deployment environment
+Maintenance mode	Deferred
+Public announcements	Admin-controlled if implemented
+Search configuration	Git configuration
+Authentication provider	Supabase configuration
+
+Do not store secret environment variables in PostgreSQL.
+
+Do not allow the admin panel to modify ADMIN_EMAILS. Permanent admin membership is controlled through the deployment environment.
+11. Backend architecture
+Create:
+src/modules/admin/
+├── schemas/
+│   ├── user.schema.ts
+│   ├── role.schema.ts
+│   ├── permission.schema.ts
+│   └── settings.schema.ts
+├── services/
+│   ├── user.service.ts
+│   ├── role.service.ts
+│   ├── permission.service.ts
+│   ├── quiz.service.ts
+│   ├── assignment.service.ts
+│   └── audit.service.ts
+├── repositories/
+│   ├── user.repository.ts
+│   ├── role.repository.ts
+│   └── audit.repository.ts
+└── actions/
+    ├── update-user-role.ts
+    ├── update-permission.ts
+    ├── suspend-user.ts
+    └── reactivate-user.ts
+
+
+Not every module needs every layer. Keep simple operations simple.
+Request flow
+Admin interface
+      |
+      v
+Server Action
+      |
+      v
+requireAdmin()
+      |
+      v
+Zod input validation
+      |
+      v
+Admin service
+      |
+      v
+Privileged repository
+      |
+      v
+Supabase PostgreSQL
+      |
+      v
+Audit log
+
+
+Every privileged action independently verifies the administrator. A protected admin layout is not sufficient protection for its Server Actions.
+12. User suspension and account deletion
+These are separate operations.
+
+Suspension:
+- Prevent new application access.
+- Revoke or invalidate active sessions where supported.
+- Preserve learning history and audit records.
+- Record who suspended the account and why.
+A profiles.account_status field or dedicated account status table can be introduced when suspension is implemented. Enforce suspension on the server and in database policies; hiding the interface alone is insufficient.
+
+Deletion:
+- Follow the account deletion and retention policy from Part 23.
+- Use a trusted server-side process.
+- Delete or anonymize relevant records according to policy.
+- Preserve required audit history without retaining unnecessary personal information.
+Do not implement permanent deletion as a casual one-click user-table action.
+13. Admin security requirements
+Threat	Protection
+Student opens admin URL	requireAdmin()
+Forged Server Action request	Independent server authorization
+Role manipulation	Restricted database permissions
+Admin email spoofing	Verified OAuth identity
+Unauthorized database access	RLS and server-only privileged client
+Audit tampering	Append-only database permissions
+Accidental last-admin removal	Environment-based admin membership
+Cross-user data access	Ownership and authorization checks
+Malicious input	Zod validation
+Secret exposure	Server-only environment variables
+Quiz answer leakage	Separate answer-key access control
+
+Additional safeguards:
+- Enable MFA on administrator Google accounts.
+- Consider a fresh authentication check for especially sensitive operations.
+- Never expose a generic service-role database query endpoint.
+- Add rate limiting to sensitive administrative operations where practical.
+- Log failed authorization attempts without logging credentials.
+14. Performance strategy
+The admin panel will be used by relatively few people, so keep its architecture lightweight.
+Feature	Strategy
+User directory	Server-side pagination
+User search	Database filtering
+Dashboard	Small aggregate queries
+Quiz listing	Pagination
+Assignment listing	Pagination
+Audit logs	Date filters and pagination
+Permissions	Fetch only relevant records
+Statistics	Reuse Part 29 metric definitions
+
+Avoid loading all users, all quiz attempts or all audit logs into memory.
+
+Do not build a separate analytics service.
+15. Testing requirements
+Test	Expected result
+Student opens /admin	Denied
+Instructor opens /admin/users	Denied
+Unlisted Google account opens admin	Denied
+Listed admin opens admin	Allowed
+Admin changes student to instructor	Successful and audited
+Student changes own role	Denied
+Instructor changes another instructor's permissions	Denied
+Admin publishes quiz	Successful and audited
+Published quiz edited in place	Version protection enforced
+Admin views audit logs	Read-only
+Suspended account requests protected page	Denied
+Student accesses another student's submission	Denied
+Service-role key in client bundle	Fails security check
+
+16. Implementation checklist
+Part 28 implementation tracker
+0/20
+
+
+
+[ ] Create protected admin layout
+[ ] Build admin dashboard shell
+[ ] Build responsive sidebar navigation
+[ ] Implement paginated user directory
+[ ] Implement user detail page
+[ ] Implement instructor role management
+[ ] Implement permission management
+[ ] Implement quiz administration
+[ ] Implement quiz version protection
+[ ] Implement assignment administration
+[ ] Build submission review interface when enabled
+[ ] Implement audit log viewer
+[ ] Implement settings page
+[ ] Implement account suspension when enabled
+[ ] Implement account deletion integration
+[ ] Add admin audit events
+[ ] Add Server Action authorization
+[ ] Add admin security tests
+[ ] Add pagination and query limits
+[ ] Test desktop and mobile layouts
+
+
+17. Final decisions
+Component	Decision
+Admin interface	Next.js App Router
+Authorization	Part 27 permanent admin allowlist
+Admin identity	ADMIN_EMAILS
+Database	Supabase PostgreSQL
+Admin database access	Server-only privileged client after authorization
+Student/instructor access	User-scoped clients + RLS
+User management	Included
+Instructor permissions	Included
+Quiz management	Included
+Assignment management	Included
+Submission review	Deferred until evidence submissions
+Audit logs	Included
+Full CMS	Not included
+Admin email management UI	Not included
+Separate admin backend	Not included
+
+Part 28 complete.
+
+The next part is Part 29 — Platform Metrics & Analytics, where we will define exactly what the administrator can measure: user growth, active learners, lesson completion, learning-path performance, popular content, quiz success rates and assignment completion.
+
+After Part 29, we have six remaining planning parts, ending at Part 35.

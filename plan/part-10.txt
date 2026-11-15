@@ -1,0 +1,643 @@
+# **Part 10 — Practical Assignments & Hands-on Learning System**
+
+## **Building practical cybersecurity skills without hosting labs, VMs or practice servers**
+
+**Objective:** Design a practical learning system where students apply what they learn using their own computers, locally installed tools and explicitly authorized real-world systems.
+
+This is particularly important for FORGESEC ACADEMY because practical cybersecurity education can become expensive if every student requires a hosted virtual machine or dedicated lab environment.
+
+My recommendation is to build an **assignment-driven learning system**, not a hosted cyber range.
+
+Students receive:
+
+- Practical tasks.
+- Step-by-step instructions.
+- Expected outcomes.
+- Verification procedures.
+- Safety boundaries.
+- Completion tracking.
+
+The Academy provides the learning structure, while students provide their own computing environments.
+
+## **1. Core architecture**
+
+The practical assignment system will be another internal Next.js module.
+
+**FORGESEC ACADEMY**
+
+Assignments · Instructions · Verification · Progress
+
+**Student's Own Environment**
+
+Linux computer · Terminal · Browser · Networking tools
+
+**Student Verification**
+
+Commands · Expected output · Screenshots · Explanations
+
+**Supabase PostgreSQL**
+
+Assignment progress and optional submissions
+
+The Academy server does not execute student commands.
+
+That distinction is important: a student running `chmod` on their own computer is completely different from allowing arbitrary users to execute commands on your hosting infrastructure.
+
+### **What the Academy will NOT provide initially**
+
+- Hosted Linux terminals.
+- Browser-based Kali Linux.
+- Virtual machines.
+- Docker lab environments.
+- Remote shell access.
+- Student-controlled server processes.
+- Automated execution of submitted scripts.
+- Vulnerable web application hosting.
+
+These can be considered later if the Academy has funding and a clear operational need.
+
+## **2. Assignment categories**
+
+Organize assignments according to the learning topics.
+
+| Category             | Example practical activities                              |
+| -------------------- | --------------------------------------------------------- |
+| Linux Fundamentals   | File navigation, permissions, users and processes         |
+| Linux Administration | Services, system logs and package management              |
+| Networking           | IP addressing, DNS, routing and connectivity              |
+| SSH                  | Key generation and remote authentication                  |
+| Web Technologies     | HTTP requests, headers and browser developer tools        |
+| Web Security         | Understanding security headers and common vulnerabilities |
+| Reconnaissance       | Passive information gathering on approved targets         |
+| Defensive Security   | Log analysis, basic hardening and monitoring              |
+
+Start with Linux, networking and SSH because these establish the foundations needed for more advanced cybersecurity work.
+
+### **Recommended assignment difficulty**
+
+
+
+Beginner
+
+&#x20;Basic commands and simple observations.
+
+
+
+
+
+Intermediate
+
+&#x20;Multiple commands, troubleshooting and interpretation.
+
+
+
+
+
+Advanced
+
+&#x20;Combining multiple skills, analyzing evidence and documenting findings.
+
+
+
+Do not use difficulty labels merely to make assignments look impressive. Base them on prerequisites and the amount of independent problem-solving required.
+
+## **3. Assignment structure**
+
+Every practical assignment should follow the same template.
+
+Beginner
+
+Linux Fundamentals
+
+# **Explore the Linux Filesystem**
+
+**Objective**
+
+Learn how Linux organizes directories and how to navigate the filesystem.
+
+**Requirements**
+
+- Access to a Linux terminal.
+- A Linux computer or an existing authorized Linux environment.
+
+**Tasks**
+
+1. Display your current working directory.
+2. List files in the current directory.
+3. Display hidden files.
+4. Navigate to your home directory.
+5. Identify the root directory.
+
+**Commands to investigate**
+
+```
+pwd
+ls
+ls -la
+cd ~
+ls /
+```
+
+**Expected outcome**
+
+You should be able to identify your current directory, inspect directory contents and navigate between directories.
+
+**Verification**
+
+- Run the commands.
+- Explain what each command does.
+- Record the output of at least three commands.
+
+**Completion requirement**
+
+Submit your explanation and mark the assignment as completed after verifying the tasks yourself.
+
+Example assignment presentation.
+
+### **Required assignment metadata**
+
+| Field               | Purpose                        |
+| ------------------- | ------------------------------ |
+| Title               | Assignment name                |
+| Slug                | Unique URL                     |
+| Description         | Short explanation              |
+| Category            | Subject area                   |
+| Difficulty          | Beginner/intermediate/advanced |
+| Estimated time      | Expected duration              |
+| Prerequisites       | Required lessons or skills     |
+| Related lesson      | Educational content reference  |
+| Instructions        | Actual task                    |
+| Expected result     | What students should achieve   |
+| Verification method | How students check their work  |
+| Safety notes        | Boundaries and warnings        |
+| Status              | Draft, published, archived     |
+
+The existing `assignments` table from Part 06 covers most of these fields. Add the missing metadata through a migration.
+
+## **4. Assignment workflow**
+
+The assignment process should be predictable.
+
+1. **Discover**
+
+   Student finds an assignment from a lesson or assignment catalogue.
+2. **Read**
+
+   Student reviews the objective, prerequisites and safety notes.
+3. **Perform**
+
+   Student executes the tasks in their own environment.
+4. **Verify**
+
+   Student compares their results with the expected outcome.
+5. **Document**
+
+   Student records relevant evidence or explanations.
+6. **Complete**
+
+   Student marks the assignment completed.
+
+### **Assignment statuses**
+
+Use three statuses in the application:
+
+| Status      | Meaning                             |
+| ----------- | ----------------------------------- |
+| Not started | No recorded activity                |
+| Started     | Student has begun                   |
+| Completed   | Student reports completing the task |
+
+The `assignment_progress` table from Part 06 currently has `started` and `completed`. An absent row represents Not started.
+
+This is sufficient for the initial release.
+
+## **5. Verification system**
+
+This is where we need to be particularly careful.
+
+Since the Academy does not execute commands or control student computers, it cannot automatically prove that a task was completed.
+
+There are three practical verification levels.
+
+### **Level 1 — Self-verification**
+
+P0 · Launch
+
+Students compare their output with the expected outcome.
+
+Example:
+
+```
+whoami
+id
+groups
+```
+
+They should be able to explain:
+
+- The current username.
+- Their user ID.
+- Their group memberships.
+
+The student marks the task complete.
+
+This is inexpensive and easy to implement.
+
+### **Level 2 — Evidence submission**
+
+P1 · Later
+
+Students submit evidence such as:
+
+- Terminal screenshots.
+- Command output.
+- Short explanations.
+- Configuration excerpts.
+- A small text report.
+
+The Academy stores the submission and an instructor can review it.
+
+This requires additional tables and potentially file storage.
+
+### **Level 3 — Instructor verification**
+
+P2 · Later
+
+An instructor reviews the submission and assigns a result:
+
+- Accepted.
+- Needs correction.
+- Rejected.
+- Requires additional explanation.
+
+This provides more meaningful verification, particularly for advanced practical assignments.
+
+**My recommendation:** Launch with Level 1. Do not introduce evidence uploads until there is an actual reason to review student submissions.
+
+## **6. Assignment and lesson integration**
+
+Assignments should appear naturally inside the educational content.
+
+For example:
+
+**Lesson: Linux File Permissions**
+
+The lesson explains:
+
+- File ownership.
+- Read, write and execute permissions.
+- `chmod`.
+- `chown`.
+- Symbolic and numeric permissions.
+
+Practical assignment
+
+**Change and inspect file permissions**
+
+Create a test file, change its permissions and verify the result using `ls -l`.
+
+Estimated time: 10 minutes
+
+**Open assignment →**
+
+### **Integration rules**
+
+- A lesson can reference multiple assignments.
+- An assignment can reference one primary lesson.
+- Assignments can have prerequisites.
+- Completing an assignment does not automatically complete a lesson.
+- Completing a lesson does not automatically complete an assignment.
+
+Keep lesson progress and assignment progress separate.
+
+This makes the progress system more honest.
+
+## **7. Safety and authorization rules**
+
+Cybersecurity assignments require explicit boundaries.
+
+A task should never leave students guessing whether they are allowed to test a system.
+
+### **Safe assignment categories**
+
+| Activity                                          | Initial policy                  |
+| ------------------------------------------------- | ------------------------------- |
+| Linux commands on own computer                    | Allowed                         |
+| Local configuration inspection                    | Allowed                         |
+| Local networking diagnostics                      | Allowed                         |
+| Testing own applications                          | Allowed                         |
+| Testing systems with explicit authorization       | Allowed within scope            |
+| Passive research using public information         | Allowed within applicable rules |
+| Scanning random public IP addresses               | Not an assignment target        |
+| Exploiting third-party systems without permission | Prohibited                      |
+| Disruptive testing against public services        | Prohibited                      |
+
+### **Every security assignment should include**
+
+1. Authorized target definition.
+2. Permitted actions.
+3. Prohibited actions.
+4. Expected impact.
+5. Cleanup instructions.
+6. Stop conditions.
+
+For example, a networking exercise can ask students to inspect their own network configuration rather than scan an arbitrary public address.
+
+The objective is to teach real security skills without encouraging unauthorized activity.
+
+## **8. Assignment catalogue**
+
+Create a dedicated public assignment catalogue.
+
+[HAXAGON](https://images.openai.com/static-rsc-4/pHwCY7XQL6sq-uiWkLAm8Lg0iS2u7tsKni6mkgx9yepRh1C4XID6DfpSo60jhKwhR27E4KqxO9iv-4ApSW_5GBv6kvVdrUIPKOW_CUXpuTnoM0VpDPipPbFkDC1QW4HMyC5B5Ik7HfxprNNGzWdQv5bOIbgW0ghOTPnRGdYCVPU?purpose=inline)
+
+[haxagon.cz](https://haxagon.cz/novinky?utm_source=chatgpt.com)
+
+### **Recommended filters**
+
+- Category.
+- Difficulty.
+- Estimated duration.
+- Related learning path.
+- Completion status.
+
+### **Example catalogue**
+
+| Assignment                    | Difficulty   | Estimated time |
+| ----------------------------- | ------------ | -------------- |
+| Explore the Linux Filesystem  | Beginner     | 10 min         |
+| Create and Manage Files       | Beginner     | 15 min         |
+| Understand Linux Permissions  | Beginner     | 20 min         |
+| Create a Linux User           | Intermediate | 20 min         |
+| Inspect Running Processes     | Beginner     | 15 min         |
+| Analyze Network Configuration | Beginner     | 15 min         |
+| Investigate DNS Resolution    | Intermediate | 20 min         |
+| Configure SSH Authentication  | Intermediate | 30 min         |
+
+These are proposed assignments, not a requirement to publish all of them at launch.
+
+### **Catalogue page structure**
+
+```
+/assignments
+/assignments/[slug]
+/dashboard/assignments
+```
+
+The public catalogue can be browsed without an account. Authentication is only necessary to persist progress.
+
+## **9. Database architecture**
+
+Part 06 already defined:
+
+```
+assignments
+--------------------------
+id
+slug
+title
+description
+instructions
+difficulty
+status
+related_lesson_id
+estimated_minutes
+created_by
+created_at
+updated_at
+```
+
+And:
+
+```
+assignment_progress
+--------------------------
+id
+user_id
+assignment_id
+status
+completed_at
+```
+
+### **Recommended additions**
+
+Add the following fields to `assignments`:
+
+```
+category
+prerequisites
+expected_outcome
+verification_instructions
+safety_notes
+published_at
+```
+
+For prerequisites, use a structured array of stable assignment IDs or lesson IDs, and validate references against the content registry.
+
+### **Future evidence submissions**
+
+Do not implement this table at launch, but reserve the following design for later:
+
+```
+assignment_submissions
+--------------------------
+id
+user_id
+assignment_id
+submission_type
+text_content
+file_reference
+review_status
+reviewed_by
+reviewed_at
+feedback
+created_at
+```
+
+If screenshots are introduced, use a storage provider with strict access controls and file-size/type validation.
+
+Do not store uploaded evidence in PostgreSQL as large binary data.
+
+### **RLS requirements**
+
+- Students can read published assignments.
+- Students can access only their own progress.
+- Students cannot change another student's completion state.
+- Instructors can review only assignments and submissions within their authorized scope.
+- Admins can manage assignment publication.
+- Students cannot directly modify instructor review fields.
+
+## **10. Admin assignment management**
+
+The admin interface should support a straightforward publishing workflow.
+
+[Orbit Theme - Filament](https://images.openai.com/static-rsc-4/_hjwc_C6wOolp8owwnL4AWZcsYi3U_NlkzSBJ7JhelCH7Uj-xOOYnQ5Yh1e95yfCl8uvNkFjxkGz2WWBO2hup8qNaOcbZbwhrNOzvjSOHUI4Ml0rzcOpcHFBoPU3r2jadSUHKY__-NxutZJLcd_9sNezh_bnC5Mk1j5Uq-DIYU0?purpose=inline)
+
+[filamentphp.com](https://filamentphp.com/plugins/devletes-orbit-theme?utm_source=chatgpt.com)
+
+### **Required functionality**
+
+| Feature                       | Priority |
+| ----------------------------- | -------- |
+| Create assignment             | P0       |
+| Edit draft                    | P0       |
+| Write instructions            | P0       |
+| Set difficulty                | P0       |
+| Link lesson                   | P0       |
+| Set prerequisites             | P0       |
+| Add verification instructions | P0       |
+| Add safety notes              | P0       |
+| Preview assignment            | P0       |
+| Publish assignment            | P0       |
+| Archive assignment            | P0       |
+| Review submissions            | P2       |
+
+### **Publishing workflow**
+
+```
+Create assignment
+       |
+       v
+Write instructions
+       |
+       v
+Define expected outcome
+       |
+       v
+Add verification method
+       |
+       v
+Review safety boundaries
+       |
+       v
+Preview
+       |
+       v
+Publish
+```
+
+For quality control, no cybersecurity assignment should be published without clearly defined authorization boundaries.
+
+## **11. Suggested project structure**
+
+Add this module:
+
+```
+src/
+└── modules/
+    └── assignments/
+        ├── schemas/
+        │   ├── assignment.schema.ts
+        │   └── progress.schema.ts
+        │
+        ├── services/
+        │   ├── assignment.service.ts
+        │   └── progress.service.ts
+        │
+        ├── repositories/
+        │   ├── assignment.repository.ts
+        │   └── progress.repository.ts
+        │
+        ├── actions/
+        │   ├── start-assignment.action.ts
+        │   └── complete-assignment.action.ts
+        │
+        ├── components/
+        │   ├── assignment-card.tsx
+        │   ├── assignment-detail.tsx
+        │   ├── assignment-status.tsx
+        │   └── assignment-filters.tsx
+        │
+        └── types/
+            └── assignment.types.ts
+```
+
+Keep the assignment content and progress logic independent of the UI.
+
+## **12. Testing requirements**
+
+**Assignment acceptance checklist**
+
+0 / 13 verified
+
+0%
+
+Guest can browse published assignments.
+
+Draft assignments are inaccessible to students.
+
+Assignment prerequisites are validated.
+
+Assignment instructions and safety notes display correctly.
+
+Students can start assignments.
+
+Students can mark assignments completed.
+
+Duplicate progress records are prevented.
+
+Students cannot modify other students' progress.
+
+Completing an assignment does not complete its related lesson.
+
+Assignment status is correctly displayed on the dashboard.
+
+Archived assignments are handled correctly.
+
+Students cannot access instructor review operations.
+
+Assignment content is responsive on mobile.
+
+Reset checklist
+
+## **13. Implementation priorities**
+
+| Phase | Feature                             | Priority |
+| ----- | ----------------------------------- | -------- |
+| 1     | Assignment database and schemas     | P0       |
+| 2     | Admin assignment creation           | P0       |
+| 3     | Public assignment catalogue         | P0       |
+| 4     | Assignment detail pages             | P0       |
+| 5     | Start and complete functionality    | P0       |
+| 6     | Student assignment dashboard        | P1       |
+| 7     | Search and filtering                | P1       |
+| 8     | Evidence submissions                | P2       |
+| 9     | Instructor review                   | P2       |
+| 10    | Automated verification integrations | P3       |
+
+### **What to postpone**
+
+- Browser-based terminals.
+- Remote execution.
+- Automated SSH access.
+- Hosted vulnerable machines.
+- Docker-based lab provisioning.
+- File upload infrastructure.
+- Automated grading of arbitrary scripts.
+
+These are separate infrastructure projects, not necessary features of the initial Academy.
+
+## **Part 10 — Final architectural decisions**
+
+| Area                     | Decision                               |
+| ------------------------ | -------------------------------------- |
+| Practical learning model | Assignment-driven                      |
+| Student environment      | Own computer or authorized environment |
+| Hosted infrastructure    | None initially                         |
+| Command execution        | Never on Academy server                |
+| Assignment content       | PostgreSQL initially                   |
+| Progress storage         | PostgreSQL                             |
+| Completion verification  | Self-reported                          |
+| Evidence submission      | Future feature                         |
+| Instructor review        | Future feature                         |
+| Lesson integration       | Related lesson IDs                     |
+| Security boundaries      | Explicit authorization and scope       |
+| Admin management         | Internal Next.js interface             |
+
+**My recommendation:** Invest in the quality of practical assignments rather than infrastructure. A well-designed Linux exercise that teaches students how to investigate, execute and explain commands can be more valuable than a poorly designed hosted lab.
+
+The Academy's advantage should be its teaching quality and practical learning methodology, not the number of servers it operates.
+
+**Next: Part 11 — Admin Panel, Content Management & Publishing Workflow.**
+
+This will define how you manage tutorials, learning paths, quizzes and assignments without needing to edit database records manually or build an unnecessarily complicated CMS.

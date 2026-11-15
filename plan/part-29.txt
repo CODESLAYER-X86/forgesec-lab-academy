@@ -1,0 +1,497 @@
+# **Part 29 — Platform Metrics & Analytics**
+
+**Objective:** Give FORGESEC ACADEMY administrators a clear understanding of platform growth, student engagement, educational effectiveness and content performance.
+
+The goal is not to collect as much data as possible. It is to measure whether students are actually learning.
+
+**Architecture decision:** Use existing Supabase tables and lightweight PostgreSQL aggregate queries. No Google Analytics dependency, no paid analytics platform, no separate analytics database and no tracking infrastructure.
+
+## **1. Analytics architecture**
+
+**Existing application data**
+
+Profiles, progress, bookmarks, activity, quiz attempts, assignments
+
+**Analytics service**
+
+Aggregate queries and metric calculations
+
+**Admin analytics dashboard**
+
+KPIs, charts, tables and trends
+
+We already collect most of the necessary information through the existing database design.
+
+Do not create a new event-tracking system just to count things we can already calculate.
+
+## **2. Analytics categories**
+
+The administrator dashboard should have six categories:
+
+1. Platform growth.
+2. Student engagement.
+3. Learning progress.
+4. Content performance.
+5. Quiz performance.
+6. Assignment performance.
+
+These answer six different questions:
+
+| Category    | Question                                 |
+| ----------- | ---------------------------------------- |
+| Growth      | Is the platform attracting students?     |
+| Engagement  | Are students returning?                  |
+| Learning    | Are students completing lessons?         |
+| Content     | Which educational materials are useful?  |
+| Quizzes     | Are students understanding the material? |
+| Assignments | Are students applying what they learn?   |
+
+## **3. Platform growth metrics**
+
+These measure the size and growth of the Academy.
+
+| Metric                 | Calculation                                        | Source                |
+| ---------------------- | -------------------------------------------------- | --------------------- |
+| Total registered users | Count of profiles                                  | `profiles`            |
+| New users today        | Profiles created today                             | `profiles.created_at` |
+| New users this week    | Profiles created during the last 7 days            | `profiles.created_at` |
+| New users this month   | Profiles created during the current calendar month | `profiles.created_at` |
+| Total students         | Users with student role                            | `user_roles`          |
+| Total instructors      | Users with instructor role                         | `user_roles`          |
+| Administrators         | Current environment allowlist                      | `ADMIN_EMAILS`        |
+
+The permanent administrator count should be derived from the configured allowlist, not from a database admin role.
+
+**Important:** A user who is both a student and instructor may have both roles. Role counts are not necessarily mutually exclusive.
+
+## **4. Student engagement metrics**
+
+These indicate whether registered students actually use the platform.
+
+| Metric                     | Definition                                                              |
+| -------------------------- | ----------------------------------------------------------------------- |
+| Daily Active Users (DAU)   | Unique authenticated users with qualifying activity in a calendar day   |
+| Weekly Active Users (WAU)  | Unique authenticated users with qualifying activity in a calendar week  |
+| Monthly Active Users (MAU) | Unique authenticated users with qualifying activity in a calendar month |
+| Returning students         | Students active on more than one distinct day                           |
+| Bookmark count             | Total bookmarks                                                         |
+| Content views              | Sum of recorded content view counts                                     |
+
+Use `content_activity` as the primary source for content engagement.
+
+However, define active users carefully: merely opening a dashboard or loading a page should not automatically qualify as meaningful learning activity.
+
+For the initial release, a qualifying event can be:
+
+- Viewing a lesson.
+- Completing a lesson.
+- Submitting a quiz.
+- Completing an assignment.
+
+We do not need to record every mouse click or keystroke.
+
+### **Important distinction**
+
+A page view is not proof of learning.
+
+For example, a student might open ten lessons without completing any. The dashboard should distinguish content views from completed learning activities.
+
+## **5. Learning progress metrics**
+
+This is one of the most important analytics categories.
+
+| Metric                      | Calculation                                |
+| --------------------------- | ------------------------------------------ |
+| Completed lessons           | Count of unique completed lessons          |
+| Active learners             | Students with qualifying learning activity |
+| Completion rate             | Completed lessons / relevant lesson starts |
+| Active learning paths       | Paths with student activity                |
+| Completed learning paths    | All lessons in a path completed            |
+| Average lessons per student | Completed lessons / registered students    |
+
+For a learning path:
+
+\\[ \text{Path Completion \\%} = \frac{\text{Completed lessons}}{\text{Total published lessons}} \times 100 \\]
+
+Calculate this dynamically using Git-managed path definitions and student progress records.
+
+Do not store duplicated path percentages in PostgreSQL.
+
+### **Path performance example**
+
+**Learning path performance**
+
+**Linux Fundamentals**
+
+72%
+
+**Networking Fundamentals**
+
+48%
+
+**Web Technologies**
+
+31%
+
+Illustrative data only. Actual statistics require student progress records.
+
+For the final analytics implementation, distinguish two measures:
+
+- Average individual progress across learners who started the path.
+- Percentage of enrolled or active learners who completed the entire path.
+
+These are different metrics and should not share the same label.
+
+## **6. Content performance metrics**
+
+We need to understand which educational materials attract attention.
+
+| Metric                  | Source                                   |
+| ----------------------- | ---------------------------------------- |
+| Most viewed lessons     | `content_activity`                       |
+| Most completed lessons  | `lesson_progress`                        |
+| Most bookmarked lessons | `bookmarks`                              |
+| Most viewed write-ups   | `content_activity`                       |
+| Popular learning paths  | Derived from lesson activity             |
+| Least engaged content   | Activity compared with published content |
+
+Recommended admin table:
+
+| Content               | Views | Completions | Bookmarks |
+| --------------------- | ----- | ----------- | --------- |
+| Introduction to Linux | 450   | 180         | 95        |
+| Linux Permissions     | 320   | 130         | 60        |
+| SSH Fundamentals      | 270   | 110         | 52        |
+
+These numbers are examples.
+
+### **Content performance interpretation**
+
+A lesson with many views but few completions might have:
+
+- A confusing explanation.
+- An overly long lesson.
+- Missing prerequisites.
+- Poor navigation.
+- A mismatch between the title and content.
+
+A lesson with many bookmarks but few views may be useful as a reference rather than a linear lesson.
+
+Do not automatically classify low-view content as bad. New content naturally has less exposure.
+
+## **7. Quiz performance metrics**
+
+The quiz system already stores attempts and scores.
+
+We can calculate:
+
+| Metric                   | Calculation                            |
+| ------------------------ | -------------------------------------- |
+| Total quiz attempts      | Submitted attempts                     |
+| Unique quiz participants | Distinct users with submitted attempts |
+| Average score            | Average percentage                     |
+| Pass rate                | Passed attempts / submitted attempts   |
+| Most attempted quiz      | Highest attempt count                  |
+| Lowest-scoring quiz      | Lowest average percentage              |
+| Retake frequency         | Multiple attempts per student per quiz |
+
+### **Example visualization**
+
+Illustrative quiz performance
+
+Average scores by quiz; example values only.
+
+0%25%50%75%100%LinuxNetworkingWebSecurity
+
+Be careful with interpretation.
+
+A high average score does not automatically mean the lesson is effective. The quiz might be too easy.
+
+A low score may indicate:
+
+- Difficult questions.
+- Poorly explained material.
+- Missing prerequisites.
+- Ambiguous question wording.
+
+### **Multiple attempts**
+
+Use submitted attempts for historical attempt statistics.
+
+If calculating average student performance, decide whether to use the latest attempt per student per quiz or all attempts. Label the metric explicitly.
+
+I recommend showing both:
+
+- Average score across all attempts.
+- Average latest score per student per quiz.
+
+## **8. Assignment performance metrics**
+
+For practical learning:
+
+| Metric                     | Calculation                    |
+| -------------------------- | ------------------------------ |
+| Total assignments          | Published assignment count     |
+| Started assignments        | Students with started status   |
+| Completed assignments      | Students with completed status |
+| Completion rate            | Completed / started            |
+| Most completed assignment  | Highest completion count       |
+| Least completed assignment | Lowest completion count        |
+
+These metrics are self-reported in the initial release.
+
+Do not describe them as verified practical skill.
+
+A student clicking "Completed" is not the same as an instructor validating the result.
+
+## **9. Admin analytics interface**
+
+Create:
+
+```
+src/app/admin/analytics/
+├── page.tsx
+├── content/
+├── learning/
+├── quizzes/
+└── assignments/
+```
+
+Recommended dashboard:
+
+**Platform analytics**
+
+Illustrative dashboard · not live data
+
+Last 30 days
+
+Registered users
+
+# **248**
+
++32 this month
+
+Monthly active users
+
+# **96**
+
+Lessons completed
+
+# **1,420**
+
+Quiz pass rate
+
+# **76%**
+
+**User growth**
+
+Illustrative monthly registrations.
+
+918273645JanFebMarAprMayJun
+
+### **Dashboard navigation**
+
+```
+/admin/analytics
+├── Overview
+├── Learning Performance
+├── Content Performance
+├── Quiz Performance
+└── Assignment Performance
+```
+
+For version 1.0, a single overview page with a few focused tables is enough. Separate pages can be added as the amount of data grows.
+
+## **10. Database strategy**
+
+Use existing tables:
+
+```
+profiles
+user_roles
+lesson_progress
+bookmarks
+content_activity
+quiz_attempts
+assignment_progress
+```
+
+Do not create a general-purpose analytics event table in the MVP.
+
+### **Important query strategy**
+
+Use aggregate SQL queries for counts and averages rather than downloading all records into Next.js and calculating everything in JavaScript.
+
+Examples:
+
+```
+-- Total registered users
+SELECT COUNT(*)
+FROM public.profiles;
+
+-- Completed lessons
+SELECT COUNT(*)
+FROM public.lesson_progress;
+
+-- Total bookmarks
+SELECT COUNT(*)
+FROM public.bookmarks;
+
+-- Submitted quiz attempts
+SELECT COUNT(*)
+FROM public.quiz_attempts
+WHERE status = 'submitted';
+```
+
+For analytics requiring several joins, create carefully scoped SQL functions or views.
+
+Use a server-only privileged database client after administrator authorization, as established in Part 27.
+
+Do not expose unrestricted aggregate queries to ordinary students.
+
+## **11. Date filtering**
+
+Admin analytics should support:
+
+- Last 7 days.
+- Last 30 days.
+- Last 90 days.
+- Current month.
+- All time.
+
+Use consistent time boundaries.
+
+Store timestamps in PostgreSQL as `timestamptz`, aggregate using a defined timezone and display dates in the platform's configured timezone.
+
+For the Academy, Asia/Dhaka is a reasonable display default.
+
+Avoid silently mixing UTC dates with local calendar dates.
+
+## **12. Data collection boundaries**
+
+We should not collect unnecessary information.
+
+| Data                           | Collect?                         |
+| ------------------------------ | -------------------------------- |
+| Account creation date          | Yes                              |
+| Lesson completion              | Yes                              |
+| Quiz score                     | Yes                              |
+| Bookmark activity              | Yes                              |
+| Assignment completion          | Yes                              |
+| Content views                  | Yes, aggregated per user/content |
+| Keystrokes                     | No                               |
+| Screenshots of student devices | No                               |
+| Precise location               | No                               |
+| Device fingerprint             | No                               |
+| Browsing outside the Academy   | No                               |
+| Private files                  | No                               |
+
+Set a reasonable retention policy for activity records and explain analytics collection in the privacy policy.
+
+## **13. Metrics that should NOT be implemented yet**
+
+Avoid these features initially:
+
+- Real-time visitor tracking.
+- Live activity feeds.
+- Heatmaps.
+- Session replay.
+- Device fingerprinting.
+- Complex student scoring/rankings.
+- AI-generated performance predictions.
+- Behavioral profiling.
+- Separate analytics warehouse.
+
+They increase cost and complexity without improving the core educational experience enough to justify them.
+
+## **14. Testing requirements**
+
+| Test                     | Expected result                            |
+| ------------------------ | ------------------------------------------ |
+| Count registered users   | Matches profile records                    |
+| Count completed lessons  | Matches progress records                   |
+| DAU calculation          | Unique qualifying active users             |
+| WAU calculation          | Unique qualifying active users             |
+| Quiz average             | Correct submitted-attempt calculation      |
+| Quiz pass rate           | Correct denominator                        |
+| Path completion          | Correct lesson ID mapping                  |
+| Archived lesson          | Excluded from published-content statistics |
+| Date filter              | Correct timezone boundaries                |
+| Guest analytics access   | Denied                                     |
+| Student analytics access | Denied                                     |
+| Admin analytics access   | Allowed                                    |
+| Empty dataset            | Displays zero/empty state                  |
+| Large dataset            | Uses database aggregates and pagination    |
+
+## **15. Implementation checklist**
+
+**Part 29 implementation tracker**
+
+0/20
+
+Define analytics metric dictionary
+
+Implement registered user counts
+
+Implement new-user growth
+
+Implement DAU, WAU and MAU
+
+Implement qualifying activity rules
+
+Implement lesson completion metrics
+
+Implement learning-path performance
+
+Implement content popularity metrics
+
+Implement bookmark metrics
+
+Implement quiz score aggregates
+
+Implement quiz pass-rate calculations
+
+Implement latest-attempt averages
+
+Implement assignment completion metrics
+
+Build admin analytics overview
+
+Build growth chart
+
+Build content performance table
+
+Add date filters
+
+Add timezone handling
+
+Protect analytics queries with requireAdmin
+
+Test calculations against known database fixtures
+
+## **16. Final decisions**
+
+| Component                   | Decision                      |
+| --------------------------- | ----------------------------- |
+| Analytics platform          | Built-in                      |
+| Data source                 | Existing PostgreSQL tables    |
+| Analytics database          | Not required                  |
+| Event tracking system       | Not required                  |
+| Dashboard access            | Admin only                    |
+| User growth                 | Included                      |
+| Engagement                  | Included                      |
+| Learning progress           | Included                      |
+| Content performance         | Included                      |
+| Quiz performance            | Included                      |
+| Assignment performance      | Included                      |
+| Real-time analytics         | Deferred                      |
+| External analytics services | Not required                  |
+| Data collection             | Minimal and privacy-conscious |
+
+**Part 29 complete.**
+
+The Academy can measure its growth and educational effectiveness without purchasing analytics infrastructure or introducing another backend.
+
+**Next: Part 30 — Homepage, Navigation & Public Interface.**
+
+We have five planning parts remaining after this one, ending at Part 35.

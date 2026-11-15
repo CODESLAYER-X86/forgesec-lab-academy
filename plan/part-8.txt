@@ -1,0 +1,654 @@
+Part 08 — Learning Management System (LMS)
+Student Dashboard, Learning Progress, Bookmarks & Learning History
+Objective: Build the core learning experience of FORGESEC ACADEMY.
+
+The LMS connects three things already designed:
+1. Educational content stored in Git using MDX.
+2. Student identities and activity stored in Supabase PostgreSQL.
+3. Authentication and permissions from Part 07.
+The central principle is simple: students should always know what to learn next, where they stopped, and how much they have completed.
+
+No hosted labs, virtual machines, command execution or expensive learning infrastructure are required.
+
+1. LMS architecture
+The LMS should be a module inside the Next.js application, not a separate application or microservice.
+Student Interface
+
+Dashboard · Learning paths · Lessons · Bookmarks
+
+
+Content Module
+
+MDX lessons, learning paths, metadata and navigation
+
+
+Learning Module
+
+Progress, bookmarks, history and dashboard data
+
+
+
+
+Supabase PostgreSQL
+
+lesson_progress · bookmarks · content_activity
+
+
+Responsibility separation
+Component	Responsibility
+Content module	Provides lesson content and learning path definitions
+Learning module	Calculates progress and manages student activity
+Supabase	Persists student-specific information
+Dashboard	Displays the student's learning state
+Authentication module	Identifies the current student
+
+The important architectural decision is that the LMS does not store copies of MDX lesson content in PostgreSQL.
+
+Git remains the content source of truth.
+
+2. Student dashboard
+The dashboard should be useful immediately after login.
+
+Avoid filling it with statistics that look impressive but provide no learning value.
+Proposed dashboard layout
+FORGESEC ACADEMY
+Student
+
+Welcome back!
+Continue building your technical skills.
+
+CONTINUE LEARNING
+
+Linux Fundamentals
+
+Lesson: Understanding Linux Filesystems
+4 of 12 lessons completed
+
+33%
+
+
+
+Continue learning →
+
+
+12
+Lessons completed
+
+
+2
+Active learning paths
+
+
+8
+Bookmarks
+
+
+5
+Quiz attempts
+
+
+
+Recently viewed
+- Linux File Permissions
+- Introduction to the Terminal
+- Understanding IP Addresses
+  Your learning paths
+- Linux Fundamentals
+- Networking Fundamentals
+  Illustrative dashboard with fictional student data.
+
+Dashboard sections
+Section	Purpose	Priority
+Welcome	Personal introduction	P0
+Continue Learning	Resume the next incomplete lesson	P0
+Learning Statistics	Summarize progress	P0
+Active Paths	Display enrolled or started paths	P0
+Recent Activity	Show recently viewed lessons	P0
+Bookmarks	Quick access to saved content	P0
+Quiz Summary	Display assessment results	P1
+Achievements	Show earned milestones	P2
+
+Important: Do not build a dashboard that depends on students manually enrolling in everything. A student should be able to explore and begin any published learning path without an administrative approval process.
+
+3. Learning path management
+A learning path organizes individual lessons into a structured sequence.
+
+Example:
+
+
+
+
+
+
+
+
+cyber-edu.co
+
+
+Example: Linux Fundamentals
+id: linux-fundamentals
+title: Linux Fundamentals
+slug: linux-fundamentals
+description: Learn essential Linux skills.
+difficulty: beginner
+category: operating-systems
+
+lessons:
+  - linux-introduction
+  - linux-terminal-basics
+  - linux-filesystem
+  - linux-file-management
+  - linux-permissions
+  - linux-users-groups
+  - linux-processes
+  - linux-services
+  - linux-networking
+  - linux-ssh
+
+
+The path definition lives in Git, not PostgreSQL.
+Learning path page should contain
+1. Title and description.
+2. Difficulty level.
+3. Prerequisites.
+4. Learning objectives.
+5. Estimated duration.
+6. Lesson curriculum.
+7. Student progress.
+8. Start or continue button.
+9. Related learning paths.
+Enrollment model
+For the initial release, use implicit enrollment.
+
+That means:
+- Students can open any published path.
+- Students can start any lesson.
+- Progress is recorded when they complete lessons.
+- A path becomes active when the student starts or completes one of its lessons.
+- No separate enrollment approval or enrollment table is necessary.
+This avoids unnecessary database complexity.
+
+Think of a learning path like a textbook: owning the book doesn't require formal enrollment. A learner simply starts reading and their progress is tracked.
+
+4. Lesson reading experience
+The lesson page is the most important interface in the entire Academy.
+
+If the reading experience is poor, students will not return regardless of how attractive the dashboard looks.
+
+
+
+
+
+
+
+
+starlight.astro.build
+
+
+Recommended desktop layout
+Top navigation
+
+Curriculum
+
+Introduction
+
+✓ Terminal basics
+
+Filesystem
+
+Permissions
+
+
+Lesson content
+Linux Filesystem
+Introduction to directories and files.
+Example command
+
+pwd
+ls -la
+cd /home
+
+Explanation and practical examples...
+
+
+On this page
+
+Overview
+
+Directories
+
+Examples
+
+Summary
+
+
+
+Previous lesson · Mark complete · Next lesson
+
+Simplified layout illustration.
+Three-column design
+Area	Function
+Left sidebar	Learning path curriculum and lesson navigation
+Main content	Actual educational material
+Right sidebar	Table of contents and section navigation
+
+On mobile:
+- Hide the left sidebar behind a curriculum button.
+- Hide the right sidebar or place it in a collapsible contents menu.
+- Keep the lesson content full width.
+- Make code blocks horizontally scrollable.
+- Keep lesson navigation accessible.
+Essential lesson features
+Feature	Priority
+Syntax-highlighted code	P0
+Copy code button	P0
+Table of contents	P0
+Breadcrumb navigation	P0
+Previous/next lesson	P0
+Mark as completed	P0
+Bookmark	P0
+Responsive layout	P0
+Related lessons	P1
+Report an issue	P1
+Reading progress indicator	P2
+
+Avoid adding comments, social feeds and elaborate interactive elements to the reading page initially.
+
+5. Lesson completion and progress tracking
+This is the central functionality of the LMS.
+
+Use the lesson_progress table designed in Part 06.
+lesson_progress
+-------------------------
+id
+user_id
+lesson_id
+completed_at
+
+
+The unique constraint is:
+UNIQUE (user_id, lesson_id)
+
+
+Completion workflow
+Student opens lesson
+        |
+        v
+Lesson content loads
+        |
+        v
+Student studies material
+        |
+        v
+Student clicks "Mark Complete"
+        |
+        v
+Server verifies session
+        |
+        v
+Server validates lesson ID
+        |
+        v
+Database records completion
+        |
+        v
+Dashboard updates
+
+
+Important rule
+Opening a lesson does not mean completing it.
+
+Completion should be an explicit action.
+
+When a student clicks Mark Complete:
+- Create a completion record.
+- Store completed_at.
+- Update the interface.
+- Recalculate affected learning path progress.
+- Allow the student to undo completion if necessary.
+Use an upsert or equivalent safe operation to prevent duplicate records.
+How to calculate progress
+Suppose a learning path contains 12 lessons.
+
+The student has completed 4.
+\[
+\text{Progress} = \frac{4}{12}\times100 = 33.33\%
+\]
+
+The percentage should be calculated from:
+- The published path's lesson IDs.
+- The current user's completed lesson IDs.
+Do not store a separate progress percentage in PostgreSQL. It is derived information and could become inconsistent when a learning path changes.
+Example
+function calculateProgress(
+  totalLessons: number,
+  completedLessons: number
+): number {
+  if (totalLessons === 0) return 0;
+
+  return Math.round(
+    (completedLessons / totalLessons) * 100
+  );
+}
+
+
+This is a simple calculation, but the application must ensure that completed lesson IDs belong to the actual path before counting them.
+What happens when content changes?
+If a lesson is removed from a learning path:
+- It should no longer count toward that path's progress.
+- Its historical completion record can remain.
+- A lesson reused in another path should retain its completion status.
+Use stable lesson IDs. Do not casually rename or recycle them.
+
+6. Continue Learning logic
+The Continue Learning button should be intelligent.
+
+It should not simply open the last page a student visited.
+Recommended algorithm
+1. Identify the student's active learning path.
+2. Load the path's ordered lesson IDs.
+3. Load the student's completed lesson IDs.
+4. Find the first incomplete lesson in the path.
+5. Open that lesson.
+Example:
+Lesson	Status
+Introduction	Completed
+Terminal Basics	Completed
+Filesystem	Completed
+File Management	Completed
+Permissions	Next lesson
+Users and Groups	Not started
+
+The next lesson is Permissions.
+
+If all lessons are completed, display a completion message and suggest another learning path.
+Multiple active paths
+A student may be studying Linux and Networking simultaneously.
+
+For the initial version:
+- Store recent activity.
+- Show active paths ordered by most recent activity.
+- Let the student choose which path to continue.
+- Use the most recently active path for the primary Continue Learning action.
+Do not invent a complicated recommendation engine.
+
+7. Bookmarks
+Students should be able to save useful content.
+
+The bookmarks table from Part 06 supports this.
+bookmarks
+-------------------------
+id
+user_id
+content_id
+content_type
+slug
+created_at
+
+
+Supported content types
+- Tutorial
+- Article
+- Write-up
+- Guide
+- Reference
+- Glossary
+- Learning path
+Bookmark workflow
+Student clicks bookmark
+        |
+        v
+Server verifies user
+        |
+        v
+Validate content ID and type
+        |
+        v
+Check content exists
+        |
+        v
+Insert or remove bookmark
+        |
+        v
+Update interface
+
+
+Bookmark page
+
+
+
+
+
+
+
+
+dribbble.com
+
+
+Recommended features:
+- All bookmarks.
+- Filter by content type.
+- Search saved content.
+- Remove bookmark.
+- Open original content.
+Use a unique constraint to prevent duplicate bookmarks for the same user and content.
+
+The server must validate the content reference against the content registry. Never blindly accept an arbitrary content_id from a client.
+
+8. Learning history
+Bookmarks and learning history solve different problems.
+- Bookmarks mean: "I want to save this."
+- History means: "I visited this."
+Use the content_activity table from Part 06.
+content_activity
+-------------------------
+id
+user_id
+content_id
+content_type
+last_viewed_at
+view_count
+
+
+Recommended behavior
+Whenever an authenticated student opens educational content:
+1. Validate the content identity.
+2. Upsert the activity record.
+3. Update last_viewed_at.
+4. Increment view_count.
+Use a server-side operation, and avoid making multiple requests for the same page view.
+Why not create a row for every page view?
+Imagine 10,000 students opening the same lesson 20 times.
+
+An event-per-view design would create 200,000 records.
+
+A single activity record per student and content item can instead maintain the latest visit and visit count.
+
+For this Academy's initial requirements, that is sufficient.
+
+Do not build a full analytics event pipeline yet.
+
+9. Student dashboard navigation
+The authenticated dashboard should have its own navigation.
+
+Recommended structure:
+/dashboard
+│
+├── Overview
+│
+├── Learning
+│   ├── Active Paths
+│   └── Completed Lessons
+│
+├── Bookmarks
+│
+├── History
+│
+├── Quiz Results
+│
+├── Profile
+│
+└── Settings
+
+
+Route structure
+/dashboard
+/dashboard/learning
+/dashboard/learning/completed
+/dashboard/bookmarks
+/dashboard/history
+/dashboard/quiz-results
+/dashboard/profile
+/dashboard/settings
+
+
+Keep the dashboard visually consistent with the public Academy site, but make its navigation optimized for returning students.
+
+10. Database queries and performance
+The LMS should be lightweight and avoid unnecessary database calls.
+Dashboard data requirements
+Data	Source
+User display name	profiles
+User roles	user_roles
+Completed lessons	lesson_progress
+Active learning paths	Git path definitions + activity/progress
+Bookmarks	bookmarks
+Recent history	content_activity
+Quiz results	quiz_attempts
+
+Important optimization rules
+1. Fetch dashboard information in a small number of server-side queries.
+2. Select only necessary columns.
+3. Use pagination for bookmarks and history.
+4. Avoid fetching every lesson body just to calculate progress.
+5. Generate static content indexes at build time.
+6. Do not query PostgreSQL for public lesson content.
+7. Avoid recalculating identical path progress repeatedly within one request.
+8. Never share user-specific cached data across sessions.
+Recommended caching
+Data	Caching approach
+Public MDX lessons	Static/build-time caching
+Learning path definitions	Static/build-time caching
+Student progress	Request-specific or carefully user-scoped
+Bookmarks	Request-specific
+Learning history	Request-specific
+User profile	Request-specific or safely scoped
+
+A useful analogy: public lessons are like library books available to everyone, so they can be cached broadly. Student progress is like an individual library account, so it must remain private.
+
+11. Recommended module structure
+Add the following to the existing application architecture:
+src/
+└── modules/
+    └── learning/
+        ├── schemas/
+        │   ├── progress.schema.ts
+        │   ├── bookmark.schema.ts
+        │   └── activity.schema.ts
+        │
+        ├── services/
+        │   ├── progress.service.ts
+        │   ├── bookmark.service.ts
+        │   ├── history.service.ts
+        │   └── dashboard.service.ts
+        │
+        ├── repositories/
+        │   ├── progress.repository.ts
+        │   ├── bookmark.repository.ts
+        │   └── activity.repository.ts
+        │
+        ├── actions/
+        │   ├── complete-lesson.action.ts
+        │   ├── undo-completion.action.ts
+        │   └── toggle-bookmark.action.ts
+        │
+        ├── components/
+        │   ├── progress-bar.tsx
+        │   ├── continue-learning.tsx
+        │   ├── learning-path-card.tsx
+        │   ├── lesson-navigation.tsx
+        │   └── bookmark-button.tsx
+        │
+        └── types/
+            └── learning.types.ts
+
+
+Responsibilities
+- Schemas: Validate incoming data using Zod.
+- Services: Implement learning rules and progress calculations.
+- Repositories: Communicate with PostgreSQL.
+- Actions: Handle authenticated user interactions.
+- Components: Display the learning experience.
+- Types: Define shared TypeScript interfaces.
+Keep the business logic independent of React components so it can be tested and reused.
+
+12. Testing requirements
+Before releasing the LMS, verify the following:
+LMS acceptance checklist
+0/15
+
+
+
+[ ] Dashboard displays the correct authenticated user.
+[ ] Student can access published learning paths without enrollment approval.
+[ ] Opening a lesson does not mark it complete.
+[ ] Completing a lesson creates exactly one progress record.
+[ ] Undoing completion removes or reverses the correct record.
+[ ] Path progress is calculated from valid lesson IDs.
+[ ] Continue Learning selects the next incomplete lesson.
+[ ] A completed lesson reused in another path remains completed.
+[ ] Students cannot access another student's progress.
+[ ] Students can add and remove bookmarks.
+[ ] Duplicate bookmarks are prevented.
+[ ] History updates last_viewed_at and view_count correctly.
+[ ] History and bookmarks are paginated.
+[ ] Dashboard data is not shared between users through caching.
+[ ] Mobile lesson navigation works correctly.
+Reset checklist
+
+13. Implementation priorities
+Do not build everything simultaneously.
+Phase	Feature	Priority
+1	Student dashboard shell	P0
+2	Learning path integration	P0
+3	Lesson navigation and reading UI	P0
+4	Mark complete / undo completion	P0
+5	Path progress calculation	P0
+6	Continue Learning	P0
+7	Bookmark functionality	P0
+8	Learning history	P0
+9	Quiz result integration	P1
+10	Achievements and advanced statistics	P2
+
+What should NOT be built yet
+- AI learning recommendations.
+- Gamification points and leaderboards.
+- Real-time learning analytics.
+- Social learning feeds.
+- Live classrooms.
+- Hosted terminal environments.
+- Automated student command execution.
+- Complex enrollment workflows.
+These features add engineering and maintenance costs without being necessary for the Academy's initial value proposition.
+
+Part 08 — Final architectural decisions
+Area	Decision
+LMS architecture	Internal Next.js module
+Learning path source	Git/YAML
+Lesson content	Git/MDX
+Progress storage	PostgreSQL
+Enrollment	Implicit
+Completion	Explicit student action
+Progress calculation	Derived from lesson IDs
+Continue Learning	First incomplete lesson in most recently active path
+Bookmarks	PostgreSQL
+Learning history	One activity record per user/content
+Dashboard	Server-rendered, user-specific
+Public lessons	Static generation where practical
+Hosted labs	Not included
+
+The most important design decision: keep the learning content independent from student activity. Git controls what is taught; PostgreSQL tracks how each student interacts with it.
+
+That separation will make content updates, database maintenance and future expansion much easier.
+
+Next: Part 09 — Assessment System: Quizzes, Question Management, Scoring, Attempts & Results.

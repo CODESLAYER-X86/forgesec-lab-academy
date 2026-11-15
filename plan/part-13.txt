@@ -1,0 +1,393 @@
+# **Part 13 — Notifications, Community & Student Interaction**
+
+**Objective:** Give students a way to interact with FORGESEC ACADEMY, ask questions, receive important updates and stay informed about their learning progress—without turning the Academy into a social network that requires constant moderation.
+
+My recommendation is to start with **simple notifications and structured discussions**, not live chat, messaging or a complicated community platform.
+
+## **1. Overall approach**
+
+Divide student interaction into three areas:
+
+**Notifications**
+
+Important learning and account updates.
+
+Initial release
+
+**Discussions**
+
+Questions and answers associated with lessons.
+
+Later release
+
+**Community features**
+
+Student profiles, contributions and recognition.
+
+Future
+
+The important distinction is that a learning platform needs educational interaction, not necessarily social networking.
+
+## **2. Notification system**
+
+Notifications should inform students about events that matter.
+
+### **Initial notification types**
+
+| Notification                | Example                        |
+| --------------------------- | ------------------------------ |
+| Learning update             | A new lesson is available      |
+| Quiz result                 | Your quiz has been evaluated   |
+| Assignment update           | Your assignment status changed |
+| Account update              | Your email was verified        |
+| Administrative announcement | Academy maintenance notice     |
+
+Avoid sending notifications for every minor action.
+
+For example, marking a lesson complete should update the dashboard immediately. It doesn't necessarily need to generate a notification.
+
+### **Notification interface**
+
+**Notifications**
+
+Illustrative
+
+**New learning material**
+
+Recently
+
+A new Linux Fundamentals lesson is available.
+
+**Quiz completed**
+
+Yesterday
+
+Your Linux Fundamentals quiz result is ready.
+
+**Welcome to FORGESEC**
+
+Earlier
+
+Your account is ready. Start exploring the learning paths.
+
+### **Notification database**
+
+Part 06 already anticipated an optional `notifications` table. We can now define it.
+
+| Column     | Purpose                 |
+| ---------- | ----------------------- |
+| id         | Notification UUID       |
+| user_id    | Recipient               |
+| title      | Notification heading    |
+| message    | Short notification body |
+| type       | Notification category   |
+| target_url | Destination page        |
+| read_at    | Read timestamp          |
+| created_at | Creation timestamp      |
+
+Use an enum or validated category rather than accepting arbitrary notification types.
+
+**Important:** Notifications must be private to their recipients. Students must not be able to read, update or delete another student's notifications.
+
+### **Notification delivery**
+
+Initially:
+
+- In-app notifications only.
+- No real-time infrastructure required.
+- No email notification service required.
+- Unread count fetched when loading the dashboard or notification panel.
+- Mark-as-read operation through a server action.
+- Paginate older notifications.
+
+This keeps the system simple and avoids additional external services.
+
+## **3. Announcements**
+
+Announcements are different from personal notifications.
+
+An announcement is intended for many users, while a notification is intended for a particular user.
+
+Examples:
+
+- New Linux learning path released.
+- Upcoming Academy maintenance.
+- New educational material published.
+- Important security advisory affecting a tutorial.
+
+I recommend storing announcements as database records initially because they need an administrative publishing interface.
+
+Suggested fields:
+
+```
+announcements
+├── id
+├── title
+├── body
+├── status
+├── published_at
+├── expires_at
+├── created_by
+└── created_at
+```
+
+Possible statuses:
+
+- Draft
+- Published
+- Archived
+
+The homepage or dashboard can show the latest active announcement.
+
+**Design decision:** Don't automatically create thousands of individual notification rows when an announcement is published. Show active announcements through a shared query, and introduce personalized delivery only if required.
+
+## **4. Discussion system**
+
+This is the most valuable future community feature.
+
+Students learning Linux, networking and web security will naturally have questions.
+
+However, I don't recommend building a general-purpose forum immediately.
+
+Instead, build **lesson-specific discussions**.
+
+For example:
+
+A student is studying Linux file permissions and doesn't understand why `chmod 755` works differently from `chmod 644`.
+
+They can ask a question directly under the lesson.
+
+**Lesson discussion**
+
+Linux Fundamentals / File Permissions
+
+**Student question**
+
+Why do we use `755` for directories but sometimes `644` for regular files?
+
+Posted by Student A · Example
+
+**Instructor response**
+
+Directory permissions have different practical implications. The execute bit allows traversal through a directory, whereas regular-file execute permission allows execution of the file.
+
+Instructor response
+
+Illustrative discussion layout, not an active discussion service.
+
+### **Discussion capabilities**
+
+Students should be able to:
+
+- Ask a question.
+- Reply to a question.
+- Edit their own question within a defined policy.
+- Delete or withdraw their own content subject to moderation rules.
+- Report inappropriate content.
+- Receive a notification when someone replies.
+
+Instructors should be able to:
+
+- Answer questions.
+- Mark an answer as accepted.
+- Hide inappropriate discussions.
+- Flag incorrect technical explanations.
+- Escalate reported content.
+
+Administrators should be able to moderate all discussions.
+
+### **Avoid these features initially**
+
+- Private messaging.
+- Group chats.
+- Real-time chat rooms.
+- Public social feeds.
+- User-to-user friend systems.
+- Complex reputation points.
+
+These features introduce moderation, privacy and operational overhead without necessarily improving learning outcomes.
+
+## **5. Discussion database architecture**
+
+When we eventually introduce discussions, use separate tables.
+
+`discussions`
+
+| Column     | Purpose                   |
+| ---------- | ------------------------- |
+| id         | Discussion UUID           |
+| user_id    | Author                    |
+| content_id | Related lesson/content ID |
+| title      | Question title            |
+| body       | Question body             |
+| status     | Open, resolved, hidden    |
+| created_at | Creation timestamp        |
+| updated_at | Update timestamp          |
+
+`discussion_replies`
+
+| Column        | Purpose            |
+| ------------- | ------------------ |
+| id            | Reply UUID         |
+| discussion_id | Parent discussion  |
+| user_id       | Reply author       |
+| body          | Reply text         |
+| is_accepted   | Accepted answer    |
+| created_at    | Creation timestamp |
+| updated_at    | Update timestamp   |
+
+`discussion_reports`
+
+| Column        | Purpose                      |
+| ------------- | ---------------------------- |
+| id            | Report UUID                  |
+| discussion_id | Reported discussion          |
+| reporter_id   | Reporting user               |
+| reason        | Report category              |
+| details       | Additional information       |
+| status        | Pending, reviewed, dismissed |
+| reviewed_by   | Moderator                    |
+| created_at    | Creation timestamp           |
+
+Use foreign keys, indexes and RLS. In particular, ensure students cannot mark their own answer as accepted or alter moderation status.
+
+For lesson references, validate `content_id` against the Git-managed content registry. A database foreign key cannot enforce a reference to an MDX file.
+
+## **6. Moderation and content safety**
+
+A community without moderation can quickly become a liability.
+
+Cybersecurity discussions require additional care because students may share sensitive information or request help with unauthorized activity.
+
+Establish these rules:
+
+1. No sharing passwords, API keys or private tokens.
+2. No posting personal information about other people.
+3. No requests to attack unauthorized targets.
+4. No malware distribution or harmful payload sharing.
+5. No publishing exploit details that expose an unpatched third-party system without appropriate disclosure.
+6. Technical explanations should distinguish authorized testing from unauthorized activity.
+
+Provide a report button on each discussion.
+
+Moderation actions should be logged, and hidden discussions should not remain publicly accessible.
+
+## **7. Student recognition**
+
+Recognition can motivate students, but avoid turning the Academy into a points competition.
+
+My recommendation is to begin with meaningful learning achievements.
+
+Examples:
+
+- Completed Linux Fundamentals.
+- Completed the Networking Fundamentals path.
+- Passed a particular assessment.
+- Completed a set of practical assignments.
+
+These can later integrate with Part 06's achievement and certificate architecture.
+
+Don't award achievements for:
+
+- Logging in repeatedly.
+- Opening pages.
+- Posting many low-quality comments.
+- Clicking buttons without demonstrating learning.
+
+Quality should matter more than activity volume.
+
+## **8. Architecture and implementation structure**
+
+Keep notifications and community as separate modules.
+
+```
+src/
+├── app/
+│   ├── notifications/
+│   │   └── page.tsx
+│   ├── dashboard/
+│   │   └── announcements/
+│   │       └── page.tsx
+│   └── learn/
+│       └── ...
+│
+├── modules/
+│   ├── notifications/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── repositories/
+│   │   ├── actions/
+│   │   └── components/
+│   │
+│   ├── announcements/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── repositories/
+│   │   └── actions/
+│   │
+│   └── discussions/
+│       ├── schemas/
+│       ├── services/
+│       ├── repositories/
+│       ├── actions/
+│       └── components/
+```
+
+Use the existing Next.js and Supabase architecture. There is no need for a separate Express server, message broker or microservice.
+
+## **9. Development priorities**
+
+| Feature                    | Priority | Decision                           |
+| -------------------------- | -------- | ---------------------------------- |
+| Basic in-app notifications | P1       | Build after core LMS               |
+| Announcements              | P1       | Simple implementation              |
+| Lesson discussions         | P2       | Later                              |
+| Discussion moderation      | P2       | Required before discussions launch |
+| Accepted answers           | P2       | Later                              |
+| Student recognition        | P2       | Later                              |
+| Email notifications        | P3       | Only if needed                     |
+| Real-time chat             | P3       | Not planned                        |
+| Private messaging          | P3       | Not planned                        |
+| Social feed                | P3       | Not planned                        |
+
+A crucial distinction: if discussions are launched, moderation is not an optional future enhancement. It must exist from day one of that feature.
+
+## **10. Final decisions for FORGESEC ACADEMY**
+
+My recommended scope:
+
+- Initial release: no discussion forum.
+- Initial release: simple announcements can be added when needed.
+- Initial release: in-app notifications only if there are actual events worth notifying students about.
+- Later: lesson-specific question-and-answer discussions.
+- Later: instructor responses and accepted answers.
+- Later: meaningful learning achievements.
+- No live chat, private messaging or social networking infrastructure.
+
+This avoids creating a community that you cannot actively maintain.
+
+## **11. Implementation checklist**
+
+**Part 13 implementation tracker**
+
+0/8
+
+Define notification event types
+
+Create notifications database migration
+
+Implement private notification access policies
+
+Build notification panel and unread state
+
+Create announcement management in admin
+
+Define community rules and moderation policy
+
+Design lesson-specific discussions
+
+Plan instructor moderation permissions
+
+**Recap:** The Academy should prioritize educational interaction over social features. Notifications and announcements are relatively inexpensive; discussions should come later, with moderation included.
+
+**Next: Part 14 — Security Architecture, Threat Modeling & Platform Hardening.** This will define how we protect accounts, student records, administrative operations, the application and its infrastructure.

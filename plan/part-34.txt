@@ -1,0 +1,719 @@
+# **Part 34 — Final Integration & Production Deployment**
+
+**Objective:** Integrate all FORGESEC ACADEMY modules, verify that they work together, prepare the production environment and deploy the first usable version.
+
+Until now, we have designed individual components: authentication, learning paths, quizzes, assignments, administration, analytics, public interfaces and security policies.
+
+Now we need to connect them into one functioning application.
+
+**Deployment principle:** Build and verify locally first, deploy to a preview environment, test the complete application, and only then promote it to production.
+
+## **1. Final application architecture**
+
+The complete architecture should look like this:
+
+**Students · Instructors · Administrators**
+
+Web browsers
+
+**Next.js Application**
+
+React · TypeScript · Tailwind CSS · App Router
+
+**Public content**
+
+Git-managed MDX and YAML
+
+**Authentication**
+
+Google OAuth via Supabase
+
+**PostgreSQL**
+
+Profiles, progress, quizzes and assignments
+
+**Administration**
+
+Roles, permissions, audit and analytics
+
+**Vercel + Supabase production infrastructure**
+
+The architecture remains a modular monolith.
+
+We are not introducing microservices, Kubernetes, Redis, message queues or separate analytics infrastructure for the first release.
+
+## **2. Final project directory structure**
+
+Consolidate the modules into one consistent repository.
+
+```
+forgesec-academy/
+│
+├── content/
+│   ├── lessons/
+│   ├── paths/
+│   ├── writeups/
+│   ├── resources/
+│   ├── glossary/
+│   ├── legal/
+│   └── config/
+│
+├── public/
+│   ├── images/
+│   ├── fonts/
+│   └── search/
+│
+├── scripts/
+│   ├── validate-content.ts
+│   ├── generate-search-index.ts
+│   ├── validate-seo.ts
+│   └── check-links.ts
+│
+├── supabase/
+│   ├── migrations/
+│   ├── seed.sql
+│   └── config.toml
+│
+├── src/
+│   ├── app/
+│   ├── components/
+│   │   ├── ui/
+│   │   ├── layout/
+│   │   ├── learning/
+│   │   ├── dashboard/
+│   │   └── admin/
+│   │
+│   ├── modules/
+│   │   ├── auth/
+│   │   ├── profiles/
+│   │   ├── learning/
+│   │   ├── quizzes/
+│   │   ├── assignments/
+│   │   ├── bookmarks/
+│   │   ├── analytics/
+│   │   ├── admin/
+│   │   └── privacy/
+│   │
+│   ├── lib/
+│   │   ├── supabase/
+│   │   ├── security/
+│   │   ├── seo/
+│   │   ├── validation/
+│   │   └── utils/
+│   │
+│   └── styles/
+│
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   ├── e2e/
+│   └── security/
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
+├── .env.example
+├── .gitignore
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+This is the target structure, not a requirement to create every directory immediately. Keep empty or deferred modules out of the initial implementation.
+
+## **3. Environment configuration**
+
+Development, preview and production must have separate configurations.
+
+Recommended environment variables:
+
+```
+# Public Supabase configuration
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+# Server-only credentials
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Admin authorization
+ADMIN_EMAILS=
+
+# Production application URL
+NEXT_PUBLIC_SITE_URL=
+```
+
+### **Environment variable rules**
+
+| Variable                      | Exposure    |
+| ----------------------------- | ----------- |
+| Supabase URL                  | Public      |
+| Supabase anon/publishable key | Public      |
+| Service-role key              | Server only |
+| Admin email allowlist         | Server only |
+| Production site URL           | Public      |
+
+The exact Supabase public-key naming should match the key format supported by the selected Supabase project.
+
+Never:
+
+- Commit `.env.local`.
+- Put service-role credentials in frontend code.
+- Use `NEXT_PUBLIC_` for administrator secrets.
+- Print secrets in build logs.
+- Share production secrets with preview deployments unnecessarily.
+
+Example `.gitignore`:
+
+```
+.env
+.env.*
+!.env.example
+
+.next/
+node_modules/
+coverage/
+playwright-report/
+test-results/
+```
+
+## **4. Supabase production preparation**
+
+Before deploying the application, prepare the production Supabase project.
+
+### **A. Database migrations**
+
+All schema changes must be version-controlled.
+
+```
+supabase/
+└── migrations/
+    ├── 001_profiles.sql
+    ├── 002_user_roles.sql
+    ├── 003_learning_progress.sql
+    ├── 004_bookmarks.sql
+    ├── 005_content_activity.sql
+    ├── 006_quizzes.sql
+    ├── 007_assignments.sql
+    ├── 008_audit_logs.sql
+    └── 009_rls_policies.sql
+```
+
+The filenames are illustrative. Use the actual migration sequence generated during implementation.
+
+Rules:
+
+1. Apply migrations to a local development database first.
+2. Test schema changes.
+3. Review RLS policies.
+4. Apply migrations to the production project.
+5. Verify tables, constraints, indexes and functions.
+6. Keep a record of applied migrations.
+
+Do not manually edit production database tables as a normal deployment procedure.
+
+### **B. Authentication configuration**
+
+Configure Google OAuth in:
+
+- Google Cloud Console.
+- Supabase Authentication.
+- Application callback handling.
+
+Verify:
+
+- Authorized redirect URIs.
+- Production site URL.
+- OAuth consent configuration.
+- Required scopes.
+- Email verification behavior.
+- Session refresh behavior.
+- Sign-out behavior.
+
+Test the complete login and callback flow on the actual production domain.
+
+### **C. Row Level Security**
+
+Before launch, verify that all exposed tables have appropriate RLS policies.
+
+Test:
+
+- Anonymous access.
+- Student access.
+- Instructor access.
+- Administrator access.
+- Cross-account access.
+- Access to quiz answer keys.
+- Audit-log access.
+
+Remember the Part 27 decision: the service-role key bypasses RLS. Every privileged administrator operation must independently authorize through `requireAdmin()`.
+
+## **5. Content integration**
+
+Connect all Git-managed content to the application.
+
+The build pipeline should:
+
+1. Read MDX and YAML files.
+2. Validate frontmatter.
+3. Validate stable content IDs.
+4. Validate slugs.
+5. Check learning-path lesson references.
+6. Check internal links.
+7. Compile MDX.
+8. Generate the static search index.
+9. Generate SEO metadata and sitemap entries.
+10. Fail the build if critical content validation fails.
+
+Example:
+
+```
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "content:validate": "tsx scripts/validate-content.ts",
+    "search:build": "tsx scripts/generate-search-index.ts",
+    "seo:validate": "tsx scripts/validate-seo.ts"
+  }
+}
+```
+
+The final script names and package versions should match the actual implementation.
+
+**Important:** Build-generated content should be deterministic. The same Git commit and configuration should produce the same public content output.
+
+## **6. Continuous integration**
+
+Use GitHub Actions to automatically test changes.
+
+Suggested workflow:
+
+**Developer pushes code**
+
+GitHub repository
+
+**CI checks**
+
+Dependencies · TypeScript · ESLint · Content validation
+
+**Pass**
+
+Continue
+
+Build and test
+
+**Fail**
+
+Stop
+
+Fix before merge
+
+**Preview deployment**
+
+Review the integrated application
+
+**Production deployment**
+
+Merge approved changes into the production branch
+
+### **Required CI checks**
+
+- Dependency installation.
+- TypeScript type checking.
+- ESLint.
+- Unit tests.
+- Content validation.
+- Search-index generation.
+- Production build.
+- Integration tests where configured.
+- Critical security tests.
+
+Do not automatically deploy every unreviewed branch to production.
+
+## **7. Testing before production**
+
+Testing must cover the integrated application, not only individual components.
+
+### **A. Authentication**
+
+Test the complete lifecycle:
+
+1. Open public homepage.
+2. Sign in using Google.
+3. Return through the OAuth callback.
+4. Create the student profile if it is the first login.
+5. Open the dashboard.
+6. Refresh the page.
+7. Verify the session remains valid.
+8. Sign out.
+9. Verify protected routes reject the signed-out user.
+
+### **B. Learning experience**
+
+Test:
+
+- Open a learning path.
+- Open a lesson.
+- Navigate to the next lesson.
+- Mark a lesson complete.
+- Refresh and confirm progress persists.
+- Bookmark a lesson.
+- Verify the bookmark appears in the dashboard.
+
+### **C. Quiz experience**
+
+Test:
+
+- Open a published quiz.
+- Submit valid answers.
+- Calculate the score.
+- Display the result.
+- Handle retakes.
+- Preserve historical attempt results.
+- Verify answer keys are not exposed to the browser.
+
+### **D. Admin experience**
+
+Test:
+
+- Unlisted email denied.
+- Listed administrator accepted.
+- Student denied from admin routes.
+- Instructor restricted to assigned permissions.
+- Administrator can manage supported records.
+- Audit events are recorded.
+- Service-role credentials remain server-side.
+
+### **E. Privacy and security**
+
+Test:
+
+- Account deletion request.
+- User data isolation.
+- RLS policies.
+- Input validation.
+- Authentication callback safety.
+- XSS protection.
+- CSRF protections appropriate to the chosen mutation mechanism.
+- Rate limiting for sensitive endpoints.
+- No secret exposure in browser bundles.
+
+## **8. Production hosting**
+
+Recommended initial infrastructure:
+
+[Vercel Logo PNG Vector (SVG) Free Download](https://images.openai.com/static-rsc-4/8TAj-zf1VCcSSsYlZU2FV-jgicMp4LL_P-wmFbyR9IoRDHWEr8znucI68J8OVBYnfpzuoVsHAQ5wQHWY9RfLOM8QGxEGWJfKfpya1kumRWPhhxAQdF-HG19aKEuZXcG5bTok40Pe5u1NVNM4gJ0hsxlLoP7r5m5EalRWYQSX2Ds?purpose=inline)
+
+**Vercel**
+
+Next.js application hosting
+
+[Supabase Logo PNG,  Vector (AI, EPS, CDR, PDF, SVG) - iconLogoVector](https://images.openai.com/static-rsc-4/ZWNEwueIa4jX7IEKpIW_ZvVuoMv7nOsWdPj6prThJJQ0b_Hdaj2TjpLMM3E--UH3DlZFvFuaW_7en80O46eYFmbPzAHBLTg5tC347p9Jxt-PfqHdXtVqQqYVLwjnGugv7sybOkq1Oxeuve_jUb8c_HhsjDpmewZufk8XjOfQcYc?purpose=inline)
+
+**Supabase**
+
+Authentication and PostgreSQL
+
+[Oakstone & Github | Executive Search for GTM SaaS](https://images.openai.com/static-rsc-4/HQnzkeZepdcbz6yki5F911xaI7qZFrq-EjoAnoh5focKQlZBBR_xVRxmdszYIh8CF9ZImt1zDUWQIDbeJm9vx6gJmTSUYpEpChiHmY_gLt1gXp9uq4lq-oxfEEM9g7FJhQpCYi7WHrUwBF9vcV_4-kwArSHYrPmmA6I2uBI6wFE?purpose=inline)
+
+**GitHub**
+
+Source code and CI/CD
+
+This is the lowest-complexity architecture consistent with our existing decisions.
+
+### **Free-tier limitations**
+
+Free hosting does not mean unlimited hosting.
+
+Potential limitations include:
+
+- Build and deployment limits.
+- Serverless execution limits.
+- Database storage limits.
+- Database connection limits.
+- Authentication quotas.
+- Project inactivity or pausing policies.
+- Bandwidth limits.
+- Backup and recovery limitations.
+
+Do not assume the platform will remain free regardless of traffic.
+
+Monitor actual usage and check current provider terms before launch. Do not add a paid service without reviewing its necessity and cost.
+
+## **9. Domain and DNS**
+
+When the platform is ready, configure a custom domain.
+
+Example:
+
+```
+academy.forgesec.com
+```
+
+If the domain is unavailable or not owned, use a deployment-provided domain temporarily.
+
+Production setup:
+
+1. Add the domain to Vercel.
+2. Configure the required DNS records.
+3. Wait for DNS verification.
+4. Enable HTTPS.
+5. Configure the canonical site URL.
+6. Update Google OAuth redirect URLs.
+7. Update Supabase authentication settings.
+8. Verify redirects and cookies.
+
+Never hardcode preview URLs into production configuration.
+
+## **10. Deployment environments**
+
+Maintain three environments.
+
+| Environment | Purpose                   | Database                 |
+| ----------- | ------------------------- | ------------------------ |
+| Development | Local implementation      | Local Supabase           |
+| Preview     | Review integrated changes | Separate staging project |
+| Production  | Real students             | Production Supabase      |
+
+If budget prevents a permanently running staging database, use local Supabase for integration tests and a carefully controlled preview project when required.
+
+Do not let preview deployments write to the real student database.
+
+Keep `ADMIN_EMAILS` and service credentials separate between environments.
+
+## **11. Production security configuration**
+
+Before launch, verify:
+
+- HTTPS is enforced.
+- Secure cookies are enabled.
+- Admin MFA is enabled where supported.
+- Environment variables are correctly scoped.
+- Service-role key is server-only.
+- RLS is enabled and tested.
+- Admin allowlist is configured.
+- Authentication callbacks validate redirects.
+- Sensitive operations have rate limits.
+- Audit logging works.
+- Error responses do not disclose secrets or database internals.
+- Dependency vulnerabilities are reviewed.
+- Production database access is restricted.
+
+Do not rely on hiding buttons or navigation items as an authorization mechanism.
+
+Every protected server operation must independently verify access.
+
+## **12. Database backup and recovery**
+
+A database without a recovery plan is a serious operational risk.
+
+For the initial platform:
+
+- Maintain version-controlled SQL migrations.
+- Export or back up important database data according to provider capabilities.
+- Preserve the Git repository.
+- Test restoring a database backup.
+- Document the recovery process.
+- Review provider backup availability and retention.
+
+Git protects the content repository, but it does not automatically protect student progress stored in PostgreSQL.
+
+A backup that has never been restored successfully is not a verified recovery strategy.
+
+## **13. Monitoring and operational visibility**
+
+The administrator needs to know whether the platform is functioning.
+
+Monitor:
+
+| Area           | What to monitor                    |
+| -------------- | ---------------------------------- |
+| Application    | Build failures and runtime errors  |
+| Database       | Availability and connection issues |
+| Authentication | OAuth callback and login failures  |
+| Performance    | Slow page responses                |
+| Security       | Suspicious authorization failures  |
+| Content        | Failed content builds              |
+| Deployment     | Failed releases                    |
+| Usage          | Provider quota consumption         |
+
+Use existing provider dashboards initially.
+
+Do not build a separate monitoring infrastructure unless actual operational needs justify it.
+
+Avoid logging:
+
+- Passwords.
+- OAuth tokens.
+- Service-role keys.
+- Full session cookies.
+- Sensitive student records.
+
+## **14. Release strategy**
+
+Do not release every planned feature simultaneously without testing.
+
+Use a controlled release sequence.
+
+| Stage            | Release scope                          |
+| ---------------- | -------------------------------------- |
+| Internal testing | Core application and database          |
+| Private preview  | Authentication, learning and dashboard |
+| Security review  | RLS, roles, admin and privacy          |
+| Public beta      | Public content and student accounts    |
+| Version 1.0      | Complete P0 feature set                |
+
+### **Recommended launch conditions**
+
+Before public registration:
+
+- At least one complete learning path.
+- Public tutorials and write-ups.
+- Working Google login.
+- Functional student dashboard.
+- Working lesson progress.
+- Working quizzes.
+- Working assignments.
+- Admin management.
+- Published privacy and usage policies.
+- Security checks passed.
+
+The suggested content target from earlier parts remains 20–30 quality-controlled articles or lessons and 2–3 complete learning paths. That is a quality target, not a hard deployment requirement.
+
+## **15. Rollback strategy**
+
+Every production release should have a recovery plan.
+
+If a deployment causes problems:
+
+1. Stop additional deployments.
+2. Identify the affected release.
+3. Roll back the application deployment where safe.
+4. Restore or repair database state if necessary.
+5. Verify authentication and learning features.
+6. Investigate the root cause.
+7. Deploy a corrected version.
+
+**Important:** Application rollback does not automatically roll back database migrations.
+
+Use backward-compatible database changes where possible:
+
+- Add new nullable columns first.
+- Deploy code that supports old and new structures.
+- Migrate data.
+- Remove obsolete structures only after verification.
+
+Never assume that reverting a Git commit reverses destructive database changes.
+
+## **16. Final integration checklist**
+
+**Part 34 implementation tracker**
+
+0/35
+
+Consolidate final repository structure
+
+Verify all application modules are connected
+
+Verify all environment variables
+
+Configure local Supabase
+
+Apply and test all migrations
+
+Verify production schema plan
+
+Configure Google OAuth
+
+Verify authentication callbacks
+
+Review RLS on every exposed table
+
+Verify service-role isolation
+
+Validate all MDX and YAML content
+
+Generate search index
+
+Generate sitemap and robots.txt
+
+Verify homepage and public navigation
+
+Verify learning paths and lesson progression
+
+Verify bookmarks and dashboard
+
+Verify quiz scoring and historical attempts
+
+Verify assignment completion
+
+Verify admin authorization and audit logs
+
+Verify analytics calculations
+
+Verify privacy request workflow
+
+Run TypeScript and ESLint
+
+Run unit and integration tests
+
+Run Playwright end-to-end tests
+
+Run security tests
+
+Build production application
+
+Configure GitHub Actions
+
+Configure preview environment
+
+Configure production environment
+
+Configure custom domain and HTTPS
+
+Verify backups and recovery
+
+Verify monitoring and error reporting
+
+Complete pre-launch security review
+
+Complete legal review
+
+Run final production smoke tests
+
+## **17. Final decisions**
+
+| Area                | Decision                                         |
+| ------------------- | ------------------------------------------------ |
+| Architecture        | Modular monolith                                 |
+| Application         | Next.js + TypeScript                             |
+| Database            | Supabase PostgreSQL                              |
+| Authentication      | Google OAuth                                     |
+| Hosting             | Vercel                                           |
+| Source control      | GitHub                                           |
+| CI/CD               | GitHub Actions                                   |
+| Environments        | Development, preview, production                 |
+| Content             | Git-managed MDX/YAML                             |
+| Database migrations | Version-controlled                               |
+| Security            | RLS + server-side authorization                  |
+| Admin authorization | Permanent environment allowlist                  |
+| Testing             | Vitest + Playwright + security tests             |
+| Monitoring          | Existing provider dashboards initially           |
+| Backups             | Provider-supported backups plus recovery testing |
+| Deployment          | Preview, review, production                      |
+| Rollback            | Application rollback plus migration strategy     |
+
+**Part 34 complete.**
+
+The full deployment process is now defined. The architecture, database, application, security, testing, hosting and release procedures have a common integration plan.
+
+**Next: Part 35 — Final Acceptance Criteria & Project Closure.**
+
+This is the final planning part. It will establish exactly what must be finished for FORGESEC ACADEMY Version 1.0, what is deliberately excluded, and when planning officially stops. After Part 35, we move to implementation rather than creating more architecture-planning parts.

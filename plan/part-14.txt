@@ -1,0 +1,247 @@
+Part 14 — Security Architecture, Threat Modeling & Platform Hardening (Revised)
+Key change: FORGESEC ACADEMY will use Google OAuth exclusively for authentication.
+
+No email/password registration, password reset system, custom password management or separate email verification workflow.
+
+This reduces authentication complexity and maintenance. It also avoids building unnecessary authentication features on our limited free-tier infrastructure.
+
+One clarification: Google OAuth primarily saves development and operational complexity, not significant application CPU. Authentication itself is usually not the major CPU consumer. The bigger benefits are delegating credential management, password recovery and account verification to Google and Supabase.
+1. Revised authentication architecture
+Google-only authentication
+Student visits FORGESEC ACADEMY
+
+
+Continue with Google
+
+Supabase Auth initiates OAuth
+
+
+Google OAuth
+
+Google authenticates the account
+
+
+Supabase Auth
+
+Validates OAuth callback and creates session
+
+
+FORGESEC Academy
+
+Creates profile and assigns default student role
+
+
+Authentication features
+Feature	Decision
+Google login	Use
+Email/password	Remove
+Password reset	Not required
+Email verification	Handled by Google identity verification
+Account creation	First successful Google login
+Logout	Supabase session logout
+Session management	Supabase SSR
+Multiple OAuth providers	Not initially
+
+2. Registration and first login
+There is no separate registration form.
+
+The user clicks Continue with Google.
+
+On the first successful login:
+1. Google authenticates the user.
+2. Supabase validates the OAuth response.
+3. The application obtains the verified user identity.
+4. A profile is created if one doesn't already exist.
+5. The default role is student.
+6. The student enters the Academy.
+Suggested initial profile fields:
+profiles
+├── id                 UUID
+├── display_name       TEXT
+├── avatar_url         TEXT
+├── bio                TEXT
+├── created_at         TIMESTAMPTZ
+└── updated_at         TIMESTAMPTZ
+
+
+Use the Supabase Auth user ID as the profile ID.
+
+Important: Never accept the user's role from Google profile metadata or a browser request. The application assigns the default student role through a trusted database trigger or server-side workflow.
+3. Account restrictions
+Google login doesn't mean every Google account should automatically receive administrative access.
+
+Our role system remains unchanged:
+Role	Assignment
+Student	Automatically on first login
+Instructor	Assigned by an administrator
+Admin	Assigned through trusted provisioning
+
+Additional recommendations:
+- Allow only one Google account per Academy user.
+- Don't automatically promote users based on email address.
+- Don't trust browser-submitted email addresses.
+- Use verified identity information from Supabase Auth.
+- If an account is suspended, block its application access even if Google login succeeds.
+If you eventually want DIU-only registration, we can introduce an approved email-domain restriction. I would not impose it in the initial release unless it is an actual requirement.
+4. Security architecture
+The rest of the security architecture remains intact.
+Google OAuth
+
+External identity provider
+
+
+Supabase Auth
+
+Identity and session management
+
+
+Next.js / Node.js
+
+Server-side authorization and validation
+
+
+Supabase PostgreSQL
+
+RLS and protected student records
+
+
+Google handles authentication. FORGESEC remains responsible for authorization.
+5. Protecting student data
+Google OAuth does not replace database security.
+
+The existing RLS policy model remains:
+Table	Student access
+profiles	Own profile
+user_roles	Read own roles
+lesson_progress	Own records
+bookmarks	Own records
+content_activity	Own records
+quiz_attempts	Own submitted attempts
+quiz_answer_keys	No direct access
+assignment_progress	Own records
+admin_audit_logs	No general access
+
+Every protected operation still verifies identity, permissions and resource ownership.
+6. Other application security requirements
+The following protections remain mandatory:
+
+Application security
+- Zod validation.
+- Safe Markdown rendering.
+- Restricted MDX contributors.
+- Protection against XSS and injection.
+- CSRF/origin protections appropriate to the authentication and request flow.
+- Secure HTTP headers.
+Database security
+- RLS on exposed tables.
+- Foreign keys and constraints.
+- Protected quiz answer keys.
+- Server-side score calculation.
+- No client-controlled role changes.
+Infrastructure security
+- HTTPS.
+- Server-only environment secrets.
+- Separate preview and production credentials.
+- GitHub secret scanning.
+- Dependency auditing.
+- Database backup and recovery plan.
+Administrative security
+- Restricted admin provisioning.
+- MFA for administrators where supported by the selected authentication setup.
+- Audit logs for role and publishing changes.
+- Prevent removal of the last active administrator.
+7. Free-tier optimization
+Here is where we should be careful: using Google OAuth doesn't automatically reduce all Supabase resource consumption.
+
+The useful savings are mainly architectural and operational.
+Decision	Benefit
+Google-only authentication	No custom password infrastructure
+Supabase Auth	Managed identity and sessions
+No password reset workflow	Less application code
+No email/password registration	Fewer authentication paths
+No custom email verification workflow	Less implementation complexity
+Server-side session verification	Reliable identity checks
+Static public tutorials	No database queries for reading content
+Browser-side search	No search database infrastructure
+
+Important optimization
+Don't query Supabase repeatedly just to discover the current user's role.
+
+For example, avoid doing separate role queries in every small UI component.
+
+Instead:
+1. Verify the user on the server.
+2. Load the role once within the request's server-side workflow.
+3. Reuse that verified authorization context where appropriate.
+4. Still perform authorization checks at each protected operation.
+Don't use a long-lived global role cache that could accidentally share one user's permissions with another.
+8. Revised implementation structure
+src/
+├── modules/
+│   └── auth/
+│       ├── schemas/
+│       ├── services/
+│       │   └── google-auth.ts
+│       ├── actions/
+│       │   ├── login.ts
+│       │   └── logout.ts
+│       ├── guards/
+│       │   ├── require-user.ts
+│       │   └── require-admin.ts
+│       └── types/
+│
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts
+│   │   ├── server.ts
+│   │   └── admin.ts
+│   └── security/
+│       ├── permissions.ts
+│       ├── ownership.ts
+│       ├── rate-limit.ts
+│       └── audit.ts
+
+
+Authentication routes:
+/login
+/auth/callback
+/dashboard
+
+
+No registration page or forgot-password page is required.
+9. Revised security priorities
+Priority	Feature	Decision
+P0	Google OAuth	Mandatory
+P0	Secure Supabase sessions	Mandatory
+P0	Default student role	Mandatory
+P0	Server-side authorization	Mandatory
+P0	Database RLS	Mandatory
+P0	Service-role key protection	Mandatory
+P0	Quiz answer protection	Mandatory
+P0	Input validation	Mandatory
+P0	HTTPS and secure headers	Mandatory
+P0	Secret protection	Mandatory
+P1	Administrator MFA	Before admin launch
+P1	Rate limiting	Sensitive endpoints
+P1	Audit logs	Administrative operations
+P1	Backup and recovery testing	Before public launch
+P2	Advanced monitoring	Later
+P2	External penetration testing	Before significant expansion
+
+10. Final decisions
+Revised baseline
+FORGESEC ACADEMY authentication
+- Google OAuth only.
+- Supabase Auth manages identity and sessions.
+- First login automatically creates a student account.
+- No email/password registration.
+- No password reset functionality.
+- No custom email verification workflow.
+- Admin and instructor roles assigned separately.
+- RLS and server-side authorization remain mandatory.
+
+One technical caution: Google OAuth introduces a dependency on Google's authentication availability. If Google login is unavailable, new logins may be temporarily unavailable too. Existing sessions may continue working until they expire or require refresh.
+
+This is a reasonable trade-off for an initially small, free-tier educational platform.
+
+Next: Part 15 — Testing Strategy, Quality Assurance & Release Management.

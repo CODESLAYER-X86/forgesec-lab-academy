@@ -1,0 +1,662 @@
+# **Part 30 — Homepage, Navigation & Public Interface**
+
+**Objective:** Design the public-facing experience of FORGESEC ACADEMY so visitors can quickly understand the platform, discover learning materials and begin learning without being forced to register.
+
+The homepage should not look like a generic corporate website or an advertisement for a cybersecurity company. It should feel like a practical technical learning platform.
+
+## **1. Public interface architecture**
+
+The public interface consists of:
+
+1. Homepage.
+2. Global navigation.
+3. Learning catalog.
+4. Learning path pages.
+5. Lesson pages.
+6. Write-ups.
+7. Resources and glossary.
+8. Search.
+9. Login and student entry points.
+10. Footer and legal links.
+
+Suggested route structure:
+
+```
+/
+├── /learn
+│   ├── /tutorials
+│   ├── /paths
+│   ├── /paths/[slug]
+│   └── /lessons/[slug]
+├── /writeups
+│   └── /[slug]
+├── /resources
+│   ├── /[slug]
+│   └── /glossary
+├── /search
+├── /about
+├── /login
+├── /dashboard
+└── /admin
+```
+
+Use the route conventions already established in previous parts. Avoid creating duplicate routes for the same content.
+
+## **2. Homepage structure**
+
+The homepage should contain six major sections.
+
+**FORGESEC ACADEMY**
+
+Learn · Explore · Build
+
+Learn
+
+Write-ups
+
+Resources
+
+Login
+
+Free cybersecurity education
+
+# **Build skills. Understand systems. Learn security.**
+
+Practical learning resources covering Linux, networking, web technologies and cybersecurity fundamentals.
+
+Explore Learning
+
+Read Write-ups
+
+**Explore learning paths**
+
+**Linux Fundamentals**
+
+Command line and system basics
+
+**Networking**
+
+Understand network communication
+
+**Web Technologies**
+
+Understand how web applications work
+
+**Security Fundamentals**
+
+Learn core security concepts
+
+**Recently published**
+
+TUTORIAL · LINUX
+
+**Understanding Linux File Permissions**
+
+Learn users, groups and permission bits.
+
+WRITE-UP · WEB SECURITY
+
+**Understanding a Web Vulnerability**
+
+Technical analysis and lessons learned.
+
+**Learn at your own pace.**
+
+Create a free account to track progress, save lessons and test your knowledge.
+
+FORGESEC ACADEMY · About · Privacy · Terms · Contact
+
+Conceptual wireframe, not the final visual design.
+
+### **Section 1: Hero**
+
+The first screen must communicate:
+
+- What FORGESEC ACADEMY is.
+- What visitors can learn.
+- Why they should explore it.
+- Where they should start.
+
+Recommended headline:
+
+**Build skills. Understand systems. Learn security.**
+
+Avoid exaggerated claims such as "Become an expert hacker in 30 days."
+
+### **Section 2: Learning paths**
+
+Show the main learning paths as cards.
+
+Each card should display:
+
+- Path title.
+- Short description.
+- Difficulty.
+- Number of published lessons.
+- Estimated learning time, if reasonably established.
+- Progress indicator for authenticated students.
+
+Visitors should be able to open a path without logging in.
+
+### **Section 3: Latest content**
+
+Display a small selection of recently published content:
+
+- Tutorials.
+- Technical write-ups.
+- Guides.
+- Reference materials.
+
+Content should be automatically retrieved from the Git-managed content registry.
+
+Do not manually maintain homepage content lists in the database.
+
+### **Section 4: Why FORGESEC ACADEMY?**
+
+Explain the educational approach:
+
+- Practical and structured learning.
+- Free access to public learning materials.
+- Self-paced progression.
+- Technical explanations with commands and examples.
+- Responsible security practices.
+
+Keep this section short. The quality of the actual lessons should prove the platform's value.
+
+### **Section 5: Student invitation**
+
+Explain the benefits of creating an account:
+
+- Track completed lessons.
+- Save bookmarks.
+- Continue learning from the dashboard.
+- Take quizzes.
+- Track assignment progress.
+
+Do not block public content behind authentication.
+
+### **Section 6: Footer**
+
+Include:
+
+- About.
+- Contact.
+- Privacy policy.
+- Terms of use.
+- Responsible disclosure / security contact, if established.
+- Copyright and platform identity.
+
+## **3. Global navigation**
+
+Use a consistent navigation bar across public pages.
+
+**Desktop:**
+
+```
+[FORGESEC ACADEMY]
+
+Learn ▼   Write-ups   Resources   About   [Search]   [Login]
+```
+
+For authenticated users:
+
+```
+[FORGESEC ACADEMY]
+
+Learn ▼   Write-ups   Resources   About   [Search]
+                                      [Dashboard] [Profile]
+```
+
+### **Navigation rules**
+
+- Logo returns to homepage.
+- Learn opens the learning catalog.
+- Write-ups opens published write-ups.
+- Resources opens guides and references.
+- Search opens the search interface from Part 26.
+- Login starts Google OAuth.
+- Dashboard is visible to authenticated students.
+- Admin links appear only to authorized administrators.
+
+Do not show admin navigation to ordinary students.
+
+## **4. Learning catalog page**
+
+Route:
+
+`/learn`
+
+The catalog is the central discovery page.
+
+**Explore learning**
+
+Find a subject and start learning at your own pace.
+
+Search tutorials and learning paths...
+
+All topics
+
+Linux
+
+Networking
+
+Web
+
+Security
+
+**Linux Fundamentals**
+
+Beginner
+
+Start with Linux commands, filesystem navigation and basic administration.
+
+8 lessons · Example only
+
+**Networking Fundamentals**
+
+Beginner
+
+Understand IP addressing, ports, protocols and network troubleshooting.
+
+10 lessons · Example only
+
+Catalog requirements:
+
+- Search and filters.
+- Difficulty filters.
+- Category filters.
+- Sorting by recently published and title.
+- Pagination or incremental loading if the catalog grows.
+- Empty states for filters with no results.
+
+Use the existing static search index where appropriate. Do not introduce another search backend.
+
+## **5. Learning path detail page**
+
+Route:
+
+`/learn/paths/[slug]`
+
+This page should explain the entire path before a student begins.
+
+Include:
+
+- Path title and description.
+- Difficulty.
+- Prerequisites.
+- Learning objectives.
+- Total published lessons.
+- Curriculum outline.
+- Estimated duration, only when meaningful.
+- Start/continue button.
+- Student progress for authenticated users.
+
+Example:
+
+```
+Linux Fundamentals
+
+Difficulty: Beginner
+Lessons: 8
+
+What you will learn:
+- Navigate the Linux filesystem.
+- Understand files and permissions.
+- Manage users and groups.
+- Work with essential commands.
+
+Curriculum:
+01. Introduction to Linux
+02. Terminal Fundamentals
+03. Filesystem Navigation
+04. File Management
+05. Users and Groups
+06. File Permissions
+07. Process Management
+08. Basic Administration
+
+[Start Learning]
+```
+
+The curriculum must come from the YAML learning-path definition, not manually duplicated page content.
+
+## **6. Lesson page public experience**
+
+The lesson engine was defined in Part 25. This part focuses on the surrounding public interface.
+
+Desktop layout:
+
+FORGESEC ACADEMY / LINUX FUNDAMENTALS / LESSON 03
+
+**Filesystem Navigation**
+
+**Curriculum**
+
+01 Introduction02 Terminal
+
+03 Filesystem
+
+04 File Management05 Users
+
+**Filesystem Navigation**
+
+Learn how to move through Linux directories.
+
+**Current directory**
+
+```
+pwd
+```
+
+**List files**
+
+```
+ls -la
+```
+
+Use the copy control on code blocks to copy commands.
+
+Previous lesson
+
+Mark complete
+
+Conceptual desktop lesson layout.
+
+Important requirements:
+
+- Keep the lesson readable.
+- Avoid excessive side panels on small screens.
+- Provide visible curriculum navigation.
+- Keep code blocks easy to copy.
+- Make the completion action clear.
+- Preserve the learning path context when navigating between lessons.
+
+These details must remain consistent with Part 25 rather than becoming a separate implementation.
+
+## **7. Write-ups interface**
+
+Routes:
+
+```
+/writeups
+/writeups/[slug]
+```
+
+Write-ups should have their own content identity.
+
+Recommended metadata:
+
+- Title.
+- Summary.
+- Author.
+- Publication date.
+- Category.
+- Tags.
+- Difficulty.
+- Target technology or vulnerability class, where appropriate.
+
+Write-ups should support:
+
+- Technical explanations.
+- Code blocks.
+- Command examples.
+- Screenshots and diagrams when useful.
+- References.
+- Responsible disclosure context.
+
+For security-related write-ups, distinguish authorized lab exercises from real-world testing. Do not publish private information, credentials or instructions that facilitate unauthorized compromise.
+
+## **8. Resources and glossary**
+
+Routes:
+
+```
+/resources
+/resources/[slug]
+/glossary
+/glossary/[term]
+```
+
+Resources should be a structured collection of reference materials.
+
+Examples:
+
+- Linux command reference.
+- Networking terminology.
+- HTTP status codes.
+- Common security terminology.
+- Protocol explanations.
+- Useful technical documentation links.
+
+Glossary pages should be lightweight, searchable and linked to relevant lessons.
+
+For example, a lesson discussing DNS should link to the DNS glossary entry.
+
+This creates internal navigation without requiring a complex recommendation engine.
+
+## **9. Responsive design**
+
+The interface must work on:
+
+- Desktop.
+- Laptop.
+- Tablet.
+- Mobile.
+
+Recommended behavior:
+
+| Element           | Desktop            | Mobile                      |
+| ----------------- | ------------------ | --------------------------- |
+| Main navigation   | Horizontal         | Collapsible menu            |
+| Learning catalog  | Multi-column       | Single column               |
+| Lesson curriculum | Side panel         | Collapsible drawer          |
+| Table of contents | Side panel         | Collapsible section         |
+| Code blocks       | Full content width | Horizontal scrolling        |
+| Search            | Dialog             | Full-screen or large dialog |
+
+Do not simply shrink the desktop design to fit a phone.
+
+For example, a three-column lesson layout should become a focused single-column reading experience on mobile.
+
+## **10. Accessibility requirements**
+
+The public interface must support:
+
+- Keyboard navigation.
+- Visible focus indicators.
+- Semantic HTML.
+- Proper heading hierarchy.
+- Accessible form labels.
+- Sufficient color contrast.
+- Meaningful link text.
+- Screen-reader-friendly menus.
+- Reduced-motion preferences.
+
+Use buttons for actions and links for navigation.
+
+Do not make clickable elements out of ordinary text containers.
+
+## **11. Public interface implementation structure**
+
+Suggested component architecture:
+
+```
+src/
+├── app/
+│   ├── page.tsx
+│   ├── learn/
+│   ├── writeups/
+│   ├── resources/
+│   ├── glossary/
+│   ├── search/
+│   └── about/
+│
+├── components/
+│   ├── layout/
+│   │   ├── public-header.tsx
+│   │   ├── public-footer.tsx
+│   │   ├── mobile-navigation.tsx
+│   │   └── page-container.tsx
+│   │
+│   ├── home/
+│   │   ├── hero.tsx
+│   │   ├── learning-paths.tsx
+│   │   ├── latest-content.tsx
+│   │   └── student-invitation.tsx
+│   │
+│   ├── learning/
+│   │   ├── path-card.tsx
+│   │   ├── lesson-card.tsx
+│   │   └── catalog-filters.tsx
+│   │
+│   └── content/
+│       ├── content-card.tsx
+│       ├── author-info.tsx
+│       └── related-content.tsx
+```
+
+Keep components focused. Do not create a separate component for every small text element.
+
+## **12. Performance and rendering strategy**
+
+The public platform is primarily a content website.
+
+Therefore:
+
+- Use Server Components by default.
+- Generate static pages for Git-managed published content wherever practical.
+- Avoid unnecessary client-side JavaScript.
+- Load images with optimized dimensions and formats.
+- Lazy-load below-the-fold media.
+- Keep navigation lightweight.
+- Reuse the static search index.
+- Avoid fetching student-specific data for anonymous visitors.
+
+**Important:** Student-specific progress must never leak through shared static or cached responses.
+
+A public lesson can be statically rendered, while progress indicators and completion controls can be loaded through an authenticated, appropriately protected mechanism.
+
+## **13. Homepage content management**
+
+The homepage should not require a CMS.
+
+Use a small configuration file for curated sections:
+
+```
+content/
+├── config/
+│   └── homepage.yaml
+├── paths/
+├── lessons/
+├── writeups/
+└── resources/
+```
+
+Example:
+
+```
+featured_paths:
+  - linux-fundamentals
+  - networking-fundamentals
+
+latest_content_limit: 4
+
+show_student_invitation: true
+```
+
+The content registry automatically supplies the latest published content.
+
+This keeps homepage changes manageable through Git without adding administrative database operations.
+
+## **14. Acceptance criteria**
+
+| Requirement      | Acceptance condition                             |
+| ---------------- | ------------------------------------------------ |
+| Homepage         | Clearly communicates Academy purpose             |
+| Navigation       | Works across all public routes                   |
+| Learning catalog | Lists published content only                     |
+| Learning paths   | Correct curriculum from YAML                     |
+| Lesson interface | Reuses Part 25 engine                            |
+| Write-ups        | Properly renders technical content               |
+| Resources        | Organized and searchable                         |
+| Glossary         | Supports linked terminology                      |
+| Search           | Reuses Part 26 implementation                    |
+| Authentication   | Google login only                                |
+| Guest access     | Public content accessible without login          |
+| Mobile           | Usable without horizontal page overflow          |
+| Accessibility    | Keyboard and screen-reader basics work           |
+| Performance      | No unnecessary client-side dependencies          |
+| Privacy          | No student-specific data in shared public caches |
+
+## **15. Implementation checklist**
+
+**Part 30 implementation tracker**
+
+0/21
+
+Implement public header and footer
+
+Implement desktop navigation
+
+Implement mobile navigation
+
+Build homepage hero section
+
+Build learning-path cards
+
+Build latest-content section
+
+Build student invitation section
+
+Implement learning catalog
+
+Implement catalog filters
+
+Implement learning-path detail page
+
+Integrate existing lesson engine
+
+Build write-up listing and detail pages
+
+Build resources listing and detail pages
+
+Build glossary listing and detail pages
+
+Integrate existing search
+
+Add responsive layouts
+
+Implement accessibility requirements
+
+Configure public content rendering and caching
+
+Verify anonymous access
+
+Verify student-specific data isolation
+
+Run mobile and desktop acceptance tests
+
+## **16. Final decisions**
+
+| Area             | Decision                                |
+| ---------------- | --------------------------------------- |
+| Homepage         | Six-section content-focused layout      |
+| Navigation       | Shared responsive navigation            |
+| Public content   | No login required                       |
+| Learning catalog | Git-managed content                     |
+| Learning paths   | YAML-driven                             |
+| Lesson pages     | Reuse Part 25                           |
+| Write-ups        | Dedicated section                       |
+| Resources        | Dedicated section                       |
+| Glossary         | Searchable and internally linked        |
+| Homepage CMS     | Not required                            |
+| Rendering        | Server Components and static generation |
+| Mobile           | Responsive-first                        |
+| Search           | Reuse Part 26                           |
+| Student data     | Strictly isolated from public cache     |
+
+**Part 30 complete.**
+
+The public interface is now defined: visitors can discover and consume educational content without authentication, while registered students get additional learning features.
+
+**Next: Part 31 — UI Design System & Responsive Implementation.**

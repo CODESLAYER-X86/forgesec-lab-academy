@@ -1,0 +1,695 @@
+# **Part 25 — Learning Path & Lesson Engine**
+
+**Objective:** Build the core educational experience of FORGESEC ACADEMY: learning paths, individual lessons, MDX rendering, navigation, syntax-highlighted code blocks, copy buttons and progress tracking.
+
+This is one of the most important modules because the platform's primary value is the quality of its educational content.
+
+The design principle is simple: **content should be easy to read, easy to navigate and easy to practice.**
+
+## **1. Learning engine architecture**
+
+The learning engine combines two sources:
+
+- Git repository: lesson content, metadata and learning path structure.
+- Supabase: student completion and activity.
+
+**Git repository**
+
+MDX lessons, YAML paths, images, metadata
+
+**Supabase**
+
+Completion, bookmarks, learning activity
+
+**Next.js Learning Engine**
+
+Content registry, MDX renderer, progress services
+
+**Student Learning Interface**
+
+Path overview, lesson reader, navigation, completion
+
+We will not store lesson bodies in PostgreSQL.
+
+This keeps the database smaller and allows content updates through Git without requiring database content migrations.
+
+## **2. Learning path structure**
+
+A learning path is an ordered collection of lessons.
+
+Example:
+
+```
+id: linux-fundamentals
+slug: linux-fundamentals
+title: Linux Fundamentals
+description: Learn essential Linux concepts and commands.
+category: linux
+difficulty: beginner
+estimated_minutes: 240
+status: published
+
+objectives:
+  - Navigate the Linux filesystem.
+  - Manage files and directories.
+  - Understand users and permissions.
+  - Work with essential system commands.
+
+lessons:
+  - linux-001
+  - linux-002
+  - linux-003
+  - linux-004
+  - linux-005
+```
+
+Recommended file:
+
+```
+content/paths/linux-fundamentals.yaml
+```
+
+The `lessons` array controls the curriculum order.
+
+Do not duplicate the lesson content inside this YAML file.
+
+## **3. Lesson metadata**
+
+Each lesson should have stable metadata.
+
+Example:
+
+```
+---
+id: linux-001
+title: Introduction to Linux
+slug: introduction-to-linux
+description: Understand Linux and its core concepts.
+category: linux
+difficulty: beginner
+tags:
+  - linux
+  - operating-systems
+status: published
+updated_at: 2026-11-16
+estimated_minutes: 15
+---
+
+# Introduction to Linux
+
+Linux is an operating system kernel...
+```
+
+Recommended file:
+
+```
+content/tutorials/linux/introduction-to-linux.mdx
+```
+
+### **Why use a stable ID?**
+
+A URL slug can change.
+
+For example:
+
+```
+introduction-to-linux
+```
+
+might later become:
+
+```
+linux-basics
+```
+
+But the stable lesson ID remains:
+
+```
+linux-001
+```
+
+Student progress remains connected to the lesson even if its URL changes.
+
+## **4. Content registry**
+
+Create a central content registry.
+
+```
+src/lib/content/
+├── registry.ts
+├── paths.ts
+├── lessons.ts
+├── schemas.ts
+└── types.ts
+```
+
+The registry should provide functions such as:
+
+```
+getAllLessons()
+getLessonBySlug(slug)
+getLessonById(id)
+getPublishedLessons()
+getLearningPath(slug)
+getAllLearningPaths()
+getLessonsInPath(pathId)
+```
+
+This avoids repeatedly scanning directories from different components.
+
+Use `fast-glob` to discover content files, `gray-matter` to parse frontmatter and Zod to validate metadata.
+
+## **5. MDX rendering engine**
+
+We already selected:
+
+- `next-mdx-remote`
+- `gray-matter`
+- `remark-gfm`
+- `rehype-pretty-code`
+- `shiki`
+
+These provide the rendering pipeline.
+
+**MDX processing pipeline**
+
+MDX source file
+
+Frontmatter extraction
+
+Zod metadata validation
+
+MDX compilation and syntax highlighting
+
+Server-rendered lesson page
+
+### **Important security rule**
+
+Only trusted contributors should be allowed to add executable MDX to the repository.
+
+Do not allow students to upload MDX files or arbitrary JSX.
+
+For student-generated text in future discussion features, use a separate safe Markdown renderer.
+
+## **6. Configure MDX rendering**
+
+Create:
+
+```
+src/lib/content/render-mdx.tsx
+```
+
+A basic implementation:
+
+```
+import { compileMDX } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
+import rehypePrettyCode from "rehype-pretty-code";
+import { codeComponents } from "@/components/content/code-components";
+
+export async function renderLesson(source: string) {
+  const { content } = await compileMDX({
+    source,
+    components: codeComponents,
+    options: {
+      parseFrontmatter: false,
+      mdxOptions: {
+        remarkPlugins: [remarkGfm],
+        rehypePlugins: [
+          [
+            rehypePrettyCode,
+            {
+              theme: "github-dark",
+            },
+          ],
+        ],
+      },
+    },
+  });
+
+  return content;
+}
+```
+
+This is the rendering foundation.
+
+The content validator should separately parse and validate frontmatter before the content reaches the renderer.
+
+Pin and test the selected MDX package versions. MDX compiler configuration and plugin compatibility should be verified in the actual project build.
+
+## **7. Lesson page layout**
+
+A lesson page should have three main areas on desktop.
+
+**FORGESEC ACADEMY — Linux Fundamentals**
+
+**Curriculum**
+
+01 Introduction
+
+02 Filesystem
+
+03 Permissions
+
+04 Users
+
+**Understanding Linux Permissions**
+
+Lesson 03 · Beginner · 15 min
+
+**Introduction**
+
+Linux uses permissions to control access to files and directories.
+
+Example command
+
+`ls -l`
+
+Illustrative lesson layout
+
+**On this page**
+
+Introduction
+
+Permission types
+
+Examples
+
+Summary
+
+Conceptual desktop layout, not a live interface.
+
+### **Desktop**
+
+- Left: learning path navigation.
+- Center: lesson content.
+- Right: table of contents.
+
+### **Mobile**
+
+- Hide the permanent sidebars.
+- Use collapsible curriculum and table-of-contents panels.
+- Keep the lesson content as the primary focus.
+- Keep navigation controls easy to reach.
+
+Do not force a three-column layout onto a mobile screen.
+
+## **8. Table of contents**
+
+Generate the TOC from lesson headings.
+
+Example:
+
+```
+# Introduction
+
+## What is Linux?
+
+## Linux Distributions
+
+## Why Linux Matters
+
+# Summary
+```
+
+Generated TOC:
+
+```
+On this page
+
+Introduction
+  What is Linux?
+  Linux Distributions
+  Why Linux Matters
+Summary
+```
+
+Use heading IDs to generate anchor links.
+
+Avoid a separate database table for TOC entries.
+
+For the initial implementation, generate the TOC from the compiled content or validated heading metadata during the build process.
+
+## **9. Code blocks and copy buttons**
+
+This is particularly important for FORGESEC ACADEMY.
+
+Cybersecurity tutorials contain:
+
+- Linux commands.
+- Terminal output.
+- Configuration files.
+- HTTP requests.
+- Python scripts.
+- SQL queries.
+- JSON.
+- YAML.
+- Bash scripts.
+
+A normal code block is not enough.
+
+We need:
+
+1. Syntax highlighting.
+2. Language labels.
+3. Copy button.
+4. Horizontal scrolling for long lines.
+5. Clear distinction between commands and output.
+6. Optional line highlighting.
+
+Example lesson source:
+
+````
+```bash
+whoami
+pwd
+ls -la
+```
+````
+
+Expected rendered experience:
+
+BASH
+
+Copy
+
+whoami\
+pwd\
+ls -la
+
+The illustration shows the desired appearance. The actual copy button must be an interactive Client Component.
+
+### **Code component architecture**
+
+```
+src/components/content/
+├── code-block.tsx
+├── code-copy-button.tsx
+├── code-components.tsx
+├── callout.tsx
+├── lesson-toc.tsx
+└── lesson-content.tsx
+```
+
+Use `navigator.clipboard.writeText()` inside the copy button's client-side event handler.
+
+Do not add a separate clipboard package.
+
+### **Critical command/output convention**
+
+Use explicit labels in lessons:
+
+```
+Command:
+whoami
+
+Expected output:
+student
+```
+
+Never make students guess whether a code block is something to execute or an example of output.
+
+## **10. Lesson completion**
+
+At the end of a lesson, show:
+
+- Previous lesson.
+- Next lesson.
+- Mark as complete.
+- Bookmark control.
+- Related assignment or quiz when available.
+
+Completion should be an explicit student action.
+
+Opening a lesson does not mean the student has completed it.
+
+The completion operation should use the `lesson_progress` table from Part 21.
+
+We already designed a `completeLesson()` Server Action in Part 24. Reuse it instead of creating another progress system.
+
+For undoing completion, implement a separate authenticated Server Action that deletes only the student's own completion record.
+
+## **11. Previous and next navigation**
+
+Navigation must follow the order defined in the learning path YAML.
+
+Example:
+
+```
+Linux Fundamentals
+
+Previous:
+Introduction to Linux
+
+Current:
+Linux File Permissions
+
+Next:
+Managing Linux Users
+```
+
+A lesson may belong to more than one learning path.
+
+Therefore, when a student enters through a specific path, previous and next navigation should preserve that path context.
+
+Use a validated `from` or path identifier parameter if needed. Never trust it to grant access to unpublished content.
+
+## **12. Learning path overview page**
+
+Create:
+
+```
+src/app/learn/paths/[slug]/page.tsx
+```
+
+The overview should display:
+
+- Title and description.
+- Difficulty.
+- Estimated duration.
+- Learning objectives.
+- Prerequisites.
+- Ordered lessons.
+- Total lessons.
+- Student completion progress when logged in.
+- Start or continue button.
+
+Guests should be able to view the complete curriculum without logging in.
+
+Do not artificially lock lessons behind previous lessons.
+
+The platform should encourage structured learning without preventing students from exploring.
+
+## **13. Lesson page route**
+
+Create:
+
+```
+src/app/learn/tutorials/[slug]/page.tsx
+```
+
+The page should:
+
+1. Resolve the lesson from the content registry.
+2. Check whether it is published.
+3. Render the MDX content.
+4. Resolve learning path context.
+5. Load completion state for authenticated users.
+6. Display previous/next navigation.
+7. Record activity when appropriate.
+8. Display a bookmark control.
+
+Public lessons should be statically generated where practical.
+
+Student-specific completion information must be loaded separately and must never enter a shared public cache.
+
+## **14. Bookmark integration**
+
+Reuse the existing `bookmarks` table.
+
+The bookmark action should:
+
+- Require an authenticated student.
+- Validate the lesson against the content registry.
+- Insert or remove the student's own bookmark.
+- Use a unique constraint to prevent duplicates.
+- Display the current bookmark state.
+
+Guests can read content but cannot persist personal bookmarks.
+
+Do not create another bookmark table specifically for lessons.
+
+## **15. Lesson content standards**
+
+The rendering engine is only half the system. The actual lesson structure must remain consistent.
+
+Recommended lesson format:
+
+```
+# Lesson Title
+
+## What You Will Learn
+
+A short explanation of the learning objectives.
+
+## Introduction
+
+Explain the concept.
+
+## Demonstration
+
+Show a practical example.
+
+## Commands or Code
+
+Provide executable commands with clear explanations.
+
+## Expected Output
+
+Show what the student should observe.
+
+## Common Mistakes
+
+Explain frequent errors.
+
+## Summary
+
+Recap the essential concepts.
+
+## Next Step
+
+Link to the next lesson or practical assignment.
+```
+
+For early lessons, keep the material short.
+
+Avoid turning a beginner lesson into a complete textbook chapter.
+
+A good lesson should give the student enough understanding to perform a task independently.
+
+## **16. Content quality and safety controls**
+
+Because this is a cybersecurity education platform, each practical lesson should have appropriate safety boundaries.
+
+For example:
+
+- Explain whether commands are safe to execute locally.
+- Identify commands that modify system configuration.
+- Warn before destructive operations.
+- Use explicitly authorized targets for security exercises.
+- Explain cleanup steps when a task changes system state.
+- Avoid encouraging scanning or exploitation of unauthorized public systems.
+
+Never present a potentially destructive command without explaining its effects.
+
+## **17. Performance strategy**
+
+The lesson engine should remain inexpensive to operate.
+
+| Operation               | Strategy                                 |
+| ----------------------- | ---------------------------------------- |
+| Public lesson rendering | Static generation where practical        |
+| Lesson metadata         | Build-time content registry              |
+| Search                  | Generated static index                   |
+| Code highlighting       | Build-time MDX processing                |
+| Student progress        | Small authenticated database query       |
+| Bookmarks               | Small authenticated database query       |
+| Path progress           | Calculate from Git path and progress IDs |
+| Images                  | Optimized static assets                  |
+| TOC                     | Generate from headings                   |
+
+Avoid:
+
+- A database query for every paragraph.
+- Client-side MDX compilation.
+- Loading the entire lesson catalogue on every page.
+- Repeated directory scans during requests.
+- A separate content server.
+- A browser-based terminal or hosted lab.
+
+## **18. Testing requirements**
+
+| Test                                     | Expected result            |
+| ---------------------------------------- | -------------------------- |
+| Published lesson opens                   | Correct MDX rendered       |
+| Draft lesson opens publicly              | Not accessible             |
+| Invalid frontmatter                      | Build validation fails     |
+| Duplicate lesson ID                      | Build validation fails     |
+| Broken path reference                    | Build validation fails     |
+| Code block renders                       | Syntax highlighting works  |
+| Copy button                              | Copies exact code          |
+| Long command                             | Horizontal scrolling works |
+| TOC link                                 | Scrolls to correct heading |
+| Mark complete                            | Database updated           |
+| Mark complete twice                      | No duplicate record        |
+| Undo completion                          | Own record removed         |
+| Guest opens lesson                       | Public content accessible  |
+| Guest bookmarks lesson                   | Login required             |
+| Student opens another student's progress | Denied                     |
+
+## **19. Part 25 implementation checklist**
+
+**Learning engine implementation tracker**
+
+0/20
+
+Create content registry
+
+Create lesson and path schemas
+
+Implement YAML learning path parser
+
+Implement MDX rendering pipeline
+
+Configure syntax highlighting
+
+Build code block component
+
+Build working copy button
+
+Build callout component
+
+Generate table of contents
+
+Build learning path overview
+
+Build lesson page
+
+Build desktop curriculum sidebar
+
+Build mobile navigation
+
+Implement previous/next navigation
+
+Integrate lesson completion action
+
+Integrate bookmark action
+
+Integrate content activity
+
+Implement Continue Learning compatibility
+
+Add content validation tests
+
+Test public/private caching boundaries
+
+## **Final decisions**
+
+| Feature                              | Decision                   |
+| ------------------------------------ | -------------------------- |
+| Lesson source                        | Git-managed MDX            |
+| Learning path source                 | Git-managed YAML           |
+| Progress storage                     | Supabase PostgreSQL        |
+| Content rendering                    | `next-mdx-remote`          |
+| Syntax highlighting                  | Shiki + Rehype Pretty Code |
+| Code copy                            | Native Clipboard API       |
+| TOC                                  | Generated from headings    |
+| Path progress                        | Calculated dynamically     |
+| Lesson completion                    | Explicit student action    |
+| Public access                        | No login required          |
+| Hosted labs                          | Not included               |
+| Student-submitted executable content | Not allowed                |
+
+**Recap:** Part 25 establishes the actual learning engine. Git manages educational content, PostgreSQL manages student progress, and Next.js renders lessons efficiently. Code blocks, navigation, completion and bookmarks form the core student learning experience.
+
+**Next: Part 26 — Search, Content Discovery & Resource Navigation: Static Search Index, Filters, Search Results, Categories, Tags and Glossary Discovery.**

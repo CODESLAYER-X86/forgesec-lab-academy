@@ -1,0 +1,597 @@
+# **Part 24 — Student Dashboard Implementation**
+
+**Objective:** Build the central student dashboard for FORGESEC ACADEMY.
+
+The dashboard should answer five questions immediately:
+
+1. Where did I stop learning?
+2. What should I learn next?
+3. How much have I completed?
+4. Which resources have I saved?
+5. How am I performing in assessments?
+
+The dashboard is a learning workspace, not an analytics-heavy administration panel.
+
+## **1. Dashboard architecture**
+
+The dashboard combines information from Git-managed content and Supabase PostgreSQL.
+
+| Information                    | Source        |
+| ------------------------------ | ------------- |
+| Learning paths                 | Git/YAML      |
+| Lesson titles and descriptions | Git/MDX       |
+| Completed lessons              | PostgreSQL    |
+| Bookmarks                      | PostgreSQL    |
+| Recent activity                | PostgreSQL    |
+| Quiz results                   | PostgreSQL    |
+| Assignment progress            | PostgreSQL    |
+| Student identity               | Supabase Auth |
+
+**Important:** We should not copy the entire lesson catalogue into the database just to display dashboard information.
+
+The database stores student activity. The Git repository remains the content source of truth.
+
+## **2. Dashboard layout**
+
+# **Welcome back, Student**
+
+Continue building your cybersecurity skills.
+
+Student
+
+# **12**
+
+Lessons completed
+
+# **5**
+
+Bookmarks
+
+# **4**
+
+Quizzes attempted
+
+# **3**
+
+Assignments completed
+
+**Continue learning**
+
+**Linux Fundamentals**
+
+Next lesson: Understanding Linux Permissions
+
+6 of 10 lessons completed
+
+Illustrative data
+
+**Recent activity**
+
+- Completed: Linux File Permissions
+- Bookmarked: Networking Commands
+- Quiz submitted: Linux Basics
+
+  Illustrative dashboard layout, not live account data.
+
+### **Layout sections**
+
+1. Welcome header.
+2. Learning statistics.
+3. Continue Learning.
+4. Active learning paths.
+5. Recent activity.
+6. Bookmarks.
+7. Recent quiz results.
+8. Assignment progress.
+
+On mobile, use a single-column layout. Avoid a complicated multi-column dashboard that becomes difficult to navigate on smaller screens.
+
+## **3. Dashboard routes**
+
+Use the following structure:
+
+```
+/dashboard
+├── /learning
+├── /bookmarks
+├── /history
+├── /quiz-results
+├── /assignments
+├── /profile
+└── /settings
+```
+
+The main dashboard should provide summaries and link to these dedicated pages.
+
+Do not load every bookmark, activity record or quiz attempt into the homepage.
+
+## **4. Dashboard data architecture**
+
+Create:
+
+```
+src/modules/dashboard/
+├── services/
+│   └── dashboard.service.ts
+├── repositories/
+│   └── dashboard.repository.ts
+├── types/
+│   └── dashboard.types.ts
+└── components/
+    ├── dashboard-header.tsx
+    ├── dashboard-stats.tsx
+    ├── continue-learning.tsx
+    ├── active-paths.tsx
+    ├── recent-activity.tsx
+    ├── recent-bookmarks.tsx
+    └── recent-quiz-results.tsx
+```
+
+The dashboard service combines data from the database and the content registry.
+
+This keeps database queries out of the UI components.
+
+## **5. Continue Learning logic**
+
+This is the most important dashboard feature.
+
+We should not simply send students to their last visited page.
+
+Instead, the platform should identify the next incomplete lesson in the student's most recently active learning path.
+
+### **Algorithm**
+
+```
+1. Load published learning paths from Git.
+2. Load the student's completed lesson IDs.
+3. Load their recent learning activity.
+4. Identify the most recently active path.
+5. Find the first incomplete lesson in that path.
+6. Display that lesson as Continue Learning.
+7. If no active path exists, recommend a starting path.
+```
+
+Example:
+
+```
+id: linux-fundamentals
+title: Linux Fundamentals
+
+lessons:
+  - linux-001
+  - linux-002
+  - linux-003
+  - linux-004
+  - linux-005
+```
+
+Suppose the student has completed:
+
+```
+linux-001
+linux-002
+linux-003
+```
+
+The next lesson is:
+
+```
+linux-004
+```
+
+The dashboard should take the student directly to that lesson.
+
+### **Important edge cases**
+
+- No completed lessons: recommend the beginner path.
+- All lessons completed: show a completion message and another learning path.
+- Recently active path archived: exclude it from the active learning recommendation.
+- Lesson removed from Git: handle missing references gracefully.
+- Student has multiple active paths: select the most recently active one.
+
+**Analogy:** It works like a book reading tracker. Rather than showing the last page you opened, it identifies the next unread chapter.
+
+## **6. Active path calculation**
+
+Do not store path completion percentages in PostgreSQL.
+
+Calculate them using the path definition and completed lesson IDs.
+
+Formula:
+
+\\[ \text{Progress} = \frac{\text{Completed lessons}}{\text{Total lessons}} \times 100 \\]
+
+Example:
+
+- Total lessons: 12
+- Completed lessons: 9
+
+\\[ \frac{9}{12}\times100=75\\% \\]
+
+A simple implementation:
+
+```
+export function calculatePathProgress(
+  lessonIds: string[],
+  completedIds: Set<string>
+) {
+  const total = lessonIds.length;
+
+  if (total === 0) {
+    return {
+      completed: 0,
+      total: 0,
+      percentage: 0,
+    };
+  }
+
+  const completed = lessonIds.filter(
+    (id) => completedIds.has(id)
+  ).length;
+
+  return {
+    completed,
+    total,
+    percentage: Math.round((completed / total) * 100),
+  };
+}
+```
+
+This avoids redundant database fields and synchronization problems.
+
+## **7. Learning statistics**
+
+The dashboard should display meaningful statistics.
+
+| Statistic             | Calculation                                       |
+| --------------------- | ------------------------------------------------- |
+| Lessons completed     | Count of `lesson_progress`                        |
+| Active paths          | Paths with student activity and remaining lessons |
+| Bookmarks             | Count of `bookmarks`                              |
+| Quizzes attempted     | Count of submitted `quiz_attempts`                |
+| Average quiz score    | Average of valid submitted percentages            |
+| Assignments completed | Count of completed `assignment_progress`          |
+
+Do not calculate statistics by fetching all rows into the browser.
+
+Use database aggregation or small server-side queries.
+
+For quiz averages, decide whether to include every attempt or only the latest attempt per quiz. For the initial dashboard, display the average across submitted attempts and label it clearly.
+
+Avoid misleading statistics such as:
+
+- Time spent learning when it cannot be measured reliably.
+- Learning streaks based on incomplete activity data.
+- Global rankings without a meaningful ranking system.
+- Estimated skill levels without assessment evidence.
+
+## **8. Recent activity**
+
+Use the existing `content_activity` table.
+
+Display a small list of recently viewed content.
+
+Example:
+
+```
+Recent activity
+
+Linux File Permissions
+Viewed recently
+
+Introduction to TCP/IP
+Viewed recently
+
+HTTP Request Structure
+Viewed recently
+```
+
+Limit the dashboard query to a few records:
+
+```
+const { data, error } = await supabase
+  .from("content_activity")
+  .select("content_id, content_type, last_viewed_at")
+  .eq("user_id", user.id)
+  .order("last_viewed_at", { ascending: false })
+  .limit(5);
+```
+
+Resolve the content IDs against the Git content registry to obtain titles and URLs.
+
+If a content item no longer exists, omit it or show a clear unavailable state.
+
+## **9. Recent bookmarks**
+
+Display the latest five bookmarks.
+
+```
+const { data, error } = await supabase
+  .from("bookmarks")
+  .select("content_id, content_type, slug, created_at")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false })
+  .limit(5);
+```
+
+Resolve their display information from the content registry.
+
+Include a link to `/dashboard/bookmarks` for the complete collection.
+
+Do not duplicate full content information in the bookmarks table.
+
+## **10. Recent quiz results**
+
+Use `quiz_attempts` to show the student's latest submitted attempts.
+
+```
+const { data, error } = await supabase
+  .from("quiz_attempts")
+  .select(
+    "id, quiz_id, percentage, passed, submitted_at"
+  )
+  .eq("user_id", user.id)
+  .eq("status", "submitted")
+  .order("submitted_at", { ascending: false })
+  .limit(5);
+```
+
+Resolve the quiz titles through the quiz repository.
+
+Display:
+
+- Quiz title.
+- Score.
+- Pass/fail.
+- Submission date.
+- Link to results.
+
+Do not expose answer keys or internal scoring information through the dashboard query.
+
+## **11. Dashboard service**
+
+Create:
+
+`src/modules/dashboard/services/dashboard.service.ts`
+
+```
+import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/modules/auth/guards/require-user";
+
+export async function getDashboardData() {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const [
+    progressResult,
+    bookmarkResult,
+    activityResult,
+    quizResult,
+    assignmentResult,
+  ] = await Promise.all([
+    supabase
+      .from("lesson_progress")
+      .select("lesson_id", { count: "exact" })
+      .eq("user_id", user.id),
+
+    supabase
+      .from("bookmarks")
+      .select("content_id", { count: "exact" })
+      .eq("user_id", user.id),
+
+    supabase
+      .from("content_activity")
+      .select("content_id, content_type, last_viewed_at")
+      .eq("user_id", user.id)
+      .order("last_viewed_at", { ascending: false })
+      .limit(5),
+
+    supabase
+      .from("quiz_attempts")
+      .select("id, quiz_id, percentage, passed, submitted_at")
+      .eq("user_id", user.id)
+      .eq("status", "submitted")
+      .order("submitted_at", { ascending: false })
+      .limit(5),
+
+    supabase
+      .from("assignment_progress")
+      .select("id", { count: "exact" })
+      .eq("user_id", user.id)
+      .eq("status", "completed"),
+  ]);
+
+  const errors = [
+    progressResult.error,
+    bookmarkResult.error,
+    activityResult.error,
+    quizResult.error,
+    assignmentResult.error,
+  ].filter(Boolean);
+
+  if (errors.length > 0) {
+    throw new Error("Could not load dashboard data.");
+  }
+
+  return {
+    user: {
+      id: user.id,
+      displayName:
+        user.user_metadata?.full_name ?? "Student",
+    },
+
+    stats: {
+      completedLessons: progressResult.count ?? 0,
+      bookmarks: bookmarkResult.count ?? 0,
+      completedAssignments: assignmentResult.count ?? 0,
+    },
+
+    recentActivity: activityResult.data ?? [],
+    recentQuizResults: quizResult.data ?? [],
+  };
+}
+```
+
+This is the initial query layer. Add active-path selection, quiz averages and content-registry resolution as separate services.
+
+**Implementation note:** `Promise.all()` reduces sequential waiting, but it still performs multiple database queries. If query volume becomes significant, combine related aggregates into carefully designed database functions. Do not introduce a separate backend just to optimize a small dashboard.
+
+## **12. Dashboard page**
+
+Create:
+
+`src/app/dashboard/page.tsx`
+
+```
+import { getDashboardData } from "@/modules/dashboard/services/dashboard.service";
+
+export default async function DashboardPage() {
+  const data = await getDashboardData();
+
+  return (
+    <main className="space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold">
+          Welcome back, {data.user.displayName}
+        </h1>
+
+        <p className="text-muted-foreground">
+          Continue your learning journey.
+        </p>
+      </header>
+
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        <StatCard
+          title="Lessons completed"
+          value={data.stats.completedLessons}
+        />
+
+        <StatCard
+          title="Bookmarks"
+          value={data.stats.bookmarks}
+        />
+
+        <StatCard
+          title="Assignments completed"
+          value={data.stats.completedAssignments}
+        />
+      </section>
+
+      {/* Continue Learning */}
+      {/* Active Learning Paths */}
+      {/* Recent Activity */}
+      {/* Recent Quiz Results */}
+    </main>
+  );
+}
+
+function StatCard({
+  title,
+  value,
+}: {
+  title: string;
+  value: number;
+}) {
+  return (
+    <article className="rounded-xl border p-4">
+      <p className="text-sm text-muted-foreground">
+        {title}
+      </p>
+
+      <p className="mt-2 text-2xl font-bold">
+        {value}
+      </p>
+    </article>
+  );
+}
+```
+
+The remaining sections should be implemented as separate components rather than making the dashboard page a large component.
+
+## **13. Performance and data protection**
+
+The dashboard is authenticated and contains private student data.
+
+Apply these rules:
+
+- Fetch private data on the server.
+- Never place student-specific results in a shared public cache.
+- Do not pass unnecessary account data to Client Components.
+- Limit recent activity, bookmarks and quiz results.
+- Paginate complete history pages.
+- Use database indexes from Part 21.
+- Avoid loading complete MDX bodies.
+- Use RLS for all user-owned database records.
+
+For the dashboard route, use dynamic rendering and ensure authenticated data is not accidentally cached across users.
+
+## **14. Empty states**
+
+A new student should not see a dashboard full of zeros without guidance.
+
+| Situation                | Display                                 |
+| ------------------------ | --------------------------------------- |
+| No completed lessons     | Start your first learning path          |
+| No active path           | Explore learning paths                  |
+| No bookmarks             | Save useful lessons for later           |
+| No quiz attempts         | Try your first knowledge check          |
+| No completed assignments | Explore practical assignments           |
+| No recent activity       | Your learning activity will appear here |
+
+Empty states should guide students toward a useful action, not make the platform look unfinished.
+
+## **15. Testing requirements**
+
+| Test                              | Expected result                        |
+| --------------------------------- | -------------------------------------- |
+| Student opens dashboard           | Own data displayed                     |
+| New student logs in               | Helpful empty state                    |
+| Student completes lesson          | Lesson count updates                   |
+| Student bookmarks content         | Bookmark count updates                 |
+| Student submits quiz              | Recent result appears                  |
+| Student completes assignment      | Assignment count updates               |
+| Student has multiple active paths | Most recently active path selected     |
+| Path has no remaining lessons     | Completion state shown                 |
+| Lesson removed from Git           | No broken dashboard link               |
+| Student changes URL               | Cannot access another user's dashboard |
+| Two users open dashboard          | Data remains isolated                  |
+
+## **16. Part 24 implementation checklist**
+
+**Dashboard implementation tracker**
+
+0/15
+
+Create dashboard module structure
+
+Implement dashboard service
+
+Implement learning statistics
+
+Implement Continue Learning selection
+
+Implement path progress calculation
+
+Build dashboard header
+
+Build statistics cards
+
+Build Continue Learning component
+
+Build active paths component
+
+Build recent activity component
+
+Build recent bookmarks component
+
+Build recent quiz results component
+
+Implement empty states
+
+Verify private-data caching behavior
+
+Test dashboard with two separate student accounts
+
+**Recap:** The dashboard combines Git-managed learning content with private student activity in PostgreSQL. Continue Learning and path progress are calculated dynamically, while bookmarks, quiz results and assignment completion come from the database.
+
+**Next: Part 25 — Learning Path & Lesson Engine: MDX Rendering, Navigation, Table of Contents, Code Blocks, Copy Buttons, Progress Tracking and Completion.**

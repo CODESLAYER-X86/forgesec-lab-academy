@@ -1,0 +1,1542 @@
+# **FORGESEC ACADEMY**
+
+## **Part 06 — Database Architecture & Complete Data Model**
+
+Planning document 06/14
+
+Database engineering
+
+PostgreSQL / Supabase
+
+## **1. Purpose**
+
+Parts 01–05 established the product requirements, student experience, content architecture and application architecture.
+
+Now we need to design the database that supports the platform.
+
+The objective is to create a database that:
+
+- Stores student accounts and application data.
+- Tracks learning progress accurately.
+- Supports bookmarks and learning history.
+- Manages quizzes, questions and attempts.
+- Supports practical assignment completion.
+- Enforces access restrictions.
+- Avoids unnecessary data duplication.
+- Remains manageable on Supabase's free tier.
+- Can evolve without requiring a complete redesign.
+
+**The most important design decision:** PostgreSQL will store student and application data, not the entire educational content library.
+
+## **2. Database design principles**
+
+I recommend eight principles.
+
+1. **Single source of truth:** Each type of data should have one authoritative location.
+2. **Relational integrity:** Use primary keys, foreign keys, unique constraints and appropriate checks.
+3. **Least privilege:** Users should only access data they are authorized to access.
+4. **Minimal data collection:** Do not collect information that the Academy does not need.
+5. **Stable identifiers:** Content references must survive title and URL changes.
+6. **Server-side validation:** Never trust data simply because it came from the frontend.
+7. **Controlled growth:** Avoid unnecessary event records and duplicated data.
+8. **Migration-based changes:** Every database structure change must be version-controlled.
+
+### **Database analogy**
+
+Think of the database as a university's records office.
+
+- Student profiles identify people.
+- Roles identify their responsibilities.
+- Progress records track completed lessons.
+- Quiz records store assessment results.
+- Bookmarks store saved resources.
+
+The library's books themselves do not need to be duplicated in the records office. The database only needs references to them.
+
+# **3. What belongs in PostgreSQL and what belongs in Git?**
+
+This separation must be explicit before creating tables.
+
+| Data                      | Authoritative storage |
+| ------------------------- | --------------------- |
+| Tutorials                 | Git / MDX             |
+| Articles                  | Git / MDX             |
+| Write-ups                 | Git / MDX             |
+| Glossary                  | Git / MDX             |
+| Learning path definitions | Git / YAML            |
+| Lesson metadata           | Git / MDX frontmatter |
+| Student accounts          | Supabase Auth         |
+| User profiles             | PostgreSQL            |
+| Roles                     | PostgreSQL            |
+| Lesson completion         | PostgreSQL            |
+| Bookmarks                 | PostgreSQL            |
+| Recent learning history   | PostgreSQL            |
+| Quiz definitions          | PostgreSQL            |
+| Quiz questions            | PostgreSQL            |
+| Quiz attempts             | PostgreSQL            |
+| Assignment definitions    | PostgreSQL initially  |
+| Assignment completion     | PostgreSQL            |
+| Admin audit records       | PostgreSQL            |
+
+## **3.1 Why learning paths are in Git**
+
+Part 04 established that learning paths reference independent MDX lessons.
+
+Therefore, the initial source of truth for a learning path is its Git-based YAML definition.
+
+PostgreSQL should not maintain a second copy of the same path structure.
+
+Student progress can reference the path's stable ID or the lesson IDs contained in it.
+
+## **3.2 Why quizzes are in PostgreSQL**
+
+Quizzes are different.
+
+We want administrators to manage questions, answer options, publication status and assessment settings through the application.
+
+Storing quiz definitions in PostgreSQL allows us to build an administrative interface without requiring instructors to edit Git files.
+
+## **3.3 Why assignments are in PostgreSQL initially**
+
+Assignments require administrative management and student completion tracking.
+
+We can store their instructions as restricted Markdown text, not executable MDX.
+
+If the assignment library later becomes primarily editorial content, we can reconsider moving its descriptive content into Git.
+
+# **4. Database entity overview**
+
+The proposed initial database contains these main entities.
+
+## **Identity and access**
+
+- `profiles`
+- `user_roles`
+  ## **Learning activity**
+- `lesson_progress`
+- `bookmarks`
+- `content_activity`
+  ## **Assessment**
+- `quizzes`
+- `quiz_questions`
+- `quiz_options`
+- `quiz_answer_keys`
+- `quiz_attempts`
+- `quiz_attempt_answers`
+  ## **Practical assignments**
+- `assignments`
+- `assignment_progress`
+  ## **Administration**
+- `admin_audit_logs`
+- `notifications` (optional, later)
+
+This is a proposed initial schema, not a requirement to create every table on the first day.
+
+# **5. Entity Relationship Diagram**
+
+The following diagram shows the principal relationships.
+
+\#chatgpt-mermaid-\_r_487\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_487\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_487\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_487\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_487\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_487\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_487\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_487\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_487\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_487\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_487\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_487\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_487\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_487\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_487\_ p{margin:0;}#chatgpt-mermaid-\_r_487\_ .entityBox{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_487\_ .relationshipLabelBox{fill:rgb(48, 48, 48);opacity:0.7;background-color:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_487\_ .relationshipLabelBox rect{opacity:0.5;}#chatgpt-mermaid-\_r_487\_ .labelBkg{background-color:rgba(48, 48, 48, 0.5);}#chatgpt-mermaid-\_r_487\_ .edgeLabel{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_487\_ .edgeLabel .label rect{fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_487\_ .edgeLabel .label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_487\_ .edgeLabel .label{fill:rgb(58, 132, 63);font-size:14px;}#chatgpt-mermaid-\_r_487\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_487\_ .edge-pattern-dashed{stroke-dasharray:8,8;}#chatgpt-mermaid-\_r_487\_ .node rect,#chatgpt-mermaid-\_r_487\_ .node circle,#chatgpt-mermaid-\_r_487\_ .node ellipse,#chatgpt-mermaid-\_r_487\_ .node polygon{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_487\_ .relationshipLine{stroke:rgb(175, 175, 175);stroke-width:1px;fill:none;}#chatgpt-mermaid-\_r_487\_ .marker{fill:none!important;stroke:rgb(175, 175, 175)!important;stroke-width:1;}#chatgpt-mermaid-\_r_487\_ [data-look=neo].labelBkg{background-color:rgba(48, 48, 48, 0.5);}#chatgpt-mermaid-\_r_487\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_487\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_487\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_487\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_487\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_487\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_487\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_487\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_487\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_487\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}AUTH_USERSuuididPKPROFILESuuididPKtextdisplay_nametextavatar_urltimestamptzcreated_atUSER_ROLESuuiduser_idPKtextrolePKuuidassigned_byLESSON_PROGRESSuuididPKuuiduser_idtextlesson_idtimestamptzcompleted_atBOOKMARKSuuididPKuuiduser_idtextcontent_idtextcontent_typeCONTENT_ACTIVITYuuididPKuuiduser_idtextcontent_idtimestamptzlast_viewed_atQUIZZESuuididPKtextslugUKtexttitletextstatusQUIZ_QUESTIONSuuididPKuuidquiz_idtextquestion_typeintegerpositionQUIZ_OPTIONSuuididPKuuidquestion_idtextoption_textQUIZ_ANSWER_KEYSuuidquestion_idPKuuid[]correct_option_idsQUIZ_ATTEMPTSuuididPKuuidquiz_iduuiduser_idnumericscoretimestamptzsubmitted_atQUIZ_ATTEMPT_ANSWERSuuididPKuuidattempt_iduuidquestion_iduuid[]selected_option_idsASSIGNMENTSuuididPKtextslugUKtexttitletextstatusASSIGNMENT_PROGRESSuuididPKuuiduser_iduuidassignment_idtextstatusADMIN_AUDIT_LOGSuuididPKuuidactor_idtextactiontextentity_typehasassignedcompletessavesviewscontainsoffershasmakesreceivescontainsanswerstrackscompletesperforms
+
+`AUTH_USERS` represents Supabase's existing `auth.users` table. We reference it; we do not recreate it.
+
+# **6. Identity and user profile tables**
+
+## **6.1&#x20;**`auth.users`**&#x20;— Authentication identity**
+
+Supabase Auth manages this table.
+
+It handles:
+
+- User identity.
+- Email and authentication credentials.
+- Password recovery.
+- Authentication-related metadata.
+- Authentication sessions.
+
+We should not create our own password table.
+
+We should also avoid duplicating authentication credentials in `profiles`.
+
+## **6.2&#x20;**`profiles`**&#x20;— Application profile**
+
+This table stores information used by the Academy interface.
+
+| Column       | Type        | Purpose                    |
+| ------------ | ----------- | -------------------------- |
+| id           | UUID        | References `auth.users.id` |
+| display_name | TEXT        | Public display name        |
+| avatar_url   | TEXT        | Optional profile image     |
+| bio          | TEXT        | Optional short biography   |
+| created_at   | TIMESTAMPTZ | Account profile creation   |
+| updated_at   | TIMESTAMPTZ | Last profile update        |
+
+Proposed SQL:
+
+```
+CREATE TABLE public.profiles (
+    id UUID PRIMARY KEY
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE,
+
+    display_name TEXT NOT NULL
+        CHECK (char_length(display_name) BETWEEN 2 AND 80),
+
+    avatar_url TEXT,
+    bio TEXT,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+### **Important design choice**
+
+The profile does not contain an editable `role` column.
+
+Why?
+
+Because a user should not be able to turn themselves into an administrator by changing their profile.
+
+Roles belong in a separate protected table.
+
+## **6.3&#x20;**`user_roles`**&#x20;— Role assignments**
+
+A user can have one or more roles.
+
+For example, an administrator might also be an instructor.
+
+| Column      | Type        | Purpose                 |
+| ----------- | ----------- | ----------------------- |
+| user_id     | UUID        | User receiving the role |
+| role        | ENUM        | Assigned role           |
+| assigned_by | UUID        | Who assigned the role   |
+| created_at  | TIMESTAMPTZ | Assignment date         |
+
+Suggested roles:
+
+```
+CREATE TYPE public.app_role AS ENUM (
+    'student',
+    'instructor',
+    'admin'
+);
+```
+
+Table:
+
+```
+CREATE TABLE public.user_roles (
+    user_id UUID NOT NULL
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE,
+
+    role public.app_role NOT NULL,
+
+    assigned_by UUID
+        REFERENCES auth.users(id)
+        ON DELETE SET NULL,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    PRIMARY KEY (user_id, role)
+);
+```
+
+**Security rule:** Students must not be allowed to insert or update their own role records.
+
+Role assignment must happen through a trusted administrative operation.
+
+For the first administrator, use a controlled setup procedure rather than a public registration option.
+
+# **7. Student learning activity**
+
+This module stores the student's relationship with educational content.
+
+Three separate concepts are required:
+
+1. Completed lessons.
+2. Bookmarked content.
+3. Recently viewed content.
+
+Do not combine these into one table. They represent different types of activity.
+
+## **7.1&#x20;**`lesson_progress`**&#x20;— Lesson completion**
+
+This table records whether a student has completed a lesson.
+
+| Column       | Type        | Purpose               |
+| ------------ | ----------- | --------------------- |
+| id           | UUID        | Record identifier     |
+| user_id      | UUID        | Student               |
+| lesson_id    | TEXT        | Stable Git content ID |
+| completed_at | TIMESTAMPTZ | Completion timestamp  |
+
+Proposed SQL:
+
+```
+CREATE TABLE public.lesson_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    user_id UUID NOT NULL
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE,
+
+    lesson_id TEXT NOT NULL,
+
+    completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE (user_id, lesson_id)
+);
+```
+
+### **Why&#x20;**`lesson_id`**&#x20;is TEXT instead of UUID?**
+
+Because lesson content is stored in Git, not PostgreSQL.
+
+For example:
+
+```
+lsn_linux_permissions_001
+```
+
+There is no corresponding PostgreSQL lesson row to reference with a foreign key.
+
+This is an intentional external content reference.
+
+### **How learning path progress works**
+
+Suppose the Linux Fundamentals path contains eight lessons.
+
+The student completes five.
+
+\\[ \text{Progress} = \frac{5}{8}\times100 = 62.5\\% \\]
+
+The application obtains the path's lesson IDs from Git and checks which IDs appear in `lesson_progress`.
+
+**Important decision:** Lesson completion is global per student and lesson, not separately recorded for every learning path.
+
+If the same lesson appears in two paths, completing it once counts in both.
+
+This avoids duplicate completion records and inconsistent progress.
+
+### **Completion behavior**
+
+- Marking complete creates a record.
+- Unmarking complete deletes the record.
+- Viewing a lesson does not create a completion record.
+- The server verifies the lesson exists and is published.
+- A student cannot create completion for another user.
+
+## **7.2&#x20;**`bookmarks`**&#x20;— Saved content**
+
+Students should be able to bookmark tutorials, articles, write-ups and learning paths.
+
+| Column       | Type        | Purpose                   |
+| ------------ | ----------- | ------------------------- |
+| id           | UUID        | Record identifier         |
+| user_id      | UUID        | Student                   |
+| content_id   | TEXT        | Stable content identifier |
+| content_type | TEXT/ENUM   | Content classification    |
+| slug         | TEXT        | Current URL reference     |
+| created_at   | TIMESTAMPTZ | Bookmark date             |
+
+Proposed SQL:
+
+```
+CREATE TYPE public.bookmark_type AS ENUM (
+    'tutorial',
+    'article',
+    'writeup',
+    'guide',
+    'reference',
+    'glossary',
+    'learning_path'
+);
+
+CREATE TABLE public.bookmarks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    user_id UUID NOT NULL
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE,
+
+    content_id TEXT NOT NULL,
+    content_type public.bookmark_type NOT NULL,
+    slug TEXT NOT NULL,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE (user_id, content_id)
+);
+```
+
+The slug is a navigational reference, not the permanent identity.
+
+If a URL changes, the application can update the slug reference while retaining the bookmark's stable content ID.
+
+## **7.3&#x20;**`content_activity`**&#x20;— Recently viewed content**
+
+The dashboard needs to display recently viewed lessons and resources.
+
+We do not need to store every page view forever.
+
+Instead, maintain one record per user and content item.
+
+| Column         | Type        | Purpose                  |
+| -------------- | ----------- | ------------------------ |
+| id             | UUID        | Record identifier        |
+| user_id        | UUID        | Student                  |
+| content_id     | TEXT        | Content identifier       |
+| content_type   | TEXT        | Content classification   |
+| slug           | TEXT        | Current URL              |
+| last_viewed_at | TIMESTAMPTZ | Most recent view         |
+| view_count     | INTEGER     | Number of recorded views |
+
+```
+CREATE TABLE public.content_activity (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    user_id UUID NOT NULL
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE,
+
+    content_id TEXT NOT NULL,
+    content_type TEXT NOT NULL,
+    slug TEXT NOT NULL,
+
+    last_viewed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    view_count INTEGER NOT NULL DEFAULT 1
+        CHECK (view_count >= 1),
+
+    UNIQUE (user_id, content_id)
+);
+```
+
+On a new view, use an upsert:
+
+- Update `last_viewed_at`.
+- Increment `view_count`.
+- Do not create another row.
+
+This gives us a compact recent-history table.
+
+**Performance consideration:** Do not write to the database on every tiny interaction. Record meaningful content visits, and avoid excessive writes caused by refreshes or repeated client events.
+
+# **8. Quiz and assessment database**
+
+Quizzes are more complex than ordinary content because they contain questions, options, answer keys, attempts and scoring.
+
+We need to protect the correct answers from being exposed to students before submission.
+
+## **8.1&#x20;**`quizzes`**&#x20;— Quiz definitions**
+
+| Column        | Type        | Purpose                                  |
+| ------------- | ----------- | ---------------------------------------- |
+| id            | UUID        | Quiz identifier                          |
+| slug          | TEXT        | Public URL identifier                    |
+| title         | TEXT        | Quiz title                               |
+| description   | TEXT        | Quiz description                         |
+| status        | ENUM        | Draft/published/archived                 |
+| passing_score | NUMERIC     | Required percentage                      |
+| attempt_limit | INTEGER     | Maximum attempts, nullable for unlimited |
+| created_by    | UUID        | Author                                   |
+| published_at  | TIMESTAMPTZ | Publication date                         |
+| created_at    | TIMESTAMPTZ | Creation date                            |
+| updated_at    | TIMESTAMPTZ | Last update                              |
+
+```
+CREATE TYPE public.publication_status AS ENUM (
+    'draft',
+    'published',
+    'archived'
+);
+
+CREATE TABLE public.quizzes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+
+    status public.publication_status
+        NOT NULL DEFAULT 'draft',
+
+    passing_score NUMERIC(5,2) NOT NULL DEFAULT 70
+        CHECK (passing_score BETWEEN 0 AND 100),
+
+    attempt_limit INTEGER
+        CHECK (attempt_limit IS NULL OR attempt_limit > 0),
+
+    created_by UUID
+        REFERENCES auth.users(id)
+        ON DELETE SET NULL,
+
+    published_at TIMESTAMPTZ,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+A null attempt limit means unlimited attempts.
+
+For initial quizzes, I recommend unlimited attempts. The goal is learning, not restricting practice.
+
+## **8.2&#x20;**`quiz_questions`**&#x20;— Questions**
+
+Supported initial question types:
+
+- Single choice.
+- Multiple select.
+- True/false.
+
+| Column        | Type    | Purpose             |
+| ------------- | ------- | ------------------- |
+| id            | UUID    | Question identifier |
+| quiz_id       | UUID    | Parent quiz         |
+| question_text | TEXT    | Question            |
+| question_type | ENUM    | Question format     |
+| points        | NUMERIC | Question value      |
+| position      | INTEGER | Display order       |
+
+```
+CREATE TYPE public.question_type AS ENUM (
+    'single_choice',
+    'multiple_select',
+    'true_false'
+);
+
+CREATE TABLE public.quiz_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    quiz_id UUID NOT NULL
+        REFERENCES public.quizzes(id)
+        ON DELETE CASCADE,
+
+    question_text TEXT NOT NULL,
+    question_type public.question_type NOT NULL,
+
+    points NUMERIC(7,2) NOT NULL DEFAULT 1
+        CHECK (points > 0),
+
+    position INTEGER NOT NULL
+        CHECK (position > 0),
+
+    UNIQUE (quiz_id, position)
+);
+```
+
+## **8.3&#x20;**`quiz_options`**&#x20;— Answer options**
+
+| Column      | Type    | Purpose           |
+| ----------- | ------- | ----------------- |
+| id          | UUID    | Option identifier |
+| question_id | UUID    | Parent question   |
+| option_text | TEXT    | Display text      |
+| position    | INTEGER | Display order     |
+
+```
+CREATE TABLE public.quiz_options (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    question_id UUID NOT NULL
+        REFERENCES public.quiz_questions(id)
+        ON DELETE CASCADE,
+
+    option_text TEXT NOT NULL,
+    position INTEGER NOT NULL CHECK (position > 0),
+
+    UNIQUE (question_id, position)
+);
+```
+
+For true/false questions, we can use two options: True and False.
+
+## **8.4&#x20;**`quiz_answer_keys`**&#x20;— Correct answers**
+
+Restricted data
+
+This is the most security-sensitive part of the quiz database.
+
+Correct answers must not be returned with the ordinary student-facing question data.
+
+```
+CREATE TABLE public.quiz_answer_keys (
+    question_id UUID PRIMARY KEY
+        REFERENCES public.quiz_questions(id)
+        ON DELETE CASCADE,
+
+    correct_option_ids UUID[] NOT NULL,
+
+    explanation TEXT
+);
+```
+
+This table is server-only.
+
+Students should not have direct `SELECT` access to it.
+
+The server uses it to score submissions and returns the result and explanations after submission.
+
+The application must also validate that every selected option belongs to the corresponding question.
+
+A database check on an array alone cannot guarantee that relationship.
+
+### **Why separate answer keys?**
+
+Imagine an examination paper where the answer key is printed on the back of the student copy.
+
+Even if the interface hides the answers, a student could inspect the network response.
+
+Separating answer keys from publicly readable question data prevents this particular exposure.
+
+## **8.5&#x20;**`quiz_attempts`**&#x20;— Student attempts**
+
+This table stores each registered student's submitted quiz attempt.
+
+| Column         | Type        | Purpose                               |
+| -------------- | ----------- | ------------------------------------- |
+| id             | UUID        | Attempt identifier                    |
+| quiz_id        | UUID        | Quiz                                  |
+| user_id        | UUID        | Student                               |
+| attempt_number | INTEGER     | Attempt sequence                      |
+| score          | NUMERIC     | Awarded points                        |
+| max_score      | NUMERIC     | Available points                      |
+| percentage     | NUMERIC     | Final percentage                      |
+| passed         | BOOLEAN     | Whether passing threshold was reached |
+| started_at     | TIMESTAMPTZ | Start time                            |
+| submitted_at   | TIMESTAMPTZ | Submission time                       |
+
+```
+CREATE TABLE public.quiz_attempts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    quiz_id UUID NOT NULL
+        REFERENCES public.quizzes(id)
+        ON DELETE RESTRICT,
+
+    user_id UUID NOT NULL
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE,
+
+    attempt_number INTEGER NOT NULL
+        CHECK (attempt_number > 0),
+
+    score NUMERIC(8,2) NOT NULL DEFAULT 0,
+    max_score NUMERIC(8,2) NOT NULL
+        CHECK (max_score > 0),
+
+    percentage NUMERIC(5,2) NOT NULL DEFAULT 0
+        CHECK (percentage BETWEEN 0 AND 100),
+
+    passed BOOLEAN NOT NULL DEFAULT false,
+
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    submitted_at TIMESTAMPTZ,
+
+    UNIQUE (quiz_id, user_id, attempt_number)
+);
+```
+
+The server calculates the score. Never accept a submitted score or `passed` value from the browser as authoritative.
+
+For the initial implementation, create and submit an attempt through trusted server-side operations. A future version can add autosaved in-progress attempts.
+
+## **8.6&#x20;**`quiz_attempt_answers`**&#x20;— Submitted answers**
+
+| Column              | Type    | Purpose          |
+| ------------------- | ------- | ---------------- |
+| id                  | UUID    | Answer record    |
+| attempt_id          | UUID    | Parent attempt   |
+| question_id         | UUID    | Question         |
+| selected_option_ids | UUID[]  | Selected options |
+| awarded_points      | NUMERIC | Points awarded   |
+| is_correct          | BOOLEAN | Correctness      |
+
+```
+CREATE TABLE public.quiz_attempt_answers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    attempt_id UUID NOT NULL
+        REFERENCES public.quiz_attempts(id)
+        ON DELETE CASCADE,
+
+    question_id UUID NOT NULL
+        REFERENCES public.quiz_questions(id)
+        ON DELETE RESTRICT,
+
+    selected_option_ids UUID[] NOT NULL DEFAULT '{}',
+
+    awarded_points NUMERIC(8,2) NOT NULL DEFAULT 0,
+    is_correct BOOLEAN NOT NULL DEFAULT false,
+
+    UNIQUE (attempt_id, question_id)
+);
+```
+
+The service must verify that:
+
+- The question belongs to the quiz associated with the attempt.
+- Every selected option belongs to that question.
+- The attempt has not already been submitted.
+- The attempt limit has not been exceeded.
+- The quiz is available for the requested operation.
+
+### **8.7 Guest quiz attempts**
+
+The previous product specification proposed allowing guests to attempt public quizzes, with registered students receiving saved results.
+
+I recommend keeping that approach.
+
+- Guests can answer questions and receive a result.
+- Guest results are calculated server-side but not stored as student attempts.
+- Registered students receive persistent attempt history.
+- Guest requests must not be able to access answer keys directly.
+
+This avoids creating anonymous records that consume database storage and complicate privacy management.
+
+# **9. Practical assignment database**
+
+Assignments are not the same as quizzes.
+
+A quiz measures knowledge through questions.
+
+An assignment asks students to perform a task in their own environment.
+
+For the initial version, the platform will track assignment completion, not execute or verify commands.
+
+## **9.1&#x20;**`assignments`**&#x20;— Assignment definitions**
+
+| Column            | Type        | Purpose                       |
+| ----------------- | ----------- | ----------------------------- |
+| id                | UUID        | Assignment ID                 |
+| slug              | TEXT        | Stable URL identifier         |
+| title             | TEXT        | Assignment title              |
+| description       | TEXT        | Short explanation             |
+| instructions      | TEXT        | Markdown instructions         |
+| difficulty        | ENUM        | Difficulty                    |
+| status            | ENUM        | Publication status            |
+| related_lesson_id | TEXT        | Optional Git lesson reference |
+| estimated_minutes | INTEGER     | Estimated duration            |
+| created_by        | UUID        | Author                        |
+| created_at        | TIMESTAMPTZ | Creation date                 |
+| updated_at        | TIMESTAMPTZ | Update date                   |
+
+```
+CREATE TABLE public.assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    instructions TEXT NOT NULL,
+
+    difficulty TEXT NOT NULL
+        CHECK (difficulty IN (
+            'beginner',
+            'intermediate',
+            'advanced'
+        )),
+
+    status public.publication_status
+        NOT NULL DEFAULT 'draft',
+
+    related_lesson_id TEXT,
+
+    estimated_minutes INTEGER
+        CHECK (
+            estimated_minutes IS NULL
+            OR estimated_minutes > 0
+        ),
+
+    created_by UUID
+        REFERENCES auth.users(id)
+        ON DELETE SET NULL,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+The `related_lesson_id` references an MDX lesson in Git, not a PostgreSQL record.
+
+## **9.2&#x20;**`assignment_progress`**&#x20;— Student completion**
+
+| Column        | Type        | Purpose                       |
+| ------------- | ----------- | ----------------------------- |
+| id            | UUID        | Record ID                     |
+| user_id       | UUID        | Student                       |
+| assignment_id | UUID        | Assignment                    |
+| status        | ENUM        | Not started/started/completed |
+| completed_at  | TIMESTAMPTZ | Completion date               |
+
+```
+CREATE TYPE public.assignment_status AS ENUM (
+    'started',
+    'completed'
+);
+
+CREATE TABLE public.assignment_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    user_id UUID NOT NULL
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE,
+
+    assignment_id UUID NOT NULL
+        REFERENCES public.assignments(id)
+        ON DELETE CASCADE,
+
+    status public.assignment_status
+        NOT NULL DEFAULT 'started',
+
+    completed_at TIMESTAMPTZ,
+
+    UNIQUE (user_id, assignment_id),
+
+    CHECK (
+        (status = 'started' AND completed_at IS NULL)
+        OR
+        (status = 'completed' AND completed_at IS NOT NULL)
+    )
+);
+```
+
+### **Important limitation**
+
+If a student presses "Completed", the platform only knows that the student marked the task complete.
+
+It does not know whether the student actually performed the task correctly.
+
+We must not present self-reported completion as verified technical achievement.
+
+Later, optional submissions and instructor verification can be introduced as separate functionality.
+
+# **10. Administration and audit logs**
+
+Administrative actions should be traceable.
+
+For example:
+
+- An administrator changes a user's role.
+- An instructor publishes a quiz.
+- An administrator archives an assignment.
+- An administrator changes an important platform setting.
+
+## **10.1&#x20;**`admin_audit_logs`
+
+| Column      | Type        | Purpose                     |
+| ----------- | ----------- | --------------------------- |
+| id          | UUID        | Event ID                    |
+| actor_id    | UUID        | Administrator or instructor |
+| action      | TEXT        | Operation performed         |
+| entity_type | TEXT        | Affected record type        |
+| entity_id   | TEXT        | Affected record ID          |
+| metadata    | JSONB       | Safe change details         |
+| created_at  | TIMESTAMPTZ | Event timestamp             |
+
+```
+CREATE TABLE public.admin_audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    actor_id UUID
+        REFERENCES auth.users(id)
+        ON DELETE SET NULL,
+
+    action TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT,
+
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+Examples of actions:
+
+```
+user.role_changed
+quiz.published
+quiz.archived
+assignment.created
+assignment.updated
+user.deactivated
+```
+
+Do not store passwords, access tokens or other secrets in audit metadata.
+
+Audit logs should be append-only for normal application users.
+
+## **10.2&#x20;**`notifications`**&#x20;— Future module**
+
+Notifications are not essential for the initial release.
+
+Later, a table could contain:
+
+- User ID.
+- Notification type.
+- Title.
+- Message.
+- Destination URL.
+- Read status.
+- Created timestamp.
+
+We should not create a notification system merely to display generic welcome messages.
+
+Add it when the application has meaningful events that justify notifications.
+
+# **11. Database indexes and performance**
+
+Indexes improve query performance, but every index also consumes storage and adds write overhead.
+
+We should index fields that appear frequently in filters, joins and sorting.
+
+## **11.1 Recommended indexes**
+
+| Table                 | Index                       | Purpose                 |
+| --------------------- | --------------------------- | ----------------------- |
+| `user_roles`          | `user_id`                   | Role lookup             |
+| `lesson_progress`     | `(user_id, completed_at)`   | Student progress        |
+| `bookmarks`           | `(user_id, created_at)`     | Bookmarks page          |
+| `content_activity`    | `(user_id, last_viewed_at)` | Recent history          |
+| `quizzes`             | `status`                    | Published quiz lookup   |
+| `quiz_questions`      | `(quiz_id, position)`       | Ordered questions       |
+| `quiz_attempts`       | `(user_id, submitted_at)`   | Attempt history         |
+| `quiz_attempts`       | `(quiz_id, user_id)`        | Attempt limit checks    |
+| `assignments`         | `status`                    | Published assignments   |
+| `assignment_progress` | `(user_id, status)`         | Student assignment list |
+| `admin_audit_logs`    | `(created_at)`              | Audit history           |
+
+Example:
+
+```
+CREATE INDEX idx_lesson_progress_user
+ON public.lesson_progress(user_id, completed_at DESC);
+
+CREATE INDEX idx_bookmarks_user
+ON public.bookmarks(user_id, created_at DESC);
+
+CREATE INDEX idx_content_activity_user
+ON public.content_activity(user_id, last_viewed_at DESC);
+
+CREATE INDEX idx_quiz_attempts_user
+ON public.quiz_attempts(user_id, submitted_at DESC);
+```
+
+Some indexes are already provided by primary keys and unique constraints. Do not create duplicate indexes without checking the existing schema.
+
+## **11.2 Query optimization rules**
+
+- Paginate quiz history and audit logs.
+- Do not fetch every student record for an admin dashboard.
+- Select only required columns.
+- Avoid repeated queries inside loops.
+- Calculate learning path progress efficiently.
+- Use database aggregation when it is simpler and more efficient than downloading every row.
+- Do not query Supabase to display static tutorials.
+
+# **12. Row Level Security (RLS) architecture**
+
+Mandatory security requirement
+
+Supabase exposes database access through APIs. Therefore, database security cannot depend only on the Next.js frontend.
+
+We must configure PostgreSQL Row Level Security.
+
+RLS determines which records an authenticated user can access.
+
+## **12.1 Access policy matrix**
+
+| Data                    | Guest   | Student          | Instructor       | Admin                    |
+| ----------------------- | ------- | ---------------- | ---------------- | ------------------------ |
+| Public profiles         | Limited | Limited          | Limited          | Authorized               |
+| Own profile             | No      | Read/update      | Read/update      | Authorized               |
+| Own roles               | No      | Read             | Read             | Manage                   |
+| Public lessons          | Read    | Read             | Read             | Read                     |
+| Own progress            | No      | Read/write       | Read/write       | Authorized               |
+| Own bookmarks           | No      | Read/write       | Read/write       | Authorized               |
+| Published quizzes       | Read    | Read             | Read             | Manage                   |
+| Correct answer keys     | No      | No direct access | No direct access | Controlled server access |
+| Own quiz attempts       | No      | Read             | Read             | Authorized               |
+| Published assignments   | Read    | Read             | Read             | Manage                   |
+| Own assignment progress | No      | Read/write       | Read/write       | Authorized               |
+| Audit logs              | No      | No               | Restricted       | Read                     |
+
+"Authorized" does not mean unrestricted access through a browser. Administrative operations must still be checked on the server.
+
+## **12.2 Example RLS policies**
+
+Enable RLS:
+
+```
+ALTER TABLE public.profiles
+ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.user_roles
+ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.lesson_progress
+ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.bookmarks
+ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.content_activity
+ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.quiz_attempts
+ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.assignment_progress
+ENABLE ROW LEVEL SECURITY;
+```
+
+Profile access:
+
+```
+CREATE POLICY "Users can read own profile"
+ON public.profiles
+FOR SELECT
+TO authenticated
+USING (id = auth.uid());
+
+CREATE POLICY "Users can update own profile"
+ON public.profiles
+FOR UPDATE
+TO authenticated
+USING (id = auth.uid())
+WITH CHECK (id = auth.uid());
+```
+
+Role access:
+
+```
+CREATE POLICY "Users can read own roles"
+ON public.user_roles
+FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+```
+
+There should be no ordinary student `INSERT`, `UPDATE` or `DELETE` policy for role assignments.
+
+Lesson progress:
+
+```
+CREATE POLICY "Users can read own progress"
+ON public.lesson_progress
+FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+
+CREATE POLICY "Users can create own progress"
+ON public.lesson_progress
+FOR INSERT
+TO authenticated
+WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own progress"
+ON public.lesson_progress
+FOR DELETE
+TO authenticated
+USING (user_id = auth.uid());
+```
+
+Bookmarks:
+
+```
+CREATE POLICY "Users manage own bookmarks"
+ON public.bookmarks
+FOR ALL
+TO authenticated
+USING (user_id = auth.uid())
+WITH CHECK (user_id = auth.uid());
+```
+
+These are starting policies. The complete migration must include policies for every exposed table and operation, including quiz options, assignments and audit logs.
+
+## **12.3 Role-checking helper**
+
+Administrative policies often need to check whether the current user has an admin role.
+
+We can create a carefully restricted database helper function.
+
+```
+CREATE FUNCTION public.has_role(
+    _user_id UUID,
+    _role public.app_role
+)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.user_roles
+        WHERE user_id = _user_id
+          AND role = _role
+    );
+$$;
+```
+
+The function should be owned by a trusted database role, and execution permissions should be granted deliberately.
+
+Using a `SECURITY DEFINER` function without controlling its owner and search path can create security vulnerabilities.
+
+## **12.4 Protecting quiz answer keys**
+
+For `quiz_answer_keys`:
+
+- Enable RLS.
+- Do not create a student-facing read policy.
+- Do not expose answer keys in ordinary quiz queries.
+- Score submissions on the server.
+- Return only the appropriate result and explanation after submission.
+
+For quiz attempts, students should be able to read their own submitted results but should not directly insert arbitrary scores or modify submitted answers.
+
+## **12.5 Important service-role rule**
+
+Supabase's service-role credential bypasses RLS.
+
+That means:
+
+- Never expose it to the browser.
+- Never use it without verifying the current user.
+- Check administrator permissions before privileged operations.
+- Keep privileged database operations inside server-only modules.
+- Never accept a claimed user ID or role from the browser as proof of identity.
+
+RLS is one security layer, not a replacement for application authorization.
+
+# **13. Database constraints and integrity**
+
+RLS controls access. Constraints protect data correctness.
+
+We need both.
+
+## **13.1 Required integrity rules**
+
+| Rule                                         | Enforcement           |
+| -------------------------------------------- | --------------------- |
+| One profile per user                         | Primary key           |
+| No duplicate role assignment                 | Composite primary key |
+| One completion per student and lesson        | Unique constraint     |
+| One bookmark per student and content         | Unique constraint     |
+| One activity record per student and content  | Unique constraint     |
+| No duplicate quiz slug                       | Unique constraint     |
+| No duplicate question position in a quiz     | Unique constraint     |
+| No duplicate attempt number                  | Unique constraint     |
+| No duplicate answer per question per attempt | Unique constraint     |
+| Positive question points                     | Check constraint      |
+| Valid assignment completion state            | Check constraint      |
+
+## **13.2 Referential integrity**
+
+For records stored in PostgreSQL, use foreign keys.
+
+Examples:
+
+- Quiz question → quiz.
+- Quiz option → question.
+- Attempt → quiz.
+- Attempt → user.
+- Assignment progress → assignment.
+- Bookmark → user.
+
+For records stored in Git, use stable text identifiers and application-level reference validation.
+
+Do not create fake database tables just to establish foreign keys to Git content.
+
+## **13.3 Content reference validation**
+
+A student could technically submit an arbitrary lesson ID to a database endpoint if a write policy allows it.
+
+Therefore, the application should validate content references before recording completion.
+
+The Git content validator should also verify that:
+
+- Lesson IDs are unique.
+- Learning paths reference existing lessons.
+- Bookmarks refer to known content where applicable.
+- Content IDs remain stable across revisions.
+
+# **14. Data lifecycle and deletion behavior**
+
+We need to define what happens when users or application records are deleted.
+
+Otherwise, we will accumulate orphaned records or accidentally delete important data.
+
+## **14.1 Proposed deletion rules**
+
+| Record              | Parent deleted | Behavior                           |
+| ------------------- | -------------- | ---------------------------------- |
+| Profile             | Auth user      | Delete profile                     |
+| User role           | Auth user      | Delete role                        |
+| Lesson progress     | Auth user      | Delete progress                    |
+| Bookmark            | Auth user      | Delete bookmark                    |
+| Content activity    | Auth user      | Delete activity                    |
+| Quiz attempt        | Auth user      | Delete personal attempt            |
+| Quiz attempt answer | Attempt        | Delete answers                     |
+| Assignment progress | Auth user      | Delete progress                    |
+| Quiz question       | Quiz           | Delete questions                   |
+| Quiz option         | Question       | Delete options                     |
+| Quiz answer key     | Question       | Delete answer key                  |
+| Assignment progress | Assignment     | Delete progress                    |
+| Audit log           | Actor deleted  | Retain event, set actor ID to null |
+
+Some of these rules are implemented through the foreign keys already proposed.
+
+## **14.2 Published quiz deletion**
+
+I recommend archiving published quizzes instead of deleting them.
+
+Why?
+
+Deleting a quiz can destroy the historical context of existing student attempts.
+
+For example, a student may have completed a quiz last month. If its questions disappear, the result becomes harder to interpret.
+
+Use:
+
+```
+draft → published → archived
+```
+
+Reserve permanent deletion for unused draft records or carefully controlled administrative maintenance.
+
+## **14.3 Account deletion**
+
+When a student requests account deletion:
+
+1. Verify the request.
+2. Delete or anonymize their personal account data according to the published retention policy.
+3. Remove personal learning and bookmark records.
+4. Preserve only records that must legitimately be retained.
+5. Ensure audit records do not expose unnecessary personal information.
+
+We should publish a clear privacy policy before accepting student registrations.
+
+# **15. Database migrations and seed data**
+
+All schema changes should be tracked in Git.
+
+We should not manually create production tables and then forget how they were created.
+
+## **15.1 Proposed migration structure**
+
+```
+supabase/
+├── migrations/
+│   ├── 001_create_enums.sql
+│   ├── 002_create_profiles.sql
+│   ├── 003_create_roles.sql
+│   ├── 004_create_learning_tables.sql
+│   ├── 005_create_quiz_tables.sql
+│   ├── 006_create_assignment_tables.sql
+│   ├── 007_create_audit_logs.sql
+│   ├── 008_enable_rls.sql
+│   ├── 009_create_policies.sql
+│   └── 010_create_indexes.sql
+│
+└── seed/
+    └── development.sql
+```
+
+The final migration boundaries can change as implementation progresses.
+
+## **15.2 What seed data should contain**
+
+Development seed data can contain:
+
+- Sample quiz.
+- Sample questions and options.
+- Sample assignments.
+- Development-only settings.
+- Test users or test-user setup instructions.
+
+Do not put real student records or production credentials into seed files.
+
+## **15.3 Migration workflow**
+
+\#chatgpt-mermaid-\_r_4cc\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_4cc\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_4cc\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_4cc\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_4cc\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_4cc\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_4cc\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_4cc\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_4cc\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_4cc\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_4cc\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_4cc\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_4cc\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_4cc\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_4cc\_ p{margin:0;}#chatgpt-mermaid-\_r_4cc\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_4cc\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_4cc\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_4cc\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_4cc\_ .label text,#chatgpt-mermaid-\_r_4cc\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_4cc\_ .node rect,#chatgpt-mermaid-\_r_4cc\_ .node circle,#chatgpt-mermaid-\_r_4cc\_ .node ellipse,#chatgpt-mermaid-\_r_4cc\_ .node polygon,#chatgpt-mermaid-\_r_4cc\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_4cc\_ .rough-node .label text,#chatgpt-mermaid-\_r_4cc\_ .node .label text,#chatgpt-mermaid-\_r_4cc\_ .image-shape .label,#chatgpt-mermaid-\_r_4cc\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_4cc\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_4cc\_ .rough-node .label,#chatgpt-mermaid-\_r_4cc\_ .node .label,#chatgpt-mermaid-\_r_4cc\_ .image-shape .label,#chatgpt-mermaid-\_r_4cc\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_4cc\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_4cc\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_4cc\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_4cc\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_4cc\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_4cc\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_4cc\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_4cc\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_4cc\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_4cc\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_4cc\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_4cc\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_4cc\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_4cc\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_4cc\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_4cc\_ .icon-shape,#chatgpt-mermaid-\_r_4cc\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_4cc\_ .icon-shape p,#chatgpt-mermaid-\_r_4cc\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_4cc\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_4cc\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_4cc\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_4cc\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_4cc\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_4cc\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_4cc\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_4cc\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_4cc\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_4cc\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_4cc\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_4cc\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_4cc\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_4cc\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_4cc\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_4cc\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_4cc\_ .node rect,#chatgpt-mermaid-\_r_4cc\_ .node circle,#chatgpt-mermaid-\_r_4cc\_ .node ellipse,#chatgpt-mermaid-\_r_4cc\_ .node polygon,#chatgpt-mermaid-\_r_4cc\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_4cc\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_4cc\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_4cc\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_4cc\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_4cc\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Developer Changes SchemaCreate MigrationApply to Local DatabaseRun TestsTests Pass?Fix MigrationCommit to GitReviewApply to ProductionVerify DatabaseNoYes
+
+Database migrations should be applied deliberately.
+
+A failed migration must not be ignored simply because the application still appears to load.
+
+# **16. Common database operations**
+
+We should understand how the database supports actual student workflows.
+
+## **16.1 Student dashboard**
+
+The dashboard needs:
+
+- Completed lesson count.
+- Active learning paths.
+- Recently viewed content.
+- Bookmarks.
+- Quiz results.
+- Assignment progress.
+
+Most of these are separate queries or small aggregated queries.
+
+Do not load every database record and calculate everything in the browser.
+
+For example, completed lesson count:
+
+```
+SELECT COUNT(*)
+FROM public.lesson_progress
+WHERE user_id = auth.uid();
+```
+
+Recent activity:
+
+```
+SELECT
+    content_id,
+    content_type,
+    slug,
+    last_viewed_at
+FROM public.content_activity
+WHERE user_id = auth.uid()
+ORDER BY last_viewed_at DESC
+LIMIT 10;
+```
+
+## **16.2 Learning path progress**
+
+The learning path definition comes from Git.
+
+The application extracts its lesson IDs and compares them against the student's completed lessons.
+
+Example:
+
+```
+Path: Linux Fundamentals
+
+Total lessons: 8
+
+Completed:
+- linux-introduction
+- filesystem-navigation
+- file-management
+- user-management
+- file-permissions
+
+Progress: 5 / 8 = 62.5%
+```
+
+The progress calculation should use the stable content IDs, not lesson titles or URLs.
+
+## **16.3 Quiz result**
+
+After submission:
+
+1. Load the quiz's questions and answer keys on the server.
+2. Validate the submitted answers.
+3. Calculate awarded points.
+4. Calculate the percentage.
+5. Determine whether the passing threshold was met.
+6. Store the attempt and answer records.
+7. Return the result to the student.
+
+The browser must not calculate the authoritative score.
+
+## **16.4 Bookmark operation**
+
+A bookmark should be idempotent.
+
+That means repeatedly clicking the bookmark action should not create duplicate records.
+
+The unique constraint on `(user_id, content_id)` protects the database even if the UI sends duplicate requests.
+
+# **17. Supabase free-tier optimization**
+
+The database should remain small and efficient.
+
+We should avoid building features that generate large volumes of unnecessary records.
+
+## **17.1 Storage strategy**
+
+| Data                | Storage impact     | Recommendation                       |
+| ------------------- | ------------------ | ------------------------------------ |
+| Profiles            | Low                | Store essential fields only          |
+| Roles               | Very low           | Separate table                       |
+| Lesson progress     | Low                | One row per completed lesson         |
+| Bookmarks           | Low                | One row per saved item               |
+| Content activity    | Moderate over time | One row per user/content             |
+| Quiz questions      | Low                | Store only published assessment data |
+| Quiz attempts       | Grows with usage   | Paginate and define retention        |
+| Assignment progress | Low                | One row per student/assignment       |
+| Audit logs          | Grows over time    | Retain meaningful events only        |
+
+## **17.2 Avoid these mistakes**
+
+- Storing full tutorial bodies in PostgreSQL.
+- Recording every mouse click.
+- Recording every page refresh as a new row.
+- Saving duplicate progress records.
+- Storing unnecessary user metadata.
+- Fetching complete quiz history on every dashboard request.
+- Storing large image files in database columns.
+- Keeping unlimited detailed activity logs without a retention policy.
+
+## **17.3 What happens when usage grows?**
+
+If the Academy eventually exceeds free-tier capacity, we can:
+
+1. Optimize queries and indexes.
+2. Reduce unnecessary writes.
+3. Archive old audit records where appropriate.
+4. Move large media to separate storage.
+5. Upgrade database capacity when justified by actual usage.
+
+We should verify the current Supabase plan limits before launch. Free-tier quotas and eligibility can change; the architecture should not depend on a fixed quota assumption.
+
+# **18. Additional implementation considerations**
+
+There are several details that should be included when we turn this plan into actual SQL migrations.
+
+## **18.1 Automatic timestamps**
+
+Tables with `updated_at` should have a database trigger to update the timestamp automatically.
+
+Do not rely on every frontend request remembering to update it.
+
+## **18.2 Profile creation**
+
+When a user registers, a profile must be created.
+
+This can be done using a carefully written database trigger on `auth.users` or a trusted server-side registration workflow.
+
+If a trigger is used, it must be tested because a failure in the trigger can affect registration.
+
+## **18.3 Quiz answer integrity**
+
+The `correct_option_ids` array is a convenient representation for the initial multiple-choice quiz engine.
+
+However, PostgreSQL does not automatically guarantee that every UUID in that array belongs to the corresponding question.
+
+The quiz-management service must validate this relationship when creating or editing answer keys.
+
+For a more complex assessment engine later, we can normalize answer keys into a separate answer-option relationship table.
+
+## **18.4 Quiz editing and historical results**
+
+Published quizzes should not be silently modified if existing student results depend on their original questions.
+
+A future enhancement should introduce quiz versions:
+
+```
+Linux Basics Quiz
+├── Version 1
+├── Version 2
+└── Version 3
+```
+
+Attempts should refer to the specific quiz version they used.
+
+This is not essential for the first release, but it becomes important when instructors regularly revise published assessments.
+
+## **18.5 Content IDs must never be casually recycled**
+
+If a lesson is deleted, do not reuse its ID for a different lesson.
+
+A student's historical progress record should never accidentally point to unrelated content.
+
+# **19. Final database architecture specification**
+
+## **FORGESEC ACADEMY — Database baseline**
+
+Recommended schema
+
+| Area                   | Decision                  |
+| ---------------------- | ------------------------- |
+| Database               | PostgreSQL                |
+| Provider               | Supabase                  |
+| Authentication         | Supabase Auth             |
+| User profiles          | `profiles`                |
+| Role assignments       | `user_roles`              |
+| Lesson completion      | `lesson_progress`         |
+| Bookmarks              | `bookmarks`               |
+| Learning history       | `content_activity`        |
+| Quiz definitions       | `quizzes`                 |
+| Quiz questions         | `quiz_questions`          |
+| Quiz options           | `quiz_options`            |
+| Correct answers        | `quiz_answer_keys`        |
+| Quiz attempts          | `quiz_attempts`           |
+| Submitted answers      | `quiz_attempt_answers`    |
+| Assignment definitions | `assignments`             |
+| Assignment completion  | `assignment_progress`     |
+| Admin audit trail      | `admin_audit_logs`        |
+| RLS                    | Enabled on exposed tables |
+| Schema management      | Supabase migrations       |
+| Content references     | Stable Git IDs            |
+
+## **19.1 Data ownership**
+
+| Data                  | Owner                  |
+| --------------------- | ---------------------- |
+| Student identity      | Supabase Auth          |
+| Profile               | Profile module         |
+| Role assignments      | Authorization module   |
+| Learning completion   | Learning module        |
+| Bookmarks             | Bookmark module        |
+| Quiz scoring          | Quiz service           |
+| Assignment completion | Assignment module      |
+| Administrative audit  | Admin module           |
+| Educational content   | Git content repository |
+
+Each module should be responsible for its own writes and validation.
+
+# **20. Part 06 acceptance checklist**
+
+- Defined the database design principles.
+- Separated Git content from PostgreSQL records.
+- Designed the entity relationship model.
+- Defined profiles and user roles.
+- Designed lesson progress.
+- Designed bookmarks.
+- Designed recent learning history.
+- Designed quizzes and question types.
+- Separated correct answers from public question data.
+- Designed quiz attempts and submitted answers.
+- Designed practical assignments.
+- Designed assignment completion tracking.
+- Added administrative audit logging.
+- Defined indexes and constraints.
+- Designed RLS policies.
+- Defined account deletion behavior.
+- Defined database migrations.
+- Considered free-tier resource usage.
+- Identified future schema extensions.
+
+Part 06 completed
+
+# **Next: Part 07 — Authentication, Authorization & Account Security**
+
+Part 07 will go deeper into identity and access control.
+
+It will cover:
+
+1. Registration and login workflows.
+2. Email verification.
+3. Password reset.
+4. Supabase SSR session management.
+5. Secure cookies and session handling.
+6. Role assignment and privilege escalation prevention.
+7. Student, instructor and administrator permissions.
+8. Protected routes and Server Actions.
+9. Supabase RLS integration.
+10. Account deactivation and deletion.
+11. Authentication abuse prevention.
+12. Security testing and verification.
+
+**One architectural point to preserve:** The database schema defines which records exist, but authentication and authorization define who can access them. We must implement and test both layers together before allowing real students to register.

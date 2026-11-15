@@ -1,0 +1,586 @@
+# **Part 15 — Testing Strategy, Quality Assurance & Release Management**
+
+**Objective:** Establish how FORGESEC ACADEMY will be tested, how bugs will be detected, and how new versions will be deployed without breaking the platform.
+
+We are using a free-tier architecture, so the testing system should also be lightweight. We don't need a large QA team, expensive testing infrastructure or a complex enterprise CI/CD platform.
+
+My recommendation is a **script-first testing strategy with automated checks in GitHub Actions and a small number of high-value browser tests**.
+
+The principle is simple: automate repetitive checks, manually verify educational quality, and test security boundaries before release.
+
+## **1. Testing architecture**
+
+We will use four main testing levels.
+
+**Level 1 — Static checks**
+
+TypeScript, ESLint, content validation and dependency checks.
+
+**Level 2 — Unit tests**
+
+Business logic, scoring, validation and progress calculations.
+
+**Level 3 — Integration tests**
+
+Database operations, RLS, authentication and server actions.
+
+**Level 4 — End-to-end tests**
+
+Real student and administrator workflows in a browser.
+
+Each level catches a different class of problem. For example, TypeScript can detect a type mismatch, but it cannot prove that a student is prevented from accessing another student's database record.
+
+## **2. Recommended testing tools**
+
+| Tool                       | Purpose                   | Decision                    |
+| -------------------------- | ------------------------- | --------------------------- |
+| TypeScript                 | Type checking             | Required                    |
+| ESLint                     | Code quality              | Required                    |
+| Vitest                     | Unit testing              | Required                    |
+| React Testing Library      | Component testing         | As needed                   |
+| Playwright                 | Browser testing           | Required for critical flows |
+| Supabase local development | Database and Auth testing | Recommended                 |
+| GitHub Actions             | Automated CI              | Required                    |
+
+Why these tools?
+
+They fit our existing TypeScript and Next.js architecture. We don't need to introduce a separate testing language or backend.
+
+**Cost consideration:** These tools can run locally. GitHub Actions usage depends on your account's available included minutes and repository visibility, so don't assume unlimited free CI execution.
+
+## **3. Unit testing**
+
+Unit tests verify small pieces of application logic independently.
+
+The most important areas are:
+
+- Quiz scoring.
+- Learning path progress calculation.
+- Assignment completion.
+- Permission checks.
+- Input validation.
+- Search indexing.
+- Content metadata validation.
+
+### **Example: Quiz scoring**
+
+Suppose a quiz has four questions worth five points each.
+
+The scoring function should correctly calculate:
+
+- Total score.
+- Maximum score.
+- Percentage.
+- Pass/fail status.
+
+Example:
+
+```
+import { describe, expect, it } from "vitest";
+
+describe("quiz scoring", () => {
+  it("calculates the percentage correctly", () => {
+    const score = calculateScore({
+      awardedPoints: 15,
+      maxPoints: 20,
+      passingScore: 70,
+    });
+
+    expect(score.percentage).toBe(75);
+    expect(score.passed).toBe(true);
+  });
+});
+```
+
+This is an illustrative test; `calculateScore` will be implemented in the assessment module.
+
+### **Example: Learning progress**
+
+Test these cases:
+
+- No lessons completed: 0%.
+- Half completed: 50%.
+- All completed: 100%.
+- Empty learning path: handled explicitly.
+- Duplicate lesson IDs: rejected during content validation.
+
+These tests are inexpensive and catch common mistakes.
+
+## **4. Integration testing**
+
+Integration tests verify that different application components work together.
+
+For FORGESEC, the database is a particularly important integration boundary.
+
+### **Authentication tests**
+
+Because we selected Google OAuth only, test:
+
+1. A successful Google login.
+2. First-time account creation.
+3. Existing account login.
+4. Default student role assignment.
+5. Logout.
+6. Expired or invalid session.
+7. Suspended account access rejection.
+
+You don't need to automate the entire Google consent interface for every test. Use controlled test users and test the application's callback/session behavior separately from Google's external service.
+
+### **Database and RLS tests**
+
+Create at least two test users:
+
+- Student A.
+- Student B.
+
+Then verify:
+
+| Test                                 | Expected result |
+| ------------------------------------ | --------------- |
+| Student A reads own progress         | Allowed         |
+| Student A reads Student B's progress | Denied          |
+| Student A edits Student B's profile  | Denied          |
+| Student A changes own role           | Denied          |
+| Student A reads quiz answer keys     | Denied          |
+| Student A reads own quiz attempts    | Allowed         |
+| Student A publishes a quiz           | Denied          |
+| Admin publishes a quiz               | Allowed         |
+
+These tests should run against a local or isolated test database, not production.
+
+**Important:** Test with actual authenticated user contexts. Testing queries only through a privileged service-role client can bypass RLS and give you false confidence.
+
+## **5. End-to-end testing**
+
+End-to-end testing verifies complete user journeys.
+
+We don't need hundreds of browser tests initially. A handful of important workflows provide much more value.
+
+### **Student workflow**
+
+1. Visit the Academy homepage.
+2. Browse Linux Fundamentals.
+3. Open a lesson and read its content.
+4. Use a code-block copy button.
+5. Sign in using Google.
+6. Mark a lesson complete.
+7. Attempt a quiz.
+8. View quiz results and dashboard progress.
+
+### **Administrator workflow**
+
+1. Log in using an authorized Google account.
+2. Open the admin dashboard.
+3. Create a quiz.
+4. Add questions and correct answers.
+5. Preview and publish the quiz.
+6. Verify the published quiz as a student.
+
+### **Anonymous visitor workflow**
+
+- Browse public tutorials.
+- Search for Linux commands.
+- Open a learning path.
+- Attempt a guest-accessible quiz if enabled.
+- Confirm private dashboard pages require authentication.
+
+Playwright can automate these workflows using dedicated test accounts.
+
+## **6. Content quality testing**
+
+This is especially important for FORGESEC because educational content is the product.
+
+A tutorial can pass every software test and still teach something incorrectly.
+
+We need two separate validation systems.
+
+### **A. Automated content validation**
+
+Create a script that checks:
+
+- Required MDX metadata exists.
+- Content IDs are unique.
+- Slugs are unique.
+- Learning paths reference existing lessons.
+- Internal links point to valid pages.
+- Images exist.
+- Required fields have correct types.
+- MDX compiles successfully.
+- Unsupported components are rejected.
+
+Example:
+
+```
+npm run validate-content
+```
+
+Expected output:
+
+```
+FORGESEC CONTENT VALIDATOR
+
+[PASS] Metadata validation
+[PASS] Unique content IDs
+[PASS] Unique slugs
+[PASS] Learning path references
+[PASS] Internal links
+[PASS] Image references
+[PASS] MDX compilation
+
+Result: 7/7 checks passed
+```
+
+This should run before production deployment.
+
+### **B. Manual educational review**
+
+Technical accuracy requires human review.
+
+For Linux tutorials, check:
+
+| Review area   | What to verify                               |
+| ------------- | -------------------------------------------- |
+| Commands      | Actually work as documented                  |
+| Output        | Matches expected behavior                    |
+| Explanation   | Technically accurate                         |
+| Safety        | Commands don't cause unintended damage       |
+| Formatting    | Code and terminal output are distinguishable |
+| Exercises     | Students can complete them independently     |
+| Prerequisites | Required knowledge is explained              |
+
+For example, don't publish a command like:
+
+```
+sudo chmod -R 777 /
+```
+
+as a normal permissions exercise. It can severely damage system security.
+
+Test commands on an appropriate development environment before publishing them.
+
+**Recommendation:** Treat content validation as a release requirement, but keep the final technical review human-controlled.
+
+## **7. Accessibility and performance testing**
+
+We already established WCAG 2.2 AA and Core Web Vitals as targets in Part 12.
+
+These should become part of QA.
+
+### **Accessibility checks**
+
+Use:
+
+- Keyboard-only navigation.
+- Screen-reader spot checks.
+- Automated accessibility checks with axe-core.
+- Contrast inspection.
+- Responsive layout testing.
+
+Automated tools identify many issues, but they cannot prove that a tutorial is understandable or that every interaction is accessible.
+
+### **Performance checks**
+
+Test:
+
+- Homepage loading.
+- Tutorial loading.
+- Search interaction.
+- Dashboard rendering.
+- Image optimization.
+- Mobile layout.
+- Excessive JavaScript.
+
+Use Lighthouse locally or through browser tools.
+
+Don't run expensive performance testing on every tiny code change. Run it on representative pages before important releases and after major UI changes.
+
+## **8. Security testing**
+
+Part 14 established the security architecture. Part 15 turns it into a repeatable testing process.
+
+The minimum security test suite should include:
+
+| Test                                       | Required result         |
+| ------------------------------------------ | ----------------------- |
+| Student accesses admin route               | Denied                  |
+| Student changes their role                 | Denied                  |
+| Student accesses another user's data       | Denied                  |
+| Student modifies quiz score                | Ignored/rejected        |
+| Student accesses answer key                | Denied                  |
+| Guest accesses dashboard                   | Authentication required |
+| User submits invalid data                  | Rejected                |
+| User submits malicious HTML                | Safely handled          |
+| Preview deployment uses production secrets | Must not happen         |
+
+Security tests should be automated wherever practical.
+
+For deeper testing, use the OWASP Web Security Testing Guide as a reference rather than inventing a custom vulnerability checklist.
+
+## **9. Continuous integration and deployment**
+
+We will use GitHub Actions and Vercel.
+
+The basic workflow:
+
+**Developer pushes code**
+
+**GitHub Actions**
+
+Type checking
+
+Linting
+
+Unit tests
+
+Content validation
+
+Production build
+
+**Preview deployment**
+
+Review the proposed changes
+
+**Merge into production branch**
+
+**Vercel production deployment**
+
+### **Suggested CI commands**
+
+```
+{
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "validate-content": "tsx scripts/validate-content.ts",
+    "build": "next build",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run validate-content"
+  }
+}
+```
+
+This is an illustrative package-script configuration. The actual commands should match the installed versions and project setup.
+
+For the initial project, keep the CI pipeline small. Run the build after the other checks pass.
+
+## **10. Database migration testing**
+
+Database changes are particularly dangerous because they can break existing student data.
+
+Every schema change should have a migration file.
+
+Example:
+
+```
+supabase/
+└── migrations/
+    ├── 001_initial_schema.sql
+    ├── 002_profiles.sql
+    ├── 003_roles.sql
+    ├── 004_learning.sql
+    ├── 005_assessments.sql
+    └── 006_assignments.sql
+```
+
+Recommended migration workflow:
+
+1. Create a migration locally.
+2. Apply it to the local database.
+3. Run database and RLS tests.
+4. Verify the application against the updated schema.
+5. Review the migration.
+6. Apply it to the production database through the controlled release process.
+
+Never make undocumented production schema changes through the Supabase dashboard.
+
+**Important:** Vercel deployment and database migration are separate operations. A successful application build does not prove that a production database migration is safe.
+
+For breaking changes, use an expand-and-contract approach: add compatible schema first, deploy code that uses it, migrate existing data if necessary, then remove obsolete schema in a later release.
+
+## **11. Release management**
+
+We need a simple versioning and release strategy.
+
+I recommend Semantic Versioning:
+
+```
+MAJOR.MINOR.PATCH
+
+1.0.0
+│ │ └── Bug fixes
+│ └──── New features
+└────── Breaking changes
+```
+
+Examples:
+
+- `1.0.1` — Fixed broken tutorial navigation.
+- `1.1.0` — Added a new learning path.
+- `2.0.0` — Major architectural change.
+
+You don't need to release a formal version for every content update. Git commits already provide a history of educational content changes.
+
+### **Release checklist**
+
+Before publishing an important release:
+
+- CI checks pass.
+- Production build succeeds.
+- Database migrations are reviewed.
+- Critical student workflows work.
+- Admin access is verified.
+- RLS tests pass.
+- No exposed secrets.
+- Mobile layout checked.
+- Content changes reviewed.
+- Backup/recovery considerations reviewed.
+
+## **12. Rollback and recovery**
+
+What happens if a new deployment breaks the Academy?
+
+### **Application rollback**
+
+Use Vercel's deployment history to return to a previous working deployment.
+
+For Git-managed content, revert the problematic commit and redeploy.
+
+### **Database rollback**
+
+This is more complicated.
+
+You should not assume that reversing a migration is always safe. For example, dropping a column may permanently remove student data.
+
+Prefer:
+
+- Backward-compatible migrations.
+- Tested recovery procedures.
+- Database backups.
+- Reversible migrations when practical.
+- Restore testing in an isolated environment.
+
+A deployment rollback does not automatically reverse database changes.
+
+Think of the application and database as two parts of a machine: replacing the software doesn't necessarily restore the data or configuration it previously used.
+
+## **13. Testing environments**
+
+We should maintain three environments.
+
+| Environment       | Database               | Users                |
+| ----------------- | ---------------------- | -------------------- |
+| Local development | Local Supabase         | Synthetic test users |
+| Preview           | Isolated test database | Test accounts        |
+| Production        | Production Supabase    | Real students        |
+
+For Google OAuth, configure the authorized redirect URLs for the relevant environments. Keep the production and preview OAuth configuration isolated where practical.
+
+Never use real student records as routine test data.
+
+Also, don't run automated tests against the production database. Use local or isolated test data.
+
+## **14. Testing project structure**
+
+The recommended additions to the repository:
+
+```
+forgesec-academy/
+├── tests/
+│   ├── unit/
+│   │   ├── assessments/
+│   │   ├── learning/
+│   │   └── permissions/
+│   │
+│   ├── integration/
+│   │   ├── auth/
+│   │   ├── database/
+│   │   └── rls/
+│   │
+│   ├── e2e/
+│   │   ├── student/
+│   │   ├── admin/
+│   │   └── public/
+│   │
+│   └── fixtures/
+│
+├── scripts/
+│   ├── validate-content.ts
+│   └── generate-search-index.ts
+│
+├── supabase/
+│   ├── migrations/
+│   └── seed/
+│
+└── .github/
+    └── workflows/
+        └── ci.yml
+```
+
+Don't create empty test files for every feature immediately. Add tests alongside the actual functionality as it is implemented.
+
+## **15. Development priorities**
+
+| Priority | Feature                                | Decision |
+| -------- | -------------------------------------- | -------- |
+| P0       | TypeScript and ESLint checks           | Build    |
+| P0       | Content validation                     | Build    |
+| P0       | Quiz scoring tests                     | Build    |
+| P0       | Authentication and authorization tests | Build    |
+| P0       | RLS integration tests                  | Build    |
+| P0       | Production build verification          | Build    |
+| P0       | Critical Playwright workflows          | Build    |
+| P0       | Migration testing                      | Build    |
+| P1       | Accessibility automation               | Add      |
+| P1       | Performance checks                     | Add      |
+| P1       | Automated security checks              | Add      |
+| P1       | Preview deployment verification        | Add      |
+| P2       | Visual regression testing              | Later    |
+| P2       | Load testing                           | Later    |
+| P2       | Advanced test reporting                | Later    |
+
+## **16. Final testing strategy**
+
+The FORGESEC testing system should follow these principles:
+
+1. Every important feature gets tests alongside its implementation.
+2. Content is validated automatically and reviewed technically.
+3. Security boundaries are tested with real user contexts.
+4. Critical workflows are automated with Playwright.
+5. Database migrations are tested separately from application deployments.
+6. Production data is never used for routine testing.
+7. Failed CI checks prevent normal production promotion.
+8. Rollback and recovery procedures are documented.
+
+### **Implementation checklist**
+
+**Part 15 implementation tracker**
+
+0/12
+
+Configure ESLint and TypeScript checks
+
+Install and configure Vitest
+
+Write quiz scoring tests
+
+Write learning progress tests
+
+Set up isolated Supabase testing
+
+Test RLS with two separate student accounts
+
+Add Playwright student workflow tests
+
+Add Playwright administrator workflow tests
+
+Build automated MDX validation
+
+Configure GitHub Actions CI
+
+Test database migrations
+
+Document application and database rollback
+
+**Recap:** We now have a testing and release process that fits a small TypeScript project. It emphasizes correctness, student-data protection, content quality and safe deployments without requiring paid QA infrastructure.
+
+**Next: Part 16 — Deployment Architecture, Hosting, Free-Tier Limits & Cost Management.** We'll examine how to operate the complete Academy with minimal or zero hosting expenditure, including what should be hosted where and which free-tier limitations need special attention.

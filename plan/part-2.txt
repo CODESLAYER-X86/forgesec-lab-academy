@@ -1,0 +1,1117 @@
+# **FORGESEC ACADEMY**
+
+## **Part 02 — Complete Functional Requirements Specification**
+
+Planning document 02/14
+
+Software requirements
+
+TypeScript / Node.js
+
+## **1. Purpose of this document**
+
+Part 01 defined what ForgeSec Academy is.
+
+Part 02 defines exactly what the software must do.
+
+We are moving from product vision to functional requirements. Every feature will receive:
+
+- A unique feature ID.
+- A description and purpose.
+- User permissions.
+- Expected system behavior.
+- Inputs and outputs.
+- Validation rules.
+- Error handling.
+- Dependencies.
+- Implementation priority.
+
+This document should eventually serve as the development reference for the implementation agent.
+
+### **1.1 Priority classification**
+
+| Priority | Meaning                                       |
+| -------- | --------------------------------------------- |
+| P0       | Mandatory for initial launch                  |
+| P1       | Important; implement after core functionality |
+| P2       | Optional future enhancement                   |
+
+**Important:** A feature being P0 does not mean it must be developed first. Dependencies determine implementation order.
+
+# **2. System users and roles**
+
+Before defining functionality, we need to establish who can interact with the application.
+
+## **2.1 User roles**
+
+**Guest**
+
+Public
+
+- Browse public tutorials.
+- Read write-ups.
+- Explore learning paths.
+- Search educational content.
+- View instructor profiles.
+- Attempt publicly available quizzes.
+
+  **Student**
+
+  Authenticated
+- Access all public content.
+- Maintain personal learning progress.
+- Bookmark lessons.
+- Maintain learning history.
+- Take quizzes with recorded results.
+- View personal dashboard.
+- Participate in discussions when enabled.
+
+  **Instructor**
+
+  Content contributor
+- Create and maintain assigned educational content.
+- Manage their own drafts.
+- View lesson engagement information where authorized.
+- Respond to student questions.
+- Update their instructor profile.
+
+  **Administrator**
+
+  Privileged
+- Manage users and roles.
+- Manage educational content and publication.
+- Manage learning paths.
+- Manage quizzes and assignments.
+- Moderate discussions.
+- Configure platform settings.
+- Review platform activity.
+
+### **2.2 Role restrictions**
+
+1. Guests cannot access private student information.
+2. Students cannot modify another student's progress.
+3. Instructors cannot grant themselves administrator permissions.
+4. Instructors cannot modify content belonging to other instructors unless explicitly authorized.
+5. Administrators have full application-management privileges.
+6. Privileged operations must be authorized on the server, not merely hidden in the UI.
+
+**Technical requirement:** Supabase Row Level Security (RLS) must enforce database-level access restrictions.
+
+# **3. Functional requirement categories**
+
+We will organize the complete system into 12 functional modules.
+
+| ID    | Module                                | Priority |
+| ----- | ------------------------------------- | -------- |
+| FR-01 | Public website                        | P0       |
+| FR-02 | Educational content system            | P0       |
+| FR-03 | Learning paths                        | P0       |
+| FR-04 | Search and discovery                  | P0       |
+| FR-05 | Authentication and accounts           | P0       |
+| FR-06 | Student dashboard                     | P0       |
+| FR-07 | Learning progress                     | P0       |
+| FR-08 | Quizzes and assessments               | P1       |
+| FR-09 | Practical assignments                 | P1       |
+| FR-10 | Administration and content management | P0       |
+| FR-11 | Community and discussions             | P2       |
+| FR-12 | Achievements and certificates         | P2       |
+
+We will now specify each module.
+
+# **4. FR-01 — Public Website**
+
+P0 — Mandatory
+
+**Purpose:** Provide a public-facing interface through which visitors can discover and access ForgeSec educational content.
+
+### **4.1.1 Required pages**
+
+| Feature ID | Page           | Description                       |
+| ---------- | -------------- | --------------------------------- |
+| FR-01-001  | Homepage       | Introduce ForgeSec Academy        |
+| FR-01-002  | About          | Explain the platform and mission  |
+| FR-01-003  | Tutorials      | Browse educational tutorials      |
+| FR-01-004  | Learning Paths | Browse structured learning paths  |
+| FR-01-005  | Write-ups      | Browse technical write-ups        |
+| FR-01-006  | Resources      | Access curated learning resources |
+| FR-01-007  | Glossary       | Browse cybersecurity terminology  |
+| FR-01-008  | Instructors    | View instructor profiles          |
+| FR-01-009  | Contact        | Contact platform administrators   |
+| FR-01-010  | Privacy Policy | Explain data handling             |
+| FR-01-011  | Terms of Use   | Define acceptable platform usage  |
+
+### **4.1.2 Expected behavior**
+
+- Public pages must be accessible without authentication.
+- Navigation must work across desktop and mobile.
+- Visitors must be able to discover educational content from the homepage.
+- The homepage should feature selected tutorials and learning paths.
+- Content pages must have readable URLs.
+- Missing pages must display a proper 404 page.
+- Metadata should support search engine indexing.
+
+### **4.1.3 Inputs and outputs**
+
+| Input                      | Expected output   |
+| -------------------------- | ----------------- |
+| Visitor opens homepage     | Homepage rendered |
+| Visitor selects Tutorials  | Tutorial listing  |
+| Visitor selects a category | Filtered content  |
+| Visitor opens a lesson     | Lesson page       |
+| Visitor visits invalid URL | 404 page          |
+
+### **4.1.4 Acceptance criteria**
+
+- All required public pages render correctly.
+- No login is required to read public content.
+- Responsive layouts work.
+- Search engine metadata is present.
+- Invalid URLs are handled correctly.
+
+**Dependency:** None.
+
+# **5. FR-02 — Educational Content System**
+
+P0 — Mandatory
+
+**Purpose:** Provide a structured system for publishing, organizing, and displaying educational material.
+
+This is the heart of ForgeSec Academy.
+
+## **5.1 Supported content types**
+
+| Type            | Description                                 |
+| --------------- | ------------------------------------------- |
+| Tutorial        | Structured technical lesson                 |
+| Article         | Educational explanation                     |
+| Write-up        | Technical walkthrough or research           |
+| Practical guide | Step-by-step instructions                   |
+| Reference       | Commands, tools and technical documentation |
+| Glossary entry  | Definition of a technical term              |
+
+## **5.2 Content structure**
+
+Each tutorial must support:
+
+- Title.
+- Unique slug.
+- Short description.
+- Main content.
+- Category.
+- Subcategory.
+- Author.
+- Difficulty level.
+- Estimated reading time.
+- Tags.
+- Featured image (optional).
+- Publication status.
+- Publication date.
+- Last updated date.
+- Related content.
+
+### **Difficulty levels**
+
+1. Beginner.
+2. Intermediate.
+3. Advanced.
+
+### **Publication statuses**
+
+- Draft.
+- Published.
+- Archived.
+
+## **5.3 Content behavior**
+
+The system must:
+
+1. Display content according to its type.
+2. Display relevant metadata.
+3. Support code blocks.
+4. Support syntax highlighting.
+5. Support headings, tables, images and lists.
+6. Support internal links to other lessons.
+7. Display related educational content.
+8. Generate a table of contents from headings.
+9. Display the author's information.
+10. Support revision and update dates.
+
+## **5.4 Content authoring decision**
+
+We need to preserve the free-tier architecture.
+
+Therefore, the initial content source will be version-controlled MDX files in the Git repository.
+
+The publishing workflow will be:
+
+**Instructor / Administrator**
+
+Creates or edits educational material
+
+**MDX content**
+
+Stored in the Git repository
+
+**Next.js build**
+
+Validates and generates pages
+
+**Published educational content**
+
+Available to students and visitors
+
+An important scope decision: the initial administrator interface will manage application records, users, quizzes and learning paths. Full browser-based MDX editing and Git publishing will be a later enhancement, not a requirement for launch.
+
+This avoids building a complex CMS unnecessarily.
+
+### **5.5 Acceptance criteria**
+
+- Every published tutorial has a valid URL.
+- Draft content is not publicly accessible.
+- Code blocks render correctly.
+- Content metadata is displayed.
+- Related lessons work.
+- Content can be updated through version control.
+- Archived content is handled appropriately.
+
+**Dependency:** FR-01.
+
+# **6. FR-03 — Learning Paths**
+
+P0 — Mandatory
+
+**Purpose:** Organize multiple tutorials into a structured learning journey.
+
+A learning path is a collection of lessons arranged in a recommended sequence.
+
+### **6.1 Required functionality**
+
+Each learning path must support:
+
+| Field              | Description                        |
+| ------------------ | ---------------------------------- |
+| Title              | Name of learning path              |
+| Slug               | Unique URL identifier              |
+| Description        | Learning path overview             |
+| Category           | Subject domain                     |
+| Difficulty         | Beginner / Intermediate / Advanced |
+| Thumbnail          | Optional image                     |
+| Prerequisites      | Required prior knowledge           |
+| Lessons            | Ordered lesson collection          |
+| Estimated duration | Approximate completion time        |
+| Status             | Draft / Published / Archived       |
+| Author             | Responsible instructor             |
+
+### **6.2 Learning path behavior**
+
+- Display all published learning paths.
+- Display the lessons belonging to each path.
+- Maintain lesson ordering.
+- Display prerequisites.
+- Display completion percentage for registered students.
+- Allow students to continue from their last incomplete lesson.
+- Allow visitors to explore the complete path without registering.
+
+### **6.3 Example**
+
+## **Linux Fundamentals**
+
+Beginner
+
+Illustrative learning path
+
+1. Introduction to Linux
+2. Linux installation and environment
+3. Filesystem navigation
+4. File and directory management
+5. User and group management
+6. File permissions
+7. Processes and services
+8. Networking commands
+9. SSH and remote access
+10. Linux administration practice
+
+### **6.4 Acceptance criteria**
+
+- Administrators can create learning paths.
+- Lessons can be ordered.
+- Lessons can be added or removed.
+- Students can view path progress.
+- Completion status updates correctly.
+- Unpublished paths remain private.
+
+**Dependency:** FR-02 and FR-07.
+
+# **7. FR-04 — Search and Content Discovery**
+
+P0 — Mandatory
+
+**Purpose:** Help visitors find relevant educational material quickly.
+
+### **7.1 Searchable content**
+
+- Tutorials.
+- Articles.
+- Write-ups.
+- Learning paths.
+- Glossary entries.
+- Resources.
+
+### **7.2 Required functionality**
+
+| ID        | Requirement                      |
+| --------- | -------------------------------- |
+| FR-04-001 | Search by title                  |
+| FR-04-002 | Search by keywords               |
+| FR-04-003 | Search by tags                   |
+| FR-04-004 | Filter by category               |
+| FR-04-005 | Filter by difficulty             |
+| FR-04-006 | Display relevant results         |
+| FR-04-007 | Display an empty-results message |
+
+### **7.3 Search behavior**
+
+- Search should be case-insensitive.
+- Only published public content should appear.
+- Results should display title, description, category and content type.
+- Search should not require authentication.
+- Search results should support pagination or controlled result limits.
+
+### **7.4 Technical direction**
+
+For the initial content volume, we do not need Elasticsearch, Algolia, or another paid search service.
+
+We can implement search using a generated static search index or a lightweight client-side search library.
+
+The educational content already exists in the repository, so we can generate the search index during the build process.
+
+**Analogy:** A library does not need a separate database server just to locate books when it has a well-organized catalog.
+
+### **7.5 Acceptance criteria**
+
+- Search returns relevant content.
+- Filters work correctly.
+- Unpublished content never appears.
+- Search works for guests.
+- Empty results are handled gracefully.
+
+**Dependency:** FR-02.
+
+# **8. FR-05 — Authentication and Student Accounts**
+
+P0 — Mandatory
+
+**Purpose:** Allow students to create accounts and access personalized functionality.
+
+### **8.1 Authentication functionality**
+
+| ID        | Feature                  |
+| --------- | ------------------------ |
+| FR-05-001 | Student registration     |
+| FR-05-002 | Student login            |
+| FR-05-003 | Logout                   |
+| FR-05-004 | Email verification       |
+| FR-05-005 | Password reset           |
+| FR-05-006 | Session management       |
+| FR-05-007 | Profile management       |
+| FR-05-008 | Role-based access        |
+| FR-05-009 | Account deactivation     |
+| FR-05-010 | Account deletion request |
+
+### **8.2 Registration requirements**
+
+Required information:
+
+- Email address.
+- Password.
+- Display name.
+
+Optional information:
+
+- Profile picture.
+- Short biography.
+- Learning interests.
+
+Do not demand university registration numbers, phone numbers, or unnecessary personal information.
+
+### **8.3 Authentication behavior**
+
+1. A student submits registration information.
+2. The system validates the information.
+3. Supabase Auth creates the authentication identity.
+4. Email verification is handled where configured.
+5. A corresponding student profile is created.
+6. The student can log in.
+7. The system establishes a secure session.
+8. The student is redirected to the appropriate destination.
+
+### **8.4 Security requirements**
+
+- Passwords must be managed by Supabase Auth.
+- Never store plaintext passwords.
+- Use secure session cookies through the Supabase SSR integration.
+- Protect private routes.
+- Validate authorization on the server.
+- Rate-limit sensitive authentication operations where applicable.
+- Never trust role information supplied by the browser.
+
+### **8.5 Acceptance criteria**
+
+- Registration works.
+- Login works.
+- Logout invalidates the session.
+- Password reset works.
+- Email verification works when enabled.
+- Students cannot access administrator functionality.
+- Unauthorized database access is denied.
+
+**Dependency:** Supabase project configuration.
+
+# **9. FR-06 — Student Dashboard**
+
+P0 — Mandatory
+
+**Purpose:** Provide a centralized overview of a student's learning activity.
+
+### **9.1 Dashboard components**
+
+[EdTech Learning Dashboard UI – Modern Dark Mode Course Platform by Talha Farooqi for loits – UI UX design for SaaS and Enterprise Web & Mobile Apps on Dribbble](https://images.openai.com/static-rsc-4/EF0U1U2qpf_5mHPZ1TxsMteMwVZBu2hBjyWFSCzG0qrJj3qJrTguUjuWGw6S-PtZdexO4Vsrwg4thWdTJbelxXAB76VzL9MQXT2_4YiWUyjEbtxIKaEILxcZJl77KTlcQ0xEEuzAGnMlJQriu7P3zmhcimrmA2PPwDwZFi0E4Lc?purpose=inline)
+
+[dribbble.com](https://dribbble.com/shots/26878544-EdTech-Learning-Dashboard-UI-Modern-Dark-Mode-Course-Platform?utm_source=chatgpt.com)
+
+| Component             | Information                 |
+| --------------------- | --------------------------- |
+| Welcome section       | Student display name        |
+| Continue learning     | Last incomplete lesson      |
+| Active learning paths | Paths being followed        |
+| Completed lessons     | Number of completed lessons |
+| Overall progress      | Completion information      |
+| Recent activity       | Latest learning actions     |
+| Bookmarks             | Saved lessons               |
+| Quiz summary          | Recent assessment results   |
+
+### **9.2 Dashboard behavior**
+
+- Dashboard information must be specific to the authenticated student.
+- Display an appropriate empty state for new students.
+- Allow students to continue learning.
+- Display recent activities in descending chronological order.
+- Link each dashboard component to its corresponding page.
+- Avoid loading unnecessary data.
+
+### **9.3 New student experience**
+
+A newly registered student should not see an empty or broken dashboard.
+
+Instead, display:
+
+- Welcome message.
+- Suggested beginner learning paths.
+- Recently published tutorials.
+- A clear way to start learning.
+
+### **9.4 Acceptance criteria**
+
+- Dashboard requires authentication.
+- Personal information is displayed correctly.
+- Progress information is accurate.
+- New students receive an onboarding state.
+- Dashboard cannot expose another student's information.
+
+**Dependencies:** FR-05, FR-03 and FR-07.
+
+# **10. FR-07 — Learning Progress Tracking**
+
+P0 — Mandatory
+
+**Purpose:** Track student progress across lessons and learning paths.
+
+This is an important feature because it transforms ForgeSec from a content website into a learning platform.
+
+### **10.1 Required functionality**
+
+| ID        | Requirement                          |
+| --------- | ------------------------------------ |
+| FR-07-001 | Mark lesson as completed             |
+| FR-07-002 | Undo completion                      |
+| FR-07-003 | Retrieve completed lessons           |
+| FR-07-004 | Calculate learning path progress     |
+| FR-07-005 | Store completion timestamp           |
+| FR-07-006 | Track recently visited lessons       |
+| FR-07-007 | Continue from last incomplete lesson |
+
+### **10.2 Completion rules**
+
+A lesson is completed when the student explicitly marks it complete.
+
+We should not automatically mark a lesson complete merely because someone opened it.
+
+For example:
+
+- Learning path contains 10 lessons.
+- Student completes 4 lessons.
+- Completion percentage = 40%.
+
+\\[ \text{Progress} = \frac{\text{Completed lessons}}{\text{Total published lessons}} \times 100 \\]
+
+### **10.3 Progress behavior**
+
+- Students can mark lessons complete.
+- Students can undo completion.
+- Completion status must persist between sessions.
+- Progress must be calculated from the student's own records.
+- Changes must be reflected in the dashboard.
+- Archived or unpublished lessons should not produce misleading progress calculations.
+
+### **10.4 Acceptance criteria**
+
+- Completion status persists.
+- Progress calculation is correct.
+- Duplicate completion records are prevented.
+- Students cannot modify another student's progress.
+- Unmarking a lesson recalculates progress correctly.
+
+**Dependencies:** FR-03 and FR-05.
+
+# **11. FR-08 — Quizzes and Assessments**
+
+P1 — Important
+
+**Purpose:** Assess students' understanding of educational material.
+
+### **11.1 Supported question types**
+
+Initial version:
+
+1. Single-choice multiple-choice questions.
+2. True/false questions.
+3. Multiple-select questions.
+
+Future version:
+
+- Short-answer questions.
+- Scenario-based assessments.
+- Instructor-reviewed questions.
+
+### **11.2 Quiz configuration**
+
+Each quiz should support:
+
+| Field              | Description                 |
+| ------------------ | --------------------------- |
+| Title              | Quiz name                   |
+| Description        | Instructions                |
+| Related lesson     | Optional lesson association |
+| Questions          | Ordered question collection |
+| Passing score      | Minimum passing percentage  |
+| Time limit         | Optional                    |
+| Attempts allowed   | Configurable limit          |
+| Publication status | Draft / Published           |
+
+### **11.3 Quiz behavior**
+
+1. Student opens a quiz.
+2. System displays instructions.
+3. Student answers questions.
+4. Student submits the quiz.
+5. System evaluates objective questions.
+6. System calculates the score.
+7. System displays feedback.
+8. System records the attempt for authenticated students.
+
+### **11.4 Feedback**
+
+A useful assessment should explain why an answer is correct or incorrect.
+
+Example:
+
+**Question:** Which Linux command displays the current working directory?
+
+- A. `ls`
+- B. `pwd`
+- C. `cd`
+- D. `mkdir`
+
+Correct answer: `pwd`.
+
+Explanation: `pwd` prints the path of the current working directory.
+
+### **11.5 Acceptance criteria**
+
+- Quizzes can be created and published.
+- Questions are displayed correctly.
+- Answers are validated.
+- Scores are calculated correctly.
+- Feedback is displayed.
+- Attempts are recorded for registered students.
+- Unpublished quizzes are inaccessible.
+
+**Dependencies:** FR-05 and FR-10.
+
+# **12. FR-09 — Practical Assignments**
+
+P1 — Important
+
+**Purpose:** Connect theoretical knowledge with practical execution.
+
+There is no requirement for a simulator, hosted VM, or command execution service.
+
+Students perform exercises on their own computers or authorized servers.
+
+### **12.1 Assignment structure**
+
+Each assignment must support:
+
+- Title.
+- Description.
+- Related lesson.
+- Learning objective.
+- Difficulty.
+- Required tools.
+- Prerequisites.
+- Instructions.
+- Expected result.
+- Verification procedure.
+- Safety warnings where appropriate.
+- Reference material.
+
+### **12.2 Example assignment**
+
+Beginner
+
+**Assignment: Inspect Linux File Permissions**
+
+**Objective:** Understand Linux file permissions.
+
+**Task:**
+
+1. Create a test file.
+2. Inspect its permissions using `ls -l`.
+3. Change its permissions using `chmod`.
+4. Inspect the permissions again.
+5. Explain what changed.
+
+**Verification:**
+
+Students should be able to identify the owner, group, and permission bits.
+
+**Expected learning outcome:** Understand how Linux controls file access.
+
+### **12.3 Submission functionality**
+
+For the initial implementation, I recommend:
+
+- Students can view assignments without registering.
+- Registered students can mark assignments as completed.
+- Students can optionally submit a text-based explanation.
+- Students can optionally provide a link to external evidence.
+- Instructors can review submissions in a later enhancement.
+
+We should not initially support large file uploads or screenshot storage. They consume storage and introduce additional moderation and security requirements.
+
+### **12.4 Acceptance criteria**
+
+- Assignments are associated with lessons.
+- Instructions are readable.
+- Safety warnings are displayed.
+- Students can record completion.
+- Completion is associated with the correct student.
+- No server-side command execution occurs.
+
+**Dependencies:** FR-02 and FR-05.
+
+# **13. FR-10 — Administration and Content Management**
+
+P0 — Mandatory
+
+**Purpose:** Provide administrators with centralized control over the platform.
+
+This module is essential even if the initial application has relatively few users.
+
+### **13.1 Admin dashboard**
+
+[CommandDesk — Business Management Dashboard | Interact Tech Group](https://images.openai.com/static-rsc-4/8lAiuI9Lc9OfWaAZkmnz8BJUfx9A8OC4_nEq05H1t6aI6TtTPLUpwmCH4UjvK89da-71fLCMWW3Z5hcBozKmOwT-LbS3xXw0ROl0jG6u29RZx-VNuBC0CJLS4htZFbXZib0pmVup_psV375ja1Pj1R7HlNk-hvnng2wrGoZxhNw?purpose=inline)
+
+[interacttechgroup.com](https://interacttechgroup.com/portfolio/adminpro-cms-dashboard?utm_source=chatgpt.com)
+
+The admin dashboard should contain:
+
+- Total registered students.
+- Published tutorials.
+- Draft content count.
+- Published learning paths.
+- Quiz count.
+- Recent registrations.
+- Recent platform activity.
+
+These are informational summaries, not a requirement for a complex analytics engine.
+
+### **13.2 User management**
+
+| ID        | Requirement                      |
+| --------- | -------------------------------- |
+| FR-10-001 | List registered users            |
+| FR-10-002 | Search users                     |
+| FR-10-003 | View user profiles               |
+| FR-10-004 | Change authorized user roles     |
+| FR-10-005 | Deactivate accounts              |
+| FR-10-006 | Review reported users or content |
+
+### **13.3 Learning path management**
+
+- Create learning paths.
+- Update learning path information.
+- Add lessons.
+- Remove lessons.
+- Change lesson ordering.
+- Publish and archive paths.
+
+### **13.4 Quiz management**
+
+- Create quizzes.
+- Edit questions.
+- Add answer choices.
+- Configure correct answers.
+- Set passing scores.
+- Publish and unpublish quizzes.
+
+### **13.5 Assignment management**
+
+- Create assignments.
+- Edit assignment instructions.
+- Associate assignments with lessons.
+- Publish and archive assignments.
+
+### **13.6 Content management boundaries**
+
+We need to distinguish between two kinds of content management.
+
+| Content                | Initial management method                             |
+| ---------------------- | ----------------------------------------------------- |
+| Tutorials              | MDX in Git                                            |
+| Articles               | MDX in Git                                            |
+| Write-ups              | MDX in Git                                            |
+| Glossary               | MDX in Git                                            |
+| Learning path metadata | Admin panel / structured data                         |
+| Quiz questions         | Admin panel                                           |
+| Assignments            | Admin panel or repository, depending on content model |
+| Student information    | Admin panel                                           |
+| Platform configuration | Admin panel                                           |
+
+This is a deliberate trade-off.
+
+We will not build a sophisticated rich-text CMS just to edit educational articles. Git-based publishing gives us revision history, reliable backups and a simpler architecture.
+
+### **13.7 Administrative security**
+
+- Only administrators can access administrative routes.
+- All privileged operations must be authorized server-side.
+- Role changes must be restricted.
+- Destructive operations should require confirmation.
+- Important administrative actions should be logged.
+- Sensitive user information should be restricted.
+
+### **13.8 Acceptance criteria**
+
+- Admin dashboard is accessible only to administrators.
+- Users can be searched and managed.
+- Learning paths can be managed.
+- Quizzes can be managed.
+- Assignments can be managed.
+- Administrative operations are validated.
+- Unauthorized users cannot perform administrative actions.
+
+**Dependencies:** FR-05 and the relevant content modules.
+
+# **14. FR-11 — Community and Discussions**
+
+P2 — Future enhancement
+
+**Purpose:** Allow students to discuss educational material and ask questions.
+
+We should not prioritize this until the core educational experience is established.
+
+### **14.1 Proposed functionality**
+
+1. Comments under tutorials.
+2. Student questions.
+3. Instructor responses.
+4. Reply threads.
+5. Report inappropriate comments.
+6. Admin moderation.
+7. Edit and delete own comments.
+
+### **14.2 Discussion restrictions**
+
+- Only authenticated students can participate.
+- Guests can read public discussions if enabled.
+- Users cannot edit other users' comments.
+- Administrators can remove inappropriate content.
+- Comments must be validated and sanitized.
+- Rate limiting must prevent spam.
+
+### **14.3 Scope limitation**
+
+No real-time chat, private messaging, or live collaboration in the initial community implementation.
+
+These features introduce unnecessary complexity and database activity.
+
+### **14.4 Acceptance criteria**
+
+- Students can submit comments.
+- Comments are associated with the correct lesson and author.
+- Inappropriate comments can be reported.
+- Administrators can moderate content.
+- Access controls are enforced.
+
+**Dependencies:** FR-05 and FR-02.
+
+# **15. FR-12 — Achievements and Certificates**
+
+P2 — Future enhancement
+
+**Purpose:** Recognize meaningful learning achievements.
+
+### **15.1 Achievement examples**
+
+| Achievement        | Condition                                |
+| ------------------ | ---------------------------------------- |
+| First Steps        | Complete the first lesson                |
+| Linux Beginner     | Complete Linux Fundamentals              |
+| Knowledge Seeker   | Complete five quizzes                    |
+| Consistent Learner | Complete lessons on seven different days |
+| Path Finisher      | Complete a defined learning path         |
+
+### **15.2 Certificate functionality**
+
+Future certificate functionality may include:
+
+- Student name.
+- Learning path name.
+- Completion date.
+- Unique certificate ID.
+- Verification page.
+- Issuing organization.
+- Certificate status.
+
+### **15.3 Important restrictions**
+
+Certificates must have meaningful eligibility criteria.
+
+Merely opening lessons or completing a sequence of pages must not qualify a student for a certificate.
+
+### **15.4 Acceptance criteria**
+
+- Achievements have clearly defined conditions.
+- Duplicate achievements are prevented.
+- Certificates are associated with verified completion records.
+- Certificate verification is publicly available without exposing private student information.
+
+**Dependencies:** FR-05, FR-07 and FR-08.
+
+# **16. Cross-functional requirements**
+
+The preceding 12 modules define individual features. The following requirements apply across the entire application.
+
+## **16.1 Navigation**
+
+- Consistent navigation across the website.
+- Breadcrumbs on nested educational pages.
+- Clear active-page indicators.
+- Mobile navigation support.
+- Footer with important platform links.
+
+## **16.2 Notifications**
+
+Initial notifications should be simple and in-app.
+
+Examples:
+
+- Profile updated.
+- Lesson marked complete.
+- Quiz submitted.
+- Bookmark added.
+- Assignment marked complete.
+
+Email notifications can be considered later, subject to a sustainable free delivery option.
+
+## **16.3 Error handling**
+
+Every operation should have defined outcomes.
+
+| Situation            | Expected behavior               |
+| -------------------- | ------------------------------- |
+| Network failure      | Display retry option            |
+| Unauthorized request | Return access-denied response   |
+| Missing content      | Display not-found page          |
+| Invalid input        | Show validation errors          |
+| Database unavailable | Display appropriate error state |
+| Empty dashboard      | Display onboarding guidance     |
+| Expired session      | Prompt for authentication       |
+
+## **16.4 Accessibility**
+
+- Semantic HTML.
+- Keyboard-accessible navigation.
+- Readable typography.
+- Sufficient color contrast.
+- Alternative text for meaningful images.
+- Proper form labels.
+- Visible focus states.
+
+# **17. Non-functional requirements**
+
+Functional requirements describe what the application does. Non-functional requirements describe how well it must operate.
+
+| ID      | Requirement     | Target                                              |
+| ------- | --------------- | --------------------------------------------------- |
+| NFR-001 | Performance     | Fast public content delivery                        |
+| NFR-002 | Responsiveness  | Desktop, tablet and mobile                          |
+| NFR-003 | Security        | Secure authorization and data handling              |
+| NFR-004 | Maintainability | Modular TypeScript architecture                     |
+| NFR-005 | Scalability     | Support future features without major restructuring |
+| NFR-006 | Availability    | Operate within free-tier provider limits            |
+| NFR-007 | Accessibility   | Follow WCAG 2.2 AA where practical                  |
+| NFR-008 | SEO             | Indexable public educational content                |
+| NFR-009 | Data integrity  | Prevent inconsistent learning records               |
+| NFR-010 | Portability     | Avoid unnecessary provider-specific dependencies    |
+
+### **17.1 Performance targets**
+
+These are proposed engineering targets, not guarantees of free hosting:
+
+- Lighthouse Performance: target 90+ on representative public pages.
+- Core Web Vitals: aim for good ratings.
+- Avoid unnecessary client-side rendering.
+- Minimize JavaScript delivered to public readers.
+- Paginate dynamic lists.
+- Avoid repeated database requests.
+
+### **17.2 Security targets**
+
+The application must follow secure development practices, including:
+
+- Server-side input validation.
+- Supabase RLS.
+- Secure authentication sessions.
+- Role-based authorization.
+- Protection against XSS, CSRF and injection.
+- Secret management through environment variables.
+- No service-role keys in client bundles.
+- Appropriate rate limiting.
+
+# **18. Functional dependencies**
+
+The following diagram shows how the major modules depend on one another.
+
+\#chatgpt-mermaid-\_r_32u\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_32u\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_32u\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_32u\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_32u\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_32u\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_32u\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_32u\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_32u\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_32u\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_32u\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_32u\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_32u\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_32u\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_32u\_ p{margin:0;}#chatgpt-mermaid-\_r_32u\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_32u\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_32u\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_32u\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_32u\_ .label text,#chatgpt-mermaid-\_r_32u\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_32u\_ .node rect,#chatgpt-mermaid-\_r_32u\_ .node circle,#chatgpt-mermaid-\_r_32u\_ .node ellipse,#chatgpt-mermaid-\_r_32u\_ .node polygon,#chatgpt-mermaid-\_r_32u\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_32u\_ .rough-node .label text,#chatgpt-mermaid-\_r_32u\_ .node .label text,#chatgpt-mermaid-\_r_32u\_ .image-shape .label,#chatgpt-mermaid-\_r_32u\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_32u\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_32u\_ .rough-node .label,#chatgpt-mermaid-\_r_32u\_ .node .label,#chatgpt-mermaid-\_r_32u\_ .image-shape .label,#chatgpt-mermaid-\_r_32u\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_32u\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_32u\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_32u\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_32u\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_32u\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_32u\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_32u\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_32u\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_32u\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_32u\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_32u\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_32u\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_32u\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_32u\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_32u\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_32u\_ .icon-shape,#chatgpt-mermaid-\_r_32u\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_32u\_ .icon-shape p,#chatgpt-mermaid-\_r_32u\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_32u\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_32u\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_32u\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_32u\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_32u\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_32u\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_32u\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_32u\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_32u\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_32u\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_32u\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_32u\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_32u\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_32u\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_32u\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_32u\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_32u\_ .node rect,#chatgpt-mermaid-\_r_32u\_ .node circle,#chatgpt-mermaid-\_r_32u\_ .node ellipse,#chatgpt-mermaid-\_r_32u\_ .node polygon,#chatgpt-mermaid-\_r_32u\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_32u\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_32u\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_32u\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_32u\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_32u\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Public WebsiteEducational ContentLearning PathsSearchAuthenticationStudent DashboardProgress TrackingQuizzesAssignmentsAdministrationCommunityAchievementsCertificates
+
+This dependency model will help us avoid implementing features before their underlying requirements exist.
+
+# **19. Final feature priority matrix**
+
+This matrix establishes what should be delivered first.
+
+| Module                | Priority | Initial release |
+| --------------------- | -------- | --------------- |
+| Public website        | P0       | Yes             |
+| Educational content   | P0       | Yes             |
+| Learning paths        | P0       | Yes             |
+| Search                | P0       | Yes             |
+| Authentication        | P0       | Yes             |
+| Student dashboard     | P0       | Yes             |
+| Progress tracking     | P0       | Yes             |
+| Quizzes               | P1       | Basic version   |
+| Practical assignments | P1       | Basic version   |
+| Administration        | P0       | Yes             |
+| Community             | P2       | No              |
+| Achievements          | P2       | No              |
+| Certificates          | P2       | No              |
+
+## **19.1 Recommended development sequence**
+
+## **Implementation sequence**
+
+1. **Foundation**
+
+   Public website, content rendering, navigation, SEO and search.
+2. **Content administration**
+
+   Content metadata, learning paths, admin authorization and publishing workflow.
+3. **Student accounts**
+
+   Registration, authentication, profiles and permissions.
+4. **Learning experience**
+
+   Dashboard, bookmarks, progress and learning history.
+5. **Assessment**
+
+   Quizzes, assignments and results.
+6. **Enhancements**
+
+   Community, achievements, certificates and other future capabilities.
+
+This sequence is more sensible than developing the entire application module by module without considering dependencies.
+
+# **20. Decisions that need to be finalized**
+
+I have made several recommendations, but there are three product decisions worth confirming before we move into the student experience design.
+
+**Decision 1 — How should educational content be published?**
+
+**Git-based MDX (recommended)**
+
+Write content in the repository and publish through Git.
+
+**Full admin CMS**
+
+Write, edit and publish tutorials directly through the website.
+
+**Hybrid**
+
+Git-based content initially, full CMS later.
+
+**Decision 2 — Who can take quizzes?**
+
+**Everyone (recommended)**
+
+Guests can practice; registered students get recorded results.
+
+Registered students only.
+
+**Decision 3 — How should assignments work initially?**
+
+**Completion tracking (recommended)**
+
+Students perform the task themselves and mark it complete.
+
+Text-based submission and completion tracking.
+
+Both, with optional text submissions.
+
+Confirm decisions
+
+## **21. Completion checklist**
+
+- Defined all system roles.
+- Defined 12 functional modules.
+- Assigned feature IDs and priorities.
+- Specified public website requirements.
+- Specified educational content requirements.
+- Specified learning paths and search.
+- Specified authentication and student accounts.
+- Specified dashboard and progress tracking.
+- Specified quizzes and practical assignments.
+- Specified administration requirements.
+- Defined future community and achievement functionality.
+- Defined cross-functional requirements.
+- Defined non-functional requirements.
+- Established implementation dependencies.
+
+Part 02 specification drafted
+
+**Next: Part 03 — Student Experience and Learning Workflows.**
+
+We'll design the actual student journey, from landing on ForgeSec Academy for the first time to discovering a roadmap, studying lessons, completing practical assignments, taking quizzes and tracking progress.
+
+We'll also define the website's page hierarchy and navigation structure. This will become the foundation for the frontend UI/UX design in later parts.

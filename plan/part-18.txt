@@ -1,0 +1,656 @@
+# **Part 18 — Project Implementation Roadmap & Development Execution Plan**
+
+**Objective:** Convert the FORGESEC ACADEMY architecture and feature specifications into an executable development roadmap.
+
+We have already designed the major components. Now we need to determine the correct implementation order, avoid unnecessary rework, and establish when the platform is ready to launch.
+
+My recommendation is to build FORGESEC ACADEMY as a **small, working product first**, then expand it based on actual student usage.
+
+We should not attempt to implement every feature from Parts 01–17 before launching.
+
+## **1. Development philosophy**
+
+Three principles should guide implementation.
+
+### **1. Build foundations before features**
+
+Authentication, database architecture, content validation and authorization should exist before we build dashboards and assessments.
+
+For example, building the dashboard before defining how student progress is stored is like constructing a house before deciding where the electrical wiring goes.
+
+### **2. Build complete vertical features**
+
+Instead of implementing every backend module first and every frontend page afterward, complete individual user workflows.
+
+For example:
+
+1. Create the lesson content system.
+2. Display lessons.
+3. Add Google login.
+4. Allow students to bookmark lessons.
+5. Add progress tracking.
+6. Test the complete workflow.
+
+This gives us something functional after each development milestone.
+
+### **3. Launch before unnecessary expansion**
+
+A platform with 15 technically complete features but no useful educational content is not a successful Academy.
+
+Our first release should prioritize:
+
+- High-quality learning materials.
+- Reliable lesson navigation.
+- Google authentication.
+- Basic student progress.
+- Search and discovery.
+- A secure administrative workflow.
+
+## **2. Overall development phases**
+
+1. **Phase 01 — Project foundation**
+
+   Critical
+
+   Repository, TypeScript, Next.js, configuration, linting and testing.
+2. **Phase 02 — Database and authentication**
+
+   Supabase, Google OAuth, profiles, roles, RLS and migrations.
+3. **Phase 03 — Public Academy**
+
+   Homepage, navigation, tutorials, MDX rendering, learning paths and search.
+4. **Phase 04 — Student experience**
+
+   Dashboard, bookmarks, lesson progress and history.
+5. **Phase 05 — Assessments and assignments**
+
+   Quizzes, scoring, practical assignments and completion tracking.
+6. **Phase 06 — Administration**
+
+   User management, quiz management, assignment management and audit logs.
+7. **Phase 07 — Quality and security**
+
+   Automated testing, accessibility, security verification and performance.
+8. **Phase 08 — Production launch**
+
+   Deployment, domain, production configuration, content publication and launch checks.
+9. **Phase 09 — Post-launch improvements**
+
+   Announcements, discussions, certificates and additional features based on demand.
+
+These are development dependencies, not fixed calendar durations. We should estimate time only after the actual implementation team and workload are known.
+
+## **3. Phase 01 — Project foundation**
+
+**Goal:** Establish a clean, working TypeScript application.
+
+Tasks:
+
+1. Create the GitHub repository.
+2. Initialize Next.js with TypeScript.
+3. Configure strict TypeScript.
+4. Configure ESLint.
+5. Establish the project directory structure.
+6. Add environment variable validation.
+7. Install essential UI dependencies.
+8. Configure Vitest.
+9. Create the initial CI workflow.
+10. Create the initial application layout.
+
+Recommended commands:
+
+```
+npx create-next-app@latest forgesec-academy
+cd forgesec-academy
+npm install
+npm run dev
+```
+
+Use the setup prompts to select TypeScript, ESLint and the chosen app directory configuration.
+
+### **Completion criteria**
+
+- Application runs locally.
+- TypeScript checks pass.
+- Linting passes.
+- Git repository is initialized.
+- Environment variables are documented.
+- CI can run successfully.
+
+Do not start building the full UI until this foundation is stable.
+
+## **4. Phase 02 — Database and authentication**
+
+**Goal:** Establish secure identity, permissions and persistent student data.
+
+Implementation order:
+
+| Step | Component                               |
+| ---- | --------------------------------------- |
+| 1    | Create Supabase project                 |
+| 2    | Configure Google OAuth                  |
+| 3    | Configure Supabase SSR                  |
+| 4    | Create database migrations              |
+| 5    | Create profiles                         |
+| 6    | Create user roles                       |
+| 7    | Configure default student role creation |
+| 8    | Enable RLS                              |
+| 9    | Create authorization helpers            |
+| 10   | Test user isolation                     |
+
+Authentication is Google OAuth only.
+
+There will be no email/password registration, password reset or custom email verification workflow.
+
+### **Important implementation detail**
+
+Do not give every newly authenticated user an administrator role.
+
+The initial administrator must be provisioned through a trusted setup procedure.
+
+### **Completion criteria**
+
+- Google login works.
+- Logout works.
+- New accounts receive student role.
+- Existing sessions are handled correctly.
+- Students cannot escalate privileges.
+- RLS policies prevent cross-user access.
+- Admin access is restricted.
+
+**Gate:** Do not begin storing real student activity until these security controls have been tested.
+
+## **5. Phase 03 — Public Academy**
+
+**Goal:** Make the educational content publicly accessible.
+
+This is where the platform begins to become useful.
+
+### **Implementation order**
+
+1. Global layout and navigation.
+2. Homepage.
+3. Content directory structure.
+4. MDX rendering.
+5. Tutorial listing.
+6. Tutorial detail pages.
+7. Code-block rendering and copy buttons.
+8. Table of contents.
+9. Previous/next lesson navigation.
+10. Learning path pages.
+11. Write-ups.
+12. Resources and glossary.
+13. Static search index.
+14. SEO and sitemap.
+
+### **Content architecture**
+
+```
+content/
+├── tutorials/
+│   ├── linux/
+│   ├── networking/
+│   └── web/
+│
+├── writeups/
+├── guides/
+├── references/
+├── glossary/
+└── paths/
+```
+
+Use Git as the content source of truth.
+
+We are deliberately not building a full browser CMS. Contributors should use the repository and pull-request workflow.
+
+### **Completion criteria**
+
+- Public tutorials load correctly.
+- MDX renders safely.
+- Code blocks have working copy buttons.
+- Learning paths reference valid lessons.
+- Search works.
+- Mobile navigation works.
+- Public content does not require login.
+
+## **6. Phase 04 — Student experience**
+
+**Goal:** Give registered students a reason to create and use an account.
+
+Implementation order:
+
+1. Protected dashboard.
+2. Profile display.
+3. Lesson completion.
+4. Learning path progress.
+5. Bookmarks.
+6. Recent activity.
+7. Continue Learning.
+8. Quiz result history integration later.
+
+### **Recommended dashboard layout**
+
+**Student dashboard**
+
+Illustrative UI
+
+# **Welcome back**
+
+Continue your learning journey.
+
+**Continue learning**
+
+## **Linux Fundamentals**
+
+Lesson 05 — File Permissions
+
+Example progress: 40%
+
+# **12**
+
+Completed lessons
+
+# **4**
+
+Bookmarks
+
+Illustrative data, not actual student records.
+
+### **Completion criteria**
+
+- Dashboard requires authentication.
+- Students can mark lessons complete.
+- Progress persists after logout.
+- Bookmarks work.
+- Continue Learning selects the next incomplete lesson.
+- Students cannot access other users' information.
+
+## **7. Phase 05 — Assessments and assignments**
+
+**Goal:** Introduce structured knowledge assessment and practical learning.
+
+Build the quiz system first, followed by assignments.
+
+### **Quiz implementation order**
+
+1. Quiz database schema.
+2. Question and option management.
+3. Correct answer storage.
+4. Quiz publication workflow.
+5. Student quiz interface.
+6. Server-side scoring.
+7. Results page.
+8. Attempt history.
+9. Quiz administration.
+
+### **Assignment implementation order**
+
+1. Assignment schema.
+2. Assignment catalogue.
+3. Assignment detail page.
+4. Start assignment.
+5. Mark assignment complete.
+6. Student assignment dashboard.
+7. Admin assignment management.
+
+Remember: assignments are performed on students' own computers or explicitly authorized systems. The Academy will not provide hosted labs, VMs, browser terminals or remote command execution.
+
+### **Completion criteria**
+
+- Quiz scores are calculated on the server.
+- Students cannot manipulate scores.
+- Published quiz versions are preserved.
+- Assignments can be started and completed.
+- Completion is accurately described as self-reported unless evidence is reviewed.
+
+## **8. Phase 06 — Administration**
+
+**Goal:** Allow authorized administrators to manage the platform without editing database records manually.
+
+Initial modules:
+
+| Module      | Capabilities                            |
+| ----------- | --------------------------------------- |
+| Overview    | Basic platform statistics               |
+| Users       | Search users and assign roles           |
+| Quizzes     | Create, edit, publish and archive       |
+| Assignments | Create, edit, publish and archive       |
+| Audit logs  | Review important administrative actions |
+| Settings    | Manage supported application settings   |
+
+### **Content publishing**
+
+Do not add an MDX editor.
+
+Instead, provide links to the configured GitHub repository and explain the content contribution workflow.
+
+```
+Contributor
+    |
+    v
+Create Git branch
+    |
+    v
+Edit MDX/YAML
+    |
+    v
+Submit pull request
+    |
+    v
+Automated validation
+    |
+    v
+Human review
+    |
+    v
+Merge and deploy
+```
+
+This keeps content management separate from the dynamic application database.
+
+### **Completion criteria**
+
+- Admin routes are protected.
+- Every admin mutation checks permissions.
+- Role changes are audited.
+- Published content and assessments are handled correctly.
+- No administrator action depends on an exposed service-role key.
+
+## **9. Phase 07 — Quality assurance and security**
+
+**Goal:** Verify the entire product before exposing it to real students.
+
+Use the Part 15 testing strategy.
+
+Minimum checks:
+
+- TypeScript and linting.
+- Unit tests.
+- Database integration tests.
+- RLS tests.
+- Playwright student workflows.
+- Playwright admin workflows.
+- MDX validation.
+- Accessibility checks.
+- Mobile responsiveness.
+- Production build.
+- Dependency review.
+- Security configuration review.
+
+### **Critical security scenarios**
+
+1. Student attempts to access admin routes.
+2. Student modifies their role.
+3. Student requests another user's data.
+4. Student attempts to read quiz answer keys.
+5. Student attempts to submit an arbitrary score.
+6. Guest attempts to access private content.
+7. Malicious HTML is submitted through any user-generated text feature.
+
+A passing homepage test is not enough. The access-control boundaries must also pass.
+
+## **10. Phase 08 — Production launch**
+
+**Goal:** Make the Academy publicly accessible.
+
+Before launch:
+
+- Configure the production domain.
+- Configure production environment variables.
+- Configure Google OAuth redirects.
+- Verify Supabase production credentials.
+- Apply reviewed database migrations.
+- Confirm backup and recovery options.
+- Deploy the production application.
+- Verify public pages.
+- Test Google login.
+- Test student workflows.
+- Test administrator workflows.
+- Verify search, sitemap and metadata.
+- Publish the initial educational content.
+
+### **Launch strategy**
+
+I recommend a limited initial launch.
+
+Start with a small group of students who can provide feedback. Fix critical problems before promoting the platform widely.
+
+Do not wait until every planned feature is implemented.
+
+## **11. Phase 09 — Post-launch expansion**
+
+Features should be introduced only when they solve a demonstrated problem.
+
+| Feature              | Recommended timing                                    |
+| -------------------- | ----------------------------------------------------- |
+| Announcements        | When updates need to reach students                   |
+| Discussions          | When students need lesson-specific support            |
+| Evidence submissions | When assignment verification becomes important        |
+| Instructor accounts  | When multiple contributors are active                 |
+| Achievements         | When meaningful criteria are defined                  |
+| Certificates         | When assessment quality supports them                 |
+| Hosted labs          | Many months later, if funding and demand justify them |
+
+The platform should not become a social network or a hosting infrastructure project before its educational content succeeds.
+
+## **12. Development dependency map**
+
+The following dependencies should control the order of work.
+
+```
+Project Foundation
+       |
+       v
+Database + Google OAuth
+       |
+       +-----------------------+
+       |                       |
+       v                       v
+Public Content             User Profiles
+       |                       |
+       v                       v
+Learning Paths             Student Dashboard
+       |                       |
+       +-----------+-----------+
+                   |
+                   v
+            Progress Tracking
+                   |
+          +--------+--------+
+          |                 |
+          v                 v
+        Quizzes         Assignments
+          |                 |
+          +--------+--------+
+                   |
+                   v
+             Admin Panel
+                   |
+                   v
+          Security + QA Review
+                   |
+                   v
+             Production
+                   |
+                   v
+            Post-launch
+```
+
+Some work can happen in parallel, particularly public content development and database implementation. However, don't integrate features before their dependencies are stable.
+
+## **13. Suggested repository implementation order**
+
+Use this order to create the actual project files.
+
+| Stage | Directory or component    |
+| ----- | ------------------------- |
+| 1     | `src/app` foundation      |
+| 2     | `src/lib/supabase`        |
+| 3     | `supabase/migrations`     |
+| 4     | `src/modules/auth`        |
+| 5     | `src/lib/content`         |
+| 6     | `content/`                |
+| 7     | `src/components/layout`   |
+| 8     | `src/components/learning` |
+| 9     | `src/modules/learning`    |
+| 10    | `src/modules/assessments` |
+| 11    | `src/modules/assignments` |
+| 12    | `src/modules/admin`       |
+| 13    | `tests/`                  |
+| 14    | `.github/workflows`       |
+
+Avoid creating dozens of empty files at the beginning. Create the directory structure as implementation begins.
+
+## **14. How we should use AI coding agents**
+
+Since the project will use TypeScript and Node.js, AI agents can help with implementation. But they should work from controlled, specific tasks.
+
+I recommend this workflow:
+
+**You define the feature specification**
+
+**AI agent inspects existing code**
+
+**Agent implements a bounded task**
+
+**Agent runs tests and reports results**
+
+**You review the changes**
+
+**Merge only after verification**
+
+### **Rules for AI agents**
+
+1. Read the existing project structure before editing.
+2. Follow the approved architecture.
+3. Don't introduce a new framework without justification.
+4. Don't duplicate existing functionality.
+5. Don't change database schemas without migrations.
+6. Never weaken RLS to make a test pass.
+7. Don't expose environment secrets.
+8. Run relevant tests after implementation.
+9. Report files changed and verification results.
+10. Stop and report when a requirement conflicts with the architecture.
+
+**Important:** Don't ask an AI agent to implement all of FORGESEC ACADEMY in one prompt. Break the work into small, verifiable tasks.
+
+## **15. Definition of Done**
+
+A feature is not complete simply because its UI looks correct.
+
+Every feature must satisfy these conditions:
+
+| Requirement    | Acceptance criteria                               |
+| -------------- | ------------------------------------------------- |
+| Functionality  | Expected behavior works                           |
+| Validation     | Invalid inputs are rejected                       |
+| Authorization  | Only permitted users can perform actions          |
+| Data integrity | Records remain consistent                         |
+| Testing        | Relevant tests pass                               |
+| UX             | Mobile and desktop behavior work                  |
+| Accessibility  | Basic accessibility requirements pass             |
+| Documentation  | Important implementation decisions are documented |
+| Deployment     | Production build succeeds                         |
+
+For example, a bookmark feature is not complete if it works in the browser but allows one student to delete another student's bookmarks.
+
+## **16. Final roadmap priorities**
+
+Initial launch
+
+These are the features I would actually require before calling the first version ready:
+
+- Public homepage and navigation.
+- Tutorials and learning paths.
+- MDX content rendering.
+- Search.
+- Google OAuth.
+- Secure profiles and roles.
+- Student dashboard.
+- Lesson progress.
+- Bookmarks.
+- Basic quiz functionality.
+- Basic assignment functionality.
+- Essential administration.
+- Testing and security verification.
+- Production deployment.
+
+**Postpone:** Discussions, notifications, certificates, hosted labs, advanced analytics, AI recommendations and full CMS functionality.
+
+## **17. Project roadmap tracker**
+
+**Development roadmap**
+
+0/25 tasks
+
+**01 — Project foundation**
+
+Initialize Next.js and TypeScript
+
+Configure linting and testing
+
+Create repository and CI
+
+**02 — Database and authentication**
+
+Set up Supabase
+
+Configure Google OAuth
+
+Create migrations and RLS
+
+Test authorization
+
+**03 — Public Academy**
+
+Build homepage and navigation
+
+Implement MDX rendering
+
+Create tutorials and learning paths
+
+Implement search
+
+**04 — Student experience**
+
+Build dashboard
+
+Implement lesson progress
+
+Implement bookmarks and history
+
+**05 — Assessments**
+
+Implement quizzes and scoring
+
+Implement practical assignments
+
+**06 — Administration**
+
+Build user management
+
+Build quiz and assignment management
+
+Implement audit logs
+
+**07 — QA and security**
+
+Automate unit and integration tests
+
+Run E2E and RLS tests
+
+Review accessibility and performance
+
+**08 — Production launch**
+
+Configure production services
+
+Verify recovery and deployment
+
+Run launch acceptance tests
+
+**Recap:** We have now converted the previous 17 planning parts into a practical implementation sequence. The first milestone is a secure, content-first Academy—not a fully featured learning management system.
+
+**Next: Part 19 — Initial Release Scope, MVP Feature Freeze & Launch Acceptance Criteria.**
+
+This will resolve exactly what belongs in version 1.0, what must be excluded, and what measurable conditions must be satisfied before we announce FORGESEC ACADEMY publicly.

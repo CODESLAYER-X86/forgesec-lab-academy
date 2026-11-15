@@ -1,0 +1,554 @@
+# **FORGESEC ACADEMY**
+
+## **Part 01 — Product Vision, Scope & Strategic Requirements**
+
+Planning document 01/14
+
+Product definition
+
+TypeScript-first
+
+## **1. Executive summary**
+
+ForgeSec Academy will be a free, web-based cybersecurity education platform developed and maintained under FORGESEC LABS.
+
+Its primary purpose is to make cybersecurity education accessible through structured tutorials, practical assignments, technical explanations, research, and learning resources.
+
+The platform will prioritize:
+
+1. High-quality educational content.
+2. Practical learning using students' own environments.
+3. Structured learning paths.
+4. Student progress tracking.
+5. A professional publishing and administration system.
+6. Lightweight architecture compatible with free hosting.
+
+**The central philosophy: Teach the concept, demonstrate the technique, assign the practical task, and explain how to verify the result.**
+
+We are building an educational platform, not a cyber-range provider.
+
+# **2. Product identity**
+
+### **2.1 Product name**
+
+**FORGESEC ACADEMY**
+
+Parent organization: FORGESEC LABS.
+
+Proposed slogan: *Security at Every Layer.*
+
+### **2.2 Product category**
+
+Cybersecurity education and technical knowledge platform.
+
+### **2.3 Product positioning**
+
+ForgeSec Academy will differentiate itself through practical, structured, technically accurate educational content rather than simply collecting articles from different sources.
+
+Its educational material should help students understand:
+
+- What something is.
+- Why it exists.
+- How it works.
+- How to use it.
+- How to verify their understanding.
+- How it applies to real-world cybersecurity.
+
+### **2.4 Core audience**
+
+| Audience                        | Primary need                       |
+| ------------------------------- | ---------------------------------- |
+| Absolute beginners              | Understand fundamental concepts    |
+| CSE students                    | Develop practical technical skills |
+| Linux learners                  | Gain command-line confidence       |
+| Aspiring security professionals | Learn security techniques          |
+| CTF participants                | Understand tools and techniques    |
+| Junior developers               | Build secure applications          |
+| Self-learners                   | Follow structured learning paths   |
+
+**Initial target audience:** Students and beginners who want to enter cybersecurity but lack a structured starting point.
+
+# **3. Product objectives**
+
+We should distinguish between educational objectives and business objectives.
+
+### **3.1 Educational objectives**
+
+- Make complex cybersecurity concepts understandable.
+- Provide a logical learning sequence.
+- Connect theory with practical work.
+- Encourage independent experimentation.
+- Develop problem-solving skills.
+- Teach responsible and authorized security practices.
+- Help students become independent learners.
+
+### **3.2 Organizational objectives**
+
+- Establish ForgeSec as a credible cybersecurity education brand.
+- Demonstrate the technical expertise of its instructors and contributors.
+- Build an audience around cybersecurity education.
+- Publish technical research and practical write-ups.
+- Create a foundation for future educational initiatives.
+
+### **3.3 Personal credibility objective**
+
+An important consideration is that the platform should demonstrate teaching ability through actual educational output.
+
+A student should be able to read a lesson and conclude:
+
+- The instructor understands the subject.
+- The explanation is technically correct.
+- The practical instructions are reproducible.
+- The material has been organized thoughtfully.
+
+This is more valuable than publishing a large number of shallow tutorials.
+
+# **4. Product scope**
+
+This section defines what belongs inside ForgeSec Academy.
+
+## **4.1 Included in the initial product**
+
+In scope
+
+| Area                | Description                               |
+| ------------------- | ----------------------------------------- |
+| Public website      | Landing pages and educational sections    |
+| Tutorials           | Structured technical lessons              |
+| Learning paths      | Ordered educational progression           |
+| Write-ups           | CTF, research and technical walkthroughs  |
+| Assignments         | Practical tasks for independent execution |
+| Quizzes             | Knowledge assessment                      |
+| Student accounts    | Registration and authentication           |
+| Dashboard           | Personal learning overview                |
+| Progress tracking   | Lesson and path completion                |
+| Bookmarks           | Save useful resources                     |
+| Search              | Find educational content                  |
+| Admin panel         | Manage platform content                   |
+| Instructor profiles | Author and contributor information        |
+
+## **4.2 Explicitly excluded from the initial product**
+
+Out of scope
+
+- Browser-based Linux terminals.
+- Hosted virtual machines.
+- Cloud-based cybersecurity laboratories.
+- Automated penetration-testing environments.
+- Attack/defense competition infrastructure.
+- Network simulation engines.
+- Web vulnerability simulation engines.
+- Arbitrary student code execution.
+- Paid courses or subscription systems.
+- Complex AI-powered tutoring infrastructure.
+
+These can be reconsidered in a future product expansion, but they are not dependencies of the initial Academy.
+
+# **5. Educational content domains**
+
+The Academy should have a clear subject taxonomy.
+
+I recommend starting with these domains:
+
+[Linux Commands for Cybersecurity 2026 | Unihackers](https://images.openai.com/static-rsc-4/bj9FzC5cm_nxLMOPt0-WdbVSSbisxyIzddeKpI77_nEOf9cpQjMtlHmr2tx5lK7Cusm0ErSMgxc0y_vjuNnzyvSjR6dQhE9TfCQv7UGAYICUYAmEx_6DL01TVC_tu0fjErVKyEdQj8hw49HU-wH-0V7dYRKw2eCbfbskS44kFNA?purpose=inline)
+
+**1. Linux Fundamentals**
+
+Linux commands, filesystem, permissions, users, processes, services, networking and SSH.
+
+Initial priority
+
+[Cisco Learning Network](https://images.openai.com/static-rsc-4/7TB-I3kOhgUzy2IKocqzOJafM4Lq0n37_r54oWrrgBFtPi_L6JR-rDWJn5WebJrjVKquyR5tgY8IEkxPsD9mVeTfwCryMbDoPAG3wx5iYjN-XpnxhAHb3YP13lkdgNk9S1T0AnNfexTWYkQi79HpwXdc-53l57Gswj0EPlmfrZs?purpose=inline)
+
+**2. Networking Fundamentals**
+
+TCP/IP, OSI, DNS, HTTP, routing, subnetting, ports and protocols.
+
+Initial priority
+
+[What Is a Secure Code? | Xygeni](https://images.openai.com/static-rsc-4/SS86Sw5G5crlqn-xDRNkNk52zlgqEVy7nD9PwJFKSGhmPTcEznyg-TAbwtkCVeFwe10E048QqIUgdfuPFnkvbBhbCLihYFiKwkZ9ZcDYmyOzpPWV8d3XJHXkozRvN94IF9neX1Y5v8WWMdDl1bHqK7_Dp-FEwNx1IYUCMFvTC8o?purpose=inline)
+
+**3. Web Technologies**
+
+HTML, CSS, JavaScript, TypeScript, HTTP, APIs, backend fundamentals and databases.
+
+[A Comprehensive Step-by-Step Guide to Your First Successful IDOR Vulnerability | by Andrei Ivan | Medium](https://images.openai.com/static-rsc-4/Qn07ryUdGjDiERz5iC8fbTOtky2zF8W4HqOwNWyUq3IIVvvu9NeDPtvrWY0vVAvjbqPu-WJUEp_OLQqcY4MWadi5Svmyh8g8jZ2Vyraw9I9vH8TGl5jxk9wEaz8TwQnSvWY-XKIgX1gVHFEyW8J_fMb0Y0_yn2Vsm-uhJ3tfpTQ?purpose=inline)
+
+**4. Web Application Security**
+
+OWASP Top 10, authentication, authorization, injection, XSS, CSRF and security testing.
+
+[Student Research | Florida Tech](https://images.openai.com/static-rsc-4/_5h4Gn2rb4mxlCuUTupBr_Q8Tt--T5ov3xsgv6KktRuQNrGA5QYianMVpKHs6fznBEKSA9ipgeg_3gpuH7guasGVW1qgWaPlf6x4rYXKYA4PslQS_uflIzt2kExCRdJJQ9V9SdzphERQ-7wi54qck42XqOkQlplRM08IsMrQ6LA?purpose=inline)
+
+**5. Penetration Testing**
+
+Methodology, reconnaissance, enumeration, vulnerability assessment, exploitation and reporting.
+
+[How Digital Forensic Labs Should Compare Modern Digital Forensics Software](https://images.openai.com/static-rsc-4/D7UdZ6Hp52mv9Vk3TsFgeiLnIOF_G1kBOAwuThNe0Gu0Fa0v_-MMtpSupPONX-qnrN3rR5K6kJBKPOS8b3myYjuM8uFip7sl-xcZnvFZXTpnq_JajETQoQfos795cAOsQZBHc1c8vBACGvCceJcJmB3faGwTxvBCCXwEYIFRNis?purpose=inline)
+
+**6. Digital Forensics**
+
+Evidence acquisition, file systems, logs, memory analysis and investigation techniques.
+
+[Zenflux - Enterprise Observability Platform](https://images.openai.com/static-rsc-4/4jWqvtcbbqhJcMU2FMpCQMjr_V2LgohvpY5W-VtmATJDl5Y-l0SpwXpeIy40QqOKiZUDackMnASH75Ncttavlvh58XUwGjxgHb-U5Qshys3vvqKg8ufpT6Z0YJFDOgyo_nwAmfMWzZIRdoIKYou-Gy7bfSV_pHeueU6213yZP7A?purpose=inline)
+
+**7. Defensive Security**
+
+Hardening, monitoring, incident response, logging, detection and security operations.
+
+[Python for Everyday Security Analysts: Simple Scripts that Save Time | by Raleigh Guevarra | Medium](https://images.openai.com/static-rsc-4/sTV2n2x1SqW66Swv54pFCBqLyHLk7cTVvz8AuFZWwBGEhrs2LIfvhtQzZ_iZZt8nmorH3U8kSu9LjAinv7jfsgBvL4w6jS9dif2Q0wYHV9xD5-YOd9nS6gmkt8DO_wSBSWy3FLMdVluz3ujXkcyiL7cyaZ7JswBOYMaacgyWJjU?purpose=inline)
+
+**8. Security Programming**
+
+Python, JavaScript, TypeScript, automation, scripting and security tool development.
+
+These are subject domains, not eight separate applications.
+
+**Important:** We should not attempt to publish all eight domains at launch. Linux Fundamentals should be the initial content focus, followed by networking and web technologies.
+
+# **6. Educational content standards**
+
+This is one of the most important sections of the entire project.
+
+ForgeSec should have a consistent teaching methodology.
+
+## **6.1 Standard lesson structure**
+
+Every technical lesson should follow a recognizable structure:
+
+## **Example lesson structure**
+
+**Topic: Linux File Permissions**
+
+1. **Introduction**
+
+   What are file permissions?
+2. **Why it matters**
+
+   Why does Linux control file access?
+3. **Concept explanation**
+
+   Owner, group, others, read, write and execute.
+4. **Practical demonstration**
+
+   Commands such as `ls -l`, `chmod` and `chown`.
+5. **Expected output**
+
+   Explain what students should observe.
+6. **Practical assignment**
+
+   Give the student a task to perform on their own Linux machine.
+7. **Verification**
+
+   Show how to confirm that the task was completed correctly.
+8. **Knowledge check**
+
+   A few questions testing understanding.
+
+Not every article needs all eight sections. For example, a research write-up and a glossary entry should have different structures.
+
+## **6.2 Writing standards**
+
+The following standards should apply:
+
+- Use straightforward technical English.
+- Avoid unnecessary theoretical explanations.
+- Explain unfamiliar terminology.
+- Use realistic command examples.
+- Include expected outputs where useful.
+- Explain dangerous commands before asking students to run them.
+- Never encourage testing against systems without authorization.
+- Provide references for important technical claims.
+- Verify practical instructions before publishing.
+
+## **6.3 Practical learning philosophy**
+
+The platform must not confuse reading a command with knowing how to use it.
+
+For example:
+
+| Weak teaching           | Better teaching                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| `systemctl restart ssh` | Explain what systemd does, why SSH might need restarting, and how to verify service status |
+| Explain `chmod`         | Assign a file-permission task and ask students to verify access                            |
+| Explain SSH             | Ask students to connect to an authorized remote server                                     |
+| Explain Nmap            | Demonstrate scanning a local or authorized target                                          |
+
+The analogy is learning to drive: reading about the accelerator does not teach you how to drive. The learner needs to operate the actual vehicle in a safe, authorized setting.
+
+# **7. Student learning model**
+
+We should design the student journey around progressive learning.
+
+## **Student journey**
+
+1. **Discover**
+
+   Student finds a topic through search, the homepage or a learning roadmap.
+2. **Understand**
+
+   Student reads the lesson and studies examples.
+3. **Practice**
+
+   Student performs the assignment on their own machine or an authorized environment.
+4. **Verify**
+
+   Student checks the expected result and completes a knowledge check.
+5. **Track**
+
+   Student records lesson completion and monitors learning progress.
+6. **Advance**
+
+   Student follows the next recommended lesson or learning path.
+
+### **Guest versus registered student**
+
+I recommend two access levels for learners.
+
+| Capability                 | Guest | Registered student |
+| -------------------------- | ----- | ------------------ |
+| Read tutorials             | Yes   | Yes                |
+| Read write-ups             | Yes   | Yes                |
+| View roadmaps              | Yes   | Yes                |
+| Search content             | Yes   | Yes                |
+| Take public quizzes        | Yes   | Yes                |
+| Save bookmarks             | No    | Yes                |
+| Track progress             | No    | Yes                |
+| Personal dashboard         | No    | Yes                |
+| Maintain learning history  | No    | Yes                |
+| Participate in discussions | No    | Yes, if enabled    |
+
+This ensures that registration improves the experience without obstructing access to education.
+
+# **8. Technical and infrastructure constraints**
+
+These constraints are product requirements, not matters to postpone until deployment.
+
+## **8.1 Infrastructure principles**
+
+1. No mandatory paid services.
+2. No permanently running backend server.
+3. No arbitrary code execution.
+4. No hosted laboratory infrastructure.
+5. No unnecessary third-party API dependencies.
+6. Static content should be served efficiently.
+7. Database usage should be minimized.
+8. All critical functionality should work within the free-tier resource limits.
+
+## **8.2 Proposed infrastructure allocation**
+
+| Requirement                | Primary solution                      |
+| -------------------------- | ------------------------------------- |
+| Website hosting            | Vercel                                |
+| Public educational content | Git repository / MDX                  |
+| Application database       | Supabase PostgreSQL                   |
+| Student authentication     | Supabase Auth                         |
+| Student progress           | Supabase                              |
+| User bookmarks             | Supabase                              |
+| Static images              | Optimized repository assets initially |
+| Source control             | GitHub                                |
+| Application language       | TypeScript                            |
+| Server-side execution      | Next.js Node.js runtime               |
+
+## **8.3 Performance requirements**
+
+- Public educational pages should be statically generated wherever practical.
+- Avoid loading unnecessary JavaScript.
+- Use responsive images.
+- Implement pagination for large content collections.
+- Avoid fetching all lessons or records at once.
+- Provide useful loading, empty and error states.
+- Ensure the platform works on mobile devices.
+
+## **8.4 Security requirements**
+
+Security must be treated as a core requirement because this is a cybersecurity education platform.
+
+- Enforce role-based access control.
+- Enable Supabase Row Level Security.
+- Validate user inputs on the server.
+- Protect administrative routes.
+- Never expose service-role credentials in client-side code.
+- Apply authorization checks to every sensitive operation.
+- Prevent unauthorized modification of learning records.
+- Sanitize and validate user-generated content.
+- Protect against common web vulnerabilities.
+
+# **9. Product principles and non-negotiable rules**
+
+These principles will guide future architectural and implementation decisions.
+
+| Principle        | Meaning                                                   |
+| ---------------- | --------------------------------------------------------- |
+| Content-first    | Education comes before platform complexity                |
+| Practical-first  | Explain how knowledge applies in reality                  |
+| Free-first       | No paid infrastructure dependency                         |
+| TypeScript-first | Application code uses TypeScript                          |
+| Static-first     | Minimize unnecessary server execution                     |
+| Security-first   | Secure defaults and strict authorization                  |
+| Mobile-friendly  | Responsive educational experience                         |
+| Expandable       | New domains can be added without restructuring everything |
+| Maintainable     | Prefer simple, understandable architecture                |
+
+**A critical distinction:** Free-first does not mean insecure or unreliable. We should not sacrifice security to save a small amount of infrastructure cost.
+
+# **10. Roles and permissions**
+
+The initial platform should support a small, clearly defined role system.
+
+| Role       | Responsibilities                                        |
+| ---------- | ------------------------------------------------------- |
+| Guest      | Read public content                                     |
+| Student    | Track progress, save content and take quizzes           |
+| Instructor | Create and manage assigned educational content          |
+| Admin      | Manage users, content, settings and platform operations |
+
+### **Permission philosophy**
+
+- Students cannot modify other students' records.
+- Instructors should only manage content they are authorized to manage.
+- Admin privileges should be restricted.
+- Public educational content should remain readable without authentication.
+
+We should implement permissions centrally rather than scattering role checks throughout frontend components.
+
+# **11. Success criteria**
+
+We need to define what success actually means.
+
+The initial goal is not to reach thousands of users or build a massive platform.
+
+It is to establish a working, credible educational resource.
+
+### **Initial success indicators**
+
+| Metric                   | What it measures                 |
+| ------------------------ | -------------------------------- |
+| Published lessons        | Educational content production   |
+| Completed learning paths | Structured learning engagement   |
+| Quiz completion          | Knowledge assessment usage       |
+| Assignment completion    | Practical learning participation |
+| Returning students       | Continued engagement             |
+| Content quality          | Accuracy and usefulness          |
+| Website performance      | Technical quality                |
+| Search usage             | Content discoverability          |
+
+### **Proposed first milestone**
+
+## **ForgeSec Academy — Initial milestone**
+
+Proposed launch target
+
+- A working public website.
+- One complete Linux Fundamentals learning path.
+- Approximately 10–15 properly developed lessons.
+- Practical assignments accompanying relevant lessons.
+- Basic quizzes.
+- Student registration and login.
+- Learning progress tracking.
+- Admin content management.
+- Responsive desktop and mobile layouts.
+- Secure deployment using the selected free infrastructure.
+
+These are proposed targets, not restrictions on future growth.
+
+# **12. Risks and limitations**
+
+We should acknowledge the limitations before implementation.
+
+| Risk                                    | Mitigation                                          |
+| --------------------------------------- | --------------------------------------------------- |
+| Supabase free project pauses            | Plan around inactivity and operational availability |
+| Database storage fills                  | Store educational content in Git                    |
+| Vercel quotas exceeded                  | Static generation, caching and efficient functions  |
+| Content becomes outdated                | Maintain references and review dates                |
+| Inaccurate technical instructions       | Test commands before publishing                     |
+| Student progress manipulation           | Server-side authorization and database constraints  |
+| Spam in discussions                     | Moderation and rate limiting                        |
+| Content production becomes overwhelming | Start with one learning domain                      |
+| Dependence on one hosting provider      | Keep deployment architecture portable               |
+
+One additional concern: certificates should not become a priority. Without a meaningful assessment process, certificates can damage credibility rather than improve it.
+
+# **13. Decisions recorded for subsequent planning**
+
+This is the baseline we should preserve throughout the remaining parts.
+
+## **Product specification baseline**
+
+**Project**\
+FORGESEC ACADEMY
+
+**Parent**\
+FORGESEC LABS
+
+**Technology direction**
+
+- TypeScript throughout application code.
+- Node.js runtime.
+- Next.js application framework.
+- React frontend.
+- Supabase PostgreSQL.
+- Supabase Auth.
+- Vercel deployment, subject to usage terms.
+- Git-based educational content.
+
+  **Product direction**
+- Free educational platform.
+- Public content without mandatory registration.
+- Practical assignments using students' own environments.
+- Student accounts for personalized features.
+- No simulators or hosted VMs.
+- No paid lab infrastructure initially.
+
+  **Initial content priority**
+
+1. Linux Fundamentals
+2. Networking Fundamentals
+3. Web Technologies
+
+   **Development philosophy**
+
+- Build only what is needed.
+- Avoid unnecessary infrastructure.
+- Prioritize educational quality.
+- Keep the architecture expandable.
+
+## **14. Completion criteria for Part 01**
+
+Part 01 is complete when the following questions have definitive answers:
+
+- What is ForgeSec Academy?
+- Who is the target audience?
+- What educational problems does it solve?
+- What are the primary objectives?
+- Which educational domains are included?
+- What belongs in the initial product?
+- What is explicitly excluded?
+- What is the teaching methodology?
+- How should students interact with the platform?
+- What are the infrastructure constraints?
+- What defines initial success?
+
+**Part 01 is complete as a proposed product specification.**
+
+## **Next: Part 02 — Complete Functional Requirements**
+
+This is where we turn the product vision into an actual software specification.
+
+We'll define each feature individually, including:
+
+- Feature ID and name.
+- Purpose.
+- User roles.
+- Functional requirements.
+- Expected behavior.
+- Inputs and outputs.
+- Permissions.
+- Error handling.
+- Dependencies.
+- Priority (P0, P1, P2).
+
+For example, instead of simply writing "Student Dashboard", we'll specify exactly what the dashboard displays, how progress is calculated, where the data comes from, and what happens when a student has not started any course.
+
+That document will become the reference for development.

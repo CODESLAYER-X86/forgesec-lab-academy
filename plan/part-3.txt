@@ -1,0 +1,999 @@
+# **FORGESEC ACADEMY**
+
+## **Part 03 — Student Experience, Learning Workflows & Navigation Architecture**
+
+Planning document 03/14
+
+UX / Product workflows
+
+Student journey
+
+## **1. Purpose of this document**
+
+Part 01 defined the product vision.
+
+Part 02 defined the software functionality.
+
+Part 03 defines how students will actually use ForgeSec Academy.
+
+We need to answer several important questions:
+
+- What does a visitor see when opening the website?
+- How does someone discover a suitable learning path?
+- How does a student navigate lessons?
+- How do practical assignments fit into the learning experience?
+- How does the platform remember learning progress?
+- What happens when a student returns after several days?
+- How should the experience differ between guests and registered students?
+
+The objective is to create a learning experience that is simple, predictable, and engaging without making the website unnecessarily complicated.
+
+**Core UX principle: Students should spend their time learning cybersecurity, not figuring out how to use the platform.**
+
+# **2. Target student experience**
+
+We should design the platform around three primary user journeys.
+
+Journey A
+
+**First-time visitor**
+
+Discovers ForgeSec Academy, explores educational content, and starts learning without registration.
+
+Journey B
+
+**Registered student**
+
+Creates an account, follows learning paths, tracks progress, saves lessons and takes quizzes.
+
+Journey C
+
+**Returning student**
+
+Opens the dashboard, resumes learning, completes assignments and reviews previous topics.
+
+These journeys should work independently. A visitor must not be forced to register before discovering the quality of the educational material.
+
+# **3. Journey A — First-time visitor**
+
+## **3.1 Entry point: Homepage**
+
+The homepage should communicate three things immediately:
+
+1. What ForgeSec Academy teaches.
+2. Who should use it.
+3. Where a beginner should start.
+
+[HackPath Homepage — Cybersecurity · Built with Blink](https://images.openai.com/static-rsc-4/eCmGfdGHaYv_mA1_1ri6MaKC_O--9NaU4ofi5g8vkIWLdxIwacAOKnvSjkh-Y2bB7IEAZmWrooe_vIEVCfcyAaQxulP_aDkRhKg-BnxR6QdIy5kcZTZyrutGllbHSuhlpe8ZlKIMn-Egg1J0FsNIS3mac6cv-DMxIRMphZHc4Gk?purpose=inline)
+
+[blink.new](https://blink.new/p/hackpath-homepage-ui-16nl9mki?utm_source=chatgpt.com)
+
+### **Proposed homepage structure**
+
+| Section                 | Purpose                                |
+| ----------------------- | -------------------------------------- |
+| Navigation              | Access major website sections          |
+| Hero                    | Explain the Academy's purpose          |
+| Featured learning paths | Help beginners choose a starting point |
+| Featured tutorials      | Highlight educational content          |
+| Latest write-ups        | Showcase technical knowledge           |
+| Learning domains        | Browse subject categories              |
+| Why ForgeSec            | Explain educational philosophy         |
+| About instructors       | Establish credibility                  |
+| Footer                  | Important links and information        |
+
+### **3.2 Homepage behavior**
+
+The homepage should provide two primary actions:
+
+- **Explore Learning Paths**
+- **Browse Tutorials**
+
+A registration button can be available in the navigation, but it should not compete with the learning actions.
+
+### **3.3 First-time visitor flow**
+
+**Homepage**
+
+**Explore Learning Paths**
+
+**Open Linux Fundamentals**
+
+**Read the first lesson**
+
+**Continue learning or create an account**
+
+The registration prompt should appear naturally when a visitor wants to save progress or use a personalized feature.
+
+# **4. Journey B — Student registration and onboarding**
+
+## **4.1 Registration experience**
+
+Registration should be short.
+
+Required fields:
+
+- Display name.
+- Email address.
+- Password.
+
+Optional:
+
+- Profile picture.
+- Learning interests.
+
+We should not create a lengthy registration questionnaire.
+
+### **4.2 First-login experience**
+
+After registration and authentication, the student should enter a simple onboarding experience.
+
+[Welcome Home  | Devpost](https://images.openai.com/static-rsc-4/GCW9frqwfVbnROXTH-05bMoroDFcfwkDj9XvrYbSjzIRTG1xYV2nII_aYyvW6rocX654pWDZn0q59UZ56GYEPSqxf3zCCJQFoxCT6eBJimPNbcf8Y22T-Ws7FqzMYT77jcC1psZaiWuSHqmnZ6J1awmzmKqFd7KPovtuJHoiYsQ?purpose=inline)
+
+[devpost.com](https://devpost.com/software/welcome-home-eknd26?utm_source=chatgpt.com)
+
+Recommended steps:
+
+1. Welcome the student.
+2. Briefly explain how ForgeSec Academy works.
+3. Recommend a beginner learning path.
+4. Provide an option to explore other subjects.
+5. Take the student to the dashboard.
+
+Onboarding must be skippable.
+
+### **4.3 Learning interest selection**
+
+We can optionally let students select interests such as:
+
+- Linux.
+- Networking.
+- Web security.
+- Penetration testing.
+- Digital forensics.
+- Defensive security.
+- Security programming.
+
+These selections can be used for recommendations later.
+
+They should not restrict access to other content.
+
+### **4.4 Acceptance criteria**
+
+- Registration takes only a few steps.
+- Onboarding is optional.
+- Students can skip interest selection.
+- Students can access all public learning materials.
+- A student's initial dashboard contains useful recommendations.
+
+# **5. Journey C — Returning student**
+
+This is arguably the most important experience.
+
+The student should not have to remember where they stopped.
+
+## **5.1 Dashboard entry**
+
+[EdTech Learning Dashboard UI – Modern Dark Mode Course Platform by Talha Farooqi for loits – UI UX design for SaaS and Enterprise Web & Mobile Apps on Dribbble](https://images.openai.com/static-rsc-4/EF0U1U2qpf_5mHPZ1TxsMteMwVZBu2hBjyWFSCzG0qrJj3qJrTguUjuWGw6S-PtZdexO4Vsrwg4thWdTJbelxXAB76VzL9MQXT2_4YiWUyjEbtxIKaEILxcZJl77KTlcQ0xEEuzAGnMlJQriu7P3zmhcimrmA2PPwDwZFi0E4Lc?purpose=inline)
+
+[dribbble.com](https://dribbble.com/shots/26878544-EdTech-Learning-Dashboard-UI-Modern-Dark-Mode-Course-Platform?utm_source=chatgpt.com)
+
+### **Dashboard layout**
+
+| Position          | Component                           |
+| ----------------- | ----------------------------------- |
+| Top               | Welcome message and profile         |
+| Primary section   | Continue learning                   |
+| Next section      | Active learning paths               |
+| Statistics        | Completed lessons and progress      |
+| Secondary section | Bookmarks                           |
+| Bottom section    | Recent activity and recommendations |
+
+### **5.2 Continue learning**
+
+The most prominent dashboard element should be a Continue Learning section.
+
+Example:
+
+**Continue learning**
+
+In progress
+
+**Linux Fundamentals**
+
+Last lesson: File and Directory Management
+
+4 of 10 lessons completed
+
+40%
+
+Explore this component
+
+The Continue Learning action should open the next incomplete lesson, not necessarily the last lesson the student viewed.
+
+This distinction matters: viewing a lesson and completing a lesson are different events.
+
+# **6. Learning path experience**
+
+A learning path should feel like a guided educational journey.
+
+It should not simply be a list of articles.
+
+## **6.1 Learning path overview page**
+
+[Udemy Concept / Dark by Vladyslav Kuchaiev on Dribbble](https://images.openai.com/static-rsc-4/fRWHv0PJ14Hr1zLeUS6FEFM8ynGnbaRhNrYR3qDcQurhR7L8gCdBUSVPiYSBae4i0WfAM4oXu7FqKd0sFytp5fNJks7lnmZIuHgFgVWDPOyQxrEUCBvWjL8Zo7cT6WvGz3ZwDscVh4dmXyhKQVR-NBHYS7vr-_oTeSFpnqDNcvM?purpose=inline)
+
+[dribbble.com](https://dribbble.com/shots/6823457-Udemy-Concept-Dark?utm_source=chatgpt.com)
+
+The page should contain:
+
+- Learning path title.
+- Short description.
+- Difficulty level.
+- Estimated duration.
+- Prerequisites.
+- Learning objectives.
+- Number of lessons.
+- Ordered curriculum.
+- Instructor information.
+- Start Learning button.
+
+### **6.2 Learning path navigation**
+
+Students should be able to:
+
+- View the entire curriculum.
+- Open any published lesson.
+- Understand lesson ordering.
+- Identify completed lessons.
+- Identify the current next lesson.
+- See the overall progress when authenticated.
+
+We should not force students to complete lesson one before reading lesson two unless a particular course genuinely requires sequential progression.
+
+The default should be recommended ordering, not artificial locking.
+
+### **6.3 Learning path states**
+
+| State       | Meaning                         |
+| ----------- | ------------------------------- |
+| Not started | No lessons completed            |
+| In progress | At least one lesson completed   |
+| Completed   | All required lessons completed  |
+| Archived    | Path no longer actively offered |
+
+A completed path should remain accessible for revision.
+
+# **7. Lesson reading experience**
+
+This is the most frequently used part of the entire Academy.
+
+The lesson interface needs more attention than decorative homepage elements.
+
+## **7.1 Proposed lesson layout**
+
+[Themes | Starlight](https://images.openai.com/static-rsc-4/LdhwFSIjm51YDtMCT95MupZfvvIFaKdmogAAt_52gL6jrk0c0e6u1n2tgU1cJNzz65IJbBVDBKYNwtTeZ2KBapIvWnsG-2HXFSr291qS3XvyRKdWZJUTnkvHayDi1g12_UZm1fG3Kg-I1nW_KKLbD7nkFPyKvz_tvbfi3zmVhN0?purpose=inline)
+
+[starlight.astro.build](https://starlight.astro.build/resources/themes/?utm_source=chatgpt.com)
+
+I recommend a three-region desktop layout.
+
+Left sidebar
+
+**Learning navigation**
+
+- Learning path name.
+- Lesson list.
+- Current lesson indicator.
+- Completed lesson indicators.
+- Expandable lesson sections.
+
+Main content
+
+**Educational material**
+
+- Lesson title.
+- Introduction.
+- Technical explanations.
+- Code examples.
+- Images and diagrams.
+- Practical demonstrations.
+- Assignment.
+- Knowledge check.
+
+Right sidebar
+
+**Contextual navigation**
+
+- Table of contents.
+- Current section indicator.
+- Related resources.
+- Estimated reading time.
+
+On mobile, the sidebars should become collapsible navigation panels. The reading content must receive priority.
+
+## **7.2 Lesson header**
+
+Every lesson should display:
+
+- Breadcrumb navigation.
+- Learning path.
+- Lesson title.
+- Short description.
+- Difficulty level.
+- Estimated reading time.
+- Author.
+- Last updated date.
+
+## **7.3 Reading controls**
+
+Recommended controls:
+
+| Control           | Function                            |
+| ----------------- | ----------------------------------- |
+| Table of contents | Jump to a heading                   |
+| Copy code         | Copy code blocks                    |
+| Bookmark          | Save lesson                         |
+| Mark complete     | Record completion                   |
+| Previous lesson   | Navigate backward                   |
+| Next lesson       | Navigate forward                    |
+| Share             | Copy lesson URL                     |
+| Report issue      | Report inaccurate or broken content |
+
+We should avoid adding too many controls around the reading area.
+
+## **7.4 Code block experience**
+
+Code examples are particularly important for cybersecurity education.
+
+A code block should support:
+
+- Syntax highlighting.
+- Copy-to-clipboard.
+- Language identification.
+- Optional command descriptions.
+- Optional expected output.
+- Optional warnings.
+
+Example:
+
+**Bash**
+
+Terminal command
+
+```
+pwd
+ls -lah
+whoami
+```
+
+Example commands for inspecting the current Linux environment.
+
+For potentially destructive commands, the lesson should explain their effects before presenting them.
+
+## **7.5 Lesson completion behavior**
+
+At the end of a lesson:
+
+1. Display a short summary.
+2. Display the practical assignment if available.
+3. Display a knowledge check if available.
+4. Provide a Mark as Complete action.
+5. Display Previous and Next navigation.
+6. Suggest related material.
+
+Completion should be explicit and reversible.
+
+## **7.6 Reading preferences**
+
+Useful future enhancements:
+
+- Light and dark reading themes.
+- Font-size adjustment.
+- Reading-width adjustment.
+- Copy code blocks.
+- Bookmark sections or lessons.
+
+I would prioritize copy buttons and responsive reading over extensive customization.
+
+# **8. Practical assignment experience**
+
+We have already decided that students will execute tasks on their own environments.
+
+The platform should make that experience understandable.
+
+## **8.1 Assignment page structure**
+
+Practical assignment
+
+**Configure and inspect an SSH service**
+
+**Objective**
+
+Understand how an SSH service is configured and how its status can be verified.
+
+**Requirements**
+
+- Linux environment.
+- OpenSSH installed.
+- An authorized machine on which to practice.
+
+**Instructions**
+
+1. Inspect the SSH service status.
+2. Review its configuration.
+3. Identify the listening port.
+4. Verify connectivity from an authorized client.
+
+**Expected result**
+
+You should understand how to inspect SSH service status, configuration and connectivity.
+
+**Completion**
+
+The student performs the work independently.
+
+Assignment status
+
+Not completed
+
+Illustrative example, not an instruction to expose SSH to the public internet.
+
+## **8.2 Assignment states**
+
+| State       | Meaning                                    |
+| ----------- | ------------------------------------------ |
+| Not started | Student has not marked it complete         |
+| In progress | Student has started the task               |
+| Completed   | Student marks the task complete            |
+| Submitted   | Student has submitted an optional response |
+| Reviewed    | Instructor has reviewed a submission       |
+
+For the initial version, Not started, In progress and Completed are sufficient.
+
+## **8.3 Student interaction**
+
+Students should be able to:
+
+- Read the task.
+- Review requirements.
+- Follow instructions.
+- Check expected results.
+- Mark the task complete.
+- Optionally provide a written explanation if submission is enabled.
+
+The platform must not claim that it verified an actual system configuration when the student simply marked the assignment complete.
+
+That distinction is important for educational credibility.
+
+# **9. Quiz experience**
+
+Quizzes should be short and directly related to the lesson.
+
+## **9.1 Quiz interface**
+
+[Course Based Test UI Design by James Adeshina on Dribbble](https://images.openai.com/static-rsc-4/Yu27eAr3cwliNmncTaEUSvYWoOcH2EZabw5O-Qh1i7d8mouDswBSt_GvNds4uCMX5jLVnz9q6F8HAK6vRnZelGA0gQgT3eaifJCp9co1CkKDBnuucZ0bZBdRmOm2NC5PrmU9hD--F4wb9SmhOKlq1G80CtVJO-cq7SLDxdQrHnE?purpose=inline)
+
+[dribbble.com](https://dribbble.com/shots/19386235-Course-Based-Test-UI-Design?utm_source=chatgpt.com)
+
+### **Quiz workflow**
+
+**Question 1 of 5**
+
+Which command displays the current working directory?
+
+A. ls
+
+B. pwd
+
+C. cd
+
+D. mkdir
+
+Check answer
+
+Illustrative question interface.
+
+The actual platform should implement the quiz without sending answer information to the student before submission.
+
+## **9.2 Quiz results**
+
+After submission, display:
+
+- Total questions.
+- Correct answers.
+- Incorrect answers.
+- Score percentage.
+- Passing status.
+- Explanations.
+- Recommended lessons for incorrect answers.
+
+### **9.3 Quiz attempt history**
+
+Registered students should be able to review:
+
+- Previous attempts.
+- Attempt dates.
+- Scores.
+- Correct and incorrect questions.
+- Improvement over time.
+
+We should avoid turning quizzes into a competitive leaderboard.
+
+The purpose is to measure understanding, not to encourage guessing for points.
+
+# **10. Bookmark and personal learning experience**
+
+Students should be able to save useful educational material.
+
+## **10.1 Bookmark behavior**
+
+A student can bookmark:
+
+- Tutorials.
+- Articles.
+- Write-ups.
+- Learning paths.
+- Reference materials.
+
+The initial implementation should support bookmarking complete content items rather than individual paragraphs.
+
+### **10.2 Bookmark page**
+
+The student's bookmarks page should contain:
+
+- Saved content title.
+- Content category.
+- Short description.
+- Date saved.
+- Remove bookmark action.
+
+### **10.3 Personal learning history**
+
+The platform should distinguish between:
+
+- Recently viewed.
+- Completed.
+- Bookmarked.
+- Currently studying.
+
+These are different types of activity.
+
+For example, opening a lesson does not mean completing it.
+
+# **11. Search and discovery experience**
+
+Search should be available from the global navigation.
+
+## **11.1 Search interface**
+
+[New SurrealDB docs search with hybrid search and reranking | Blog | SurrealDB](https://images.openai.com/static-rsc-4/t-m5R3s2ECVH8roXrBHrCCe07_OUdA1tbqCJV8hl0P3YJWsLZwygr7N3x1_3_NbiW23_xGJ4YpFqoAtlUQiOn5rfaSsgiAb-UmVg_mB5sHal4L8BJIWqbY7ipOLF_LWanTmQcKLv0eCRPCkZvrwCUnsQgXILhouaWKN_1I4Z754?purpose=inline)
+
+[surrealdb.com](https://surrealdb.com/blog/a-real-world-example-of-hybrid-fusion-search-using-the-surrealdb-docs-search?utm_source=chatgpt.com)
+
+The search experience should include:
+
+- Search input.
+- Suggested search terms.
+- Result titles.
+- Content descriptions.
+- Content types.
+- Categories.
+- Difficulty indicators.
+
+## **11.2 Discovery filters**
+
+| Filter       | Example                          |
+| ------------ | -------------------------------- |
+| Content type | Tutorial, write-up, reference    |
+| Category     | Linux, networking, web security  |
+| Difficulty   | Beginner, intermediate, advanced |
+| Topic        | SSH, DNS, authentication         |
+| Tags         | Bash, HTTP, OWASP                |
+
+## **11.3 Empty search experience**
+
+If no results are found:
+
+- Explain that no matching content was found.
+- Suggest alternative keywords.
+- Provide links to related categories.
+- Allow the student to clear filters.
+
+We should never show a blank search page.
+
+# **12. Student dashboard workflows**
+
+The dashboard should be the student's central learning workspace.
+
+### **12.1 Dashboard navigation**
+
+I recommend these sections:
+
+| Section      | Purpose                  |
+| ------------ | ------------------------ |
+| Overview     | Learning summary         |
+| My Learning  | Active learning paths    |
+| Bookmarks    | Saved content            |
+| History      | Recently viewed material |
+| Quiz Results | Assessment history       |
+| Profile      | Personal information     |
+| Settings     | Account preferences      |
+
+### **12.2 Dashboard scenarios**
+
+**Scenario A: New student**
+
+- No completed lessons.
+- No bookmarks.
+- No quiz attempts.
+
+Display onboarding guidance and suggested beginner content.
+
+**Scenario B: Active student**
+
+- Show ongoing learning paths.
+- Show completion progress.
+- Show Continue Learning.
+- Show recent activity.
+
+**Scenario C: Student who completed a path**
+
+- Show completed learning paths.
+- Suggest the next relevant learning path.
+- Allow revision of completed material.
+
+### **12.3 Resume learning rules**
+
+When a student selects Continue Learning:
+
+1. Identify active learning paths.
+2. Find the next incomplete required lesson.
+3. Open that lesson.
+4. If all required lessons are complete, show a completed state and recommend the next path.
+
+If a student has multiple active paths, prioritize the path they most recently engaged with.
+
+# **13. Navigation and information architecture**
+
+We now need to establish the actual page hierarchy.
+
+This will be the basis for frontend routing.
+
+## **13.1 Public website navigation**
+
+Proposed desktop navigation:
+
+**FORGESEC**
+
+Learn
+
+Write-ups
+
+Resources
+
+Login
+
+Illustrative navigation layout
+
+### **Recommended navigation items**
+
+| Navigation | Dropdown contents            |
+| ---------- | ---------------------------- |
+| Learn      | Tutorials, Learning Paths    |
+| Write-ups  | CTF, Research, Technical     |
+| Resources  | Tools, References, Glossary  |
+| About      | About Academy, Instructors   |
+| Search     | Global search                |
+| Account    | Login / Register / Dashboard |
+
+Do not put every subject category in the main navigation. Categories should be discoverable through the Learn section.
+
+## **13.2 Complete route hierarchy**
+
+The following is a proposed URL architecture, not the final Next.js folder structure.
+
+```
+
+/
+├── /about
+├── /instructors
+│   └── /[slug]
+├── /learn
+│   ├── /tutorials
+│   │   ├── /[slug]
+│   │   └── /category/[slug]
+│   └── /paths
+│       └── /[slug]
+├── /writeups
+│   ├── /[slug]
+│   └── /category/[slug]
+├── /resources
+│   ├── /[slug]
+│   └── /category/[slug]
+├── /glossary
+│   └── /[term]
+├── /search
+├── /quiz
+│   └── /[slug]
+├── /login
+├── /register
+├── /forgot-password
+├── /dashboard
+│   ├── /learning
+│   ├── /bookmarks
+│   ├── /history
+│   ├── /quiz-results
+│   ├── /profile
+│   └── /settings
+├── /admin
+│   ├── /users
+│   ├── /paths
+│   ├── /quizzes
+│   ├── /assignments
+│   └── /settings
+├── /privacy
+├── /terms
+└── /contact
+
+```
+
+The actual URL structure may be adjusted to avoid unnecessary nesting, but public URLs should remain stable once published.
+
+## **13.3 Breadcrumb navigation**
+
+Breadcrumbs should show the student's current location.
+
+Example:
+
+`Home > Learn > Linux Fundamentals > File Permissions`
+
+This is particularly useful for nested tutorials and learning paths.
+
+# **14. Mobile experience**
+
+Mobile usability cannot be treated as an afterthought.
+
+Many students will access the Academy from their phones.
+
+[Learning platform - Home page ui by Safna Sherin on Dribbble](https://images.openai.com/static-rsc-4/hypMZ7yNpPriXjyfY5ffQ6AgLV4WvjvI_z2zfEYDMg_sl8lDTK6rq16hmVhonyu7dTy8LWJ6mYA3g182VfGI-Oo7mRi05tAlvxE3KY40Mwd5HZCuhal_SFWhytOFPMv6tv-IEmjnZXr8rLMOgyusTXQ9MqKTjP70es2WtayC6Nk?purpose=inline)
+
+[Revamping developer docs on Shopify.dev](https://images.openai.com/static-rsc-4/jhnsD9rVfugvhrxOL1eQdjqoRkTQyNxfAb4LzBoJE5-z5e-URssYGa6UIKFLhd2S-DVvSYNNs5A_tZA9RsusnkPjFCybMpCC6Dq4XbB4NgctfUYL9gp0AYoRCxD3ZbfXN290mlZezmUPPp1RTP9IPzKf8OMpXpnmGtkmAbVczkI?purpose=inline)
+
+[BMS Learning App — BMS Project Manager · Built with Blink](https://images.openai.com/static-rsc-4/8nbmJCk1ZBHw2sBfRWiNleyiDX8LEaRwHr3fqoxWwMdqxNUiGD_IUfI4AW5uVvISFENNgMSyJuyHGV-EhuKTW14-qdNPmN5XGP52p6TayFxfqyluSUEC7s_3mqDnWQZoEXt1znLUvaDVL29a5jJXn_HzAG98a3NCcZMpUQmjXg0?purpose=inline)
+
+9
+
+### **Mobile requirements**
+
+- Responsive navigation menu.
+- Readable lesson typography.
+- Horizontally scrollable code blocks when necessary.
+- No unnecessary horizontal page scrolling.
+- Touch-friendly controls.
+- Collapsible lesson navigation.
+- Accessible forms.
+- Responsive quiz options.
+- Dashboard cards arranged vertically.
+
+### **Mobile lesson layout**
+
+Recommended order:
+
+1. Breadcrumb.
+2. Lesson title and metadata.
+3. Lesson content.
+4. Practical assignment.
+5. Knowledge check.
+6. Previous/Next navigation.
+
+The table of contents can be opened from a dedicated button.
+
+# **15. UI/UX design system**
+
+We should establish consistent design rules before building individual pages.
+
+## **15.1 Visual direction**
+
+I recommend:
+
+- Dark-first design.
+- Neutral charcoal backgrounds.
+- Metallic or muted silver typography.
+- A restrained green or teal accent.
+- Clear technical typography.
+- Minimal decorative animations.
+- High contrast for code examples.
+
+The Academy should look like a professional technical publication, not a gaming website.
+
+[Making this website - blendOS](https://images.openai.com/static-rsc-4/TCp6z9WvYSx_c6R1GzEOlWj8RBYpacpje3_hwDS-Ab5CHTEQxNydNALKRjHVal96p5bAsmmonC8Qw6K5Z4RCT3Nw2vuzW06HfglP3LTVVrOcG9vSk759Td6nYxUB4bDbe8bqo4Lig7W_NaYHJyWto9OhfgATtAChcmOi-kZKMaM?purpose=inline)
+
+[The Hux Design Awards – Celebrating Exceptional UX Design](https://images.openai.com/static-rsc-4/LzBk5MDYQ2qWvqqZfzxHUdES-_sUAuCTAfL-YfSsGm7ofdqgyXMKecwdZF9_cz_boWGXGUD9-Zxz_LykdepDOl98EdgxQqECoopD34OJRLhM_KAyAZXZqvgq2Hy9fEyTtNacq7E28lWMCvV3j1wcl9XV1T6tiIGBs0sjqadYDWQ?purpose=inline)
+
+[Slate Blog | Slate Wealth Technology](https://images.openai.com/static-rsc-4/3KLJ-jEt7OtSWhe4RF6Wn44cPVJ-PqWMGugVrThgI_43xbvFRCWq_ooYNcKSxhsMCYUSjYV1OIoWlTbpaBsqO1nqRms6aVhollL2PA7CSWolCbLPenjB_JAgID-31WeP5rJhZ3O0oLb-lcIwCRACRQNAU3YNkAod_PKzA2oky6M?purpose=inline)
+
+9
+
+## **15.2 Design principles**
+
+| Principle      | Implementation                             |
+| -------------- | ------------------------------------------ |
+| Consistency    | Reuse components                           |
+| Readability    | Comfortable line lengths                   |
+| Hierarchy      | Clear heading structure                    |
+| Simplicity     | Avoid unnecessary decoration               |
+| Accessibility  | Contrast and keyboard navigation           |
+| Responsiveness | Mobile-first layout                        |
+| Performance    | Avoid heavy animation and oversized assets |
+
+## **15.3 Common UI components**
+
+The frontend should eventually have reusable components for:
+
+- Navbar.
+- Footer.
+- Breadcrumbs.
+- Content cards.
+- Learning path cards.
+- Lesson sidebar.
+- Table of contents.
+- Code blocks.
+- Difficulty indicators.
+- Progress bars.
+- Quiz question cards.
+- Search interface.
+- Empty states.
+- Confirmation dialogs.
+- Pagination.
+- Loading skeletons.
+- Toast notifications.
+
+We should not create a separate implementation of the same component for every page.
+
+# **16. Student interaction and notification rules**
+
+We need to define how the application responds to student actions.
+
+| Student action                 | Expected response                |
+| ------------------------------ | -------------------------------- |
+| Bookmark lesson                | Show confirmation                |
+| Complete lesson                | Update progress                  |
+| Undo completion                | Recalculate progress             |
+| Submit quiz                    | Display result                   |
+| Save profile                   | Show success or validation error |
+| Remove bookmark                | Update saved list                |
+| Login with invalid credentials | Display safe error               |
+| Open unavailable lesson        | Display not-found state          |
+| Lose internet connection       | Show recoverable error           |
+
+### **Notification principles**
+
+- Use small, non-intrusive notifications.
+- Avoid unnecessary popups.
+- Do not interrupt lesson reading.
+- Require confirmation for destructive operations.
+- Never display sensitive information in notifications.
+
+# **17. Accessibility and learning usability**
+
+The platform should be usable by students with different devices and accessibility requirements.
+
+Recommended baseline:
+
+- WCAG 2.2 AA as the accessibility target.
+- Semantic HTML.
+- Keyboard navigation.
+- Visible focus indicators.
+- Proper form labels.
+- Alternative text for meaningful images.
+- Sufficient contrast.
+- Accessible quiz controls.
+- Reduced-motion support.
+- Meaningful error messages.
+
+A particularly important point for technical tutorials: code blocks must remain readable without forcing users to zoom the entire page.
+
+# **18. Student workflow diagrams**
+
+These diagrams summarize the core interactions.
+
+## **18.1 Learning workflow**
+
+\#chatgpt-mermaid-\_r_3bk\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3bk\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3bk\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3bk\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3bk\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3bk\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3bk\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3bk\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3bk\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3bk\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3bk\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3bk\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3bk\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3bk\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3bk\_ p{margin:0;}#chatgpt-mermaid-\_r_3bk\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3bk\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3bk\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3bk\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3bk\_ .label text,#chatgpt-mermaid-\_r_3bk\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3bk\_ .node rect,#chatgpt-mermaid-\_r_3bk\_ .node circle,#chatgpt-mermaid-\_r_3bk\_ .node ellipse,#chatgpt-mermaid-\_r_3bk\_ .node polygon,#chatgpt-mermaid-\_r_3bk\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3bk\_ .rough-node .label text,#chatgpt-mermaid-\_r_3bk\_ .node .label text,#chatgpt-mermaid-\_r_3bk\_ .image-shape .label,#chatgpt-mermaid-\_r_3bk\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3bk\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3bk\_ .rough-node .label,#chatgpt-mermaid-\_r_3bk\_ .node .label,#chatgpt-mermaid-\_r_3bk\_ .image-shape .label,#chatgpt-mermaid-\_r_3bk\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3bk\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3bk\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3bk\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3bk\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3bk\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3bk\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3bk\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3bk\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3bk\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3bk\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3bk\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3bk\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3bk\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3bk\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3bk\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3bk\_ .icon-shape,#chatgpt-mermaid-\_r_3bk\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3bk\_ .icon-shape p,#chatgpt-mermaid-\_r_3bk\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3bk\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3bk\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3bk\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3bk\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3bk\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3bk\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3bk\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3bk\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3bk\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3bk\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3bk\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3bk\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3bk\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3bk\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3bk\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3bk\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3bk\_ .node rect,#chatgpt-mermaid-\_r_3bk\_ .node circle,#chatgpt-mermaid-\_r_3bk\_ .node ellipse,#chatgpt-mermaid-\_r_3bk\_ .node polygon,#chatgpt-mermaid-\_r_3bk\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3bk\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3bk\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3bk\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3bk\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3bk\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Visit AcademyBrowse Learning PathsSelect Learning PathOpen LessonStudy ExplanationPerform Practical AssignmentComplete Knowledge CheckMark Lesson CompleteMore Lessons?Complete Learning PathExplore Next PathYesNo
+
+## **18.2 Returning student workflow**
+
+\#chatgpt-mermaid-\_r_3br\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3br\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3br\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3br\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3br\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3br\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3br\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3br\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3br\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3br\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3br\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3br\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3br\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3br\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3br\_ p{margin:0;}#chatgpt-mermaid-\_r_3br\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3br\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3br\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3br\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3br\_ .label text,#chatgpt-mermaid-\_r_3br\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3br\_ .node rect,#chatgpt-mermaid-\_r_3br\_ .node circle,#chatgpt-mermaid-\_r_3br\_ .node ellipse,#chatgpt-mermaid-\_r_3br\_ .node polygon,#chatgpt-mermaid-\_r_3br\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3br\_ .rough-node .label text,#chatgpt-mermaid-\_r_3br\_ .node .label text,#chatgpt-mermaid-\_r_3br\_ .image-shape .label,#chatgpt-mermaid-\_r_3br\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3br\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3br\_ .rough-node .label,#chatgpt-mermaid-\_r_3br\_ .node .label,#chatgpt-mermaid-\_r_3br\_ .image-shape .label,#chatgpt-mermaid-\_r_3br\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3br\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3br\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3br\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3br\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3br\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3br\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3br\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3br\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3br\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3br\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3br\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3br\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3br\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3br\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3br\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3br\_ .icon-shape,#chatgpt-mermaid-\_r_3br\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3br\_ .icon-shape p,#chatgpt-mermaid-\_r_3br\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3br\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3br\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3br\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3br\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3br\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3br\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3br\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3br\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3br\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3br\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3br\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3br\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3br\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3br\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3br\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3br\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3br\_ .node rect,#chatgpt-mermaid-\_r_3br\_ .node circle,#chatgpt-mermaid-\_r_3br\_ .node ellipse,#chatgpt-mermaid-\_r_3br\_ .node polygon,#chatgpt-mermaid-\_r_3br\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3br\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3br\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3br\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3br\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3br\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Student LoginDashboardActive Learning Path?Continue LearningExplore Learning PathsFind Next Incomplete LessonStudy and PracticeUpdate ProgressYesNo
+
+## **18.3 Quiz workflow**
+
+\#chatgpt-mermaid-\_r_3c2\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3c2\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3c2\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3c2\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3c2\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3c2\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3c2\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3c2\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3c2\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3c2\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3c2\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3c2\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3c2\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3c2\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3c2\_ p{margin:0;}#chatgpt-mermaid-\_r_3c2\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3c2\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3c2\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3c2\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3c2\_ .label text,#chatgpt-mermaid-\_r_3c2\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3c2\_ .node rect,#chatgpt-mermaid-\_r_3c2\_ .node circle,#chatgpt-mermaid-\_r_3c2\_ .node ellipse,#chatgpt-mermaid-\_r_3c2\_ .node polygon,#chatgpt-mermaid-\_r_3c2\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3c2\_ .rough-node .label text,#chatgpt-mermaid-\_r_3c2\_ .node .label text,#chatgpt-mermaid-\_r_3c2\_ .image-shape .label,#chatgpt-mermaid-\_r_3c2\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3c2\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3c2\_ .rough-node .label,#chatgpt-mermaid-\_r_3c2\_ .node .label,#chatgpt-mermaid-\_r_3c2\_ .image-shape .label,#chatgpt-mermaid-\_r_3c2\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3c2\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3c2\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3c2\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3c2\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3c2\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3c2\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3c2\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3c2\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3c2\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3c2\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3c2\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3c2\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3c2\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3c2\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3c2\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3c2\_ .icon-shape,#chatgpt-mermaid-\_r_3c2\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3c2\_ .icon-shape p,#chatgpt-mermaid-\_r_3c2\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3c2\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3c2\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3c2\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3c2\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3c2\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3c2\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3c2\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3c2\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3c2\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3c2\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3c2\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3c2\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3c2\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3c2\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3c2\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3c2\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3c2\_ .node rect,#chatgpt-mermaid-\_r_3c2\_ .node circle,#chatgpt-mermaid-\_r_3c2\_ .node ellipse,#chatgpt-mermaid-\_r_3c2\_ .node polygon,#chatgpt-mermaid-\_r_3c2\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3c2\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3c2\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3c2\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3c2\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3c2\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Open QuizRead InstructionsAnswer QuestionsSubmitEvaluate AnswersCalculate ScoreDisplay ExplanationsSave Attempt if RegisteredRecommend Review Material
+
+# **19. UX rules and non-negotiable decisions**
+
+The following rules should guide the implementation.
+
+| ID     | Rule                                                                          |
+| ------ | ----------------------------------------------------------------------------- |
+| UX-001 | Public educational content must not require registration.                     |
+| UX-002 | Registration must remain simple.                                              |
+| UX-003 | Lessons must be readable on mobile.                                           |
+| UX-004 | Students must be able to navigate freely.                                     |
+| UX-005 | Viewing a lesson must not automatically mark it complete.                     |
+| UX-006 | Learning progress must persist between sessions.                              |
+| UX-007 | Continue Learning must identify the next incomplete lesson.                   |
+| UX-008 | Assignments must be executable independently by students.                     |
+| UX-009 | Quiz feedback must explain incorrect answers.                                 |
+| UX-010 | The lesson reading area must remain distraction-free.                         |
+| UX-011 | All student-specific information must remain private.                         |
+| UX-012 | The interface must remain lightweight.                                        |
+| UX-013 | Learning paths should not artificially lock educational content.              |
+| UX-014 | The platform must support self-paced learning without requiring live classes. |
+
+The self-paced model is especially important: students should be able to study independently, perform tasks on their own schedules, and return whenever convenient.&#x20;
+
+# **20. Product decisions carried forward**
+
+Some decisions from Part 02 are still awaiting your confirmation. For Part 03, I have used the recommended defaults provisionally.
+
+| Decision               | Working assumption                            |
+| ---------------------- | --------------------------------------------- |
+| Content publishing     | Git-based MDX initially                       |
+| Quiz access            | Guests and registered students                |
+| Quiz history           | Recorded for registered students              |
+| Assignments            | Independent execution and completion tracking |
+| Assignment submissions | Optional future functionality                 |
+| Learning paths         | Recommended sequence, not forced locking      |
+| Dashboard              | Personalized for registered students          |
+| Homepage               | Content-first                                 |
+| Theme                  | Dark-first, restrained technical aesthetic    |
+| Mobile                 | Fully responsive                              |
+
+These assumptions can be changed without redesigning the entire student experience.
+
+# **21. Completion checklist**
+
+- Defined first-time visitor journey.
+- Defined registration and onboarding.
+- Designed returning student experience.
+- Defined dashboard structure.
+- Defined learning path navigation.
+- Defined lesson reading experience.
+- Defined practical assignment workflow.
+- Defined quiz interaction.
+- Defined bookmarks and learning history.
+- Defined search and discovery.
+- Defined public website navigation.
+- Established proposed URL hierarchy.
+- Defined mobile experience.
+- Established UI/UX design principles.
+- Defined interaction and notification behavior.
+- Established accessibility requirements.
+- Created workflow diagrams.
+
+Part 03 completed
+
+# **22. Next: Part 04 — Content Architecture**
+
+This is where we design how educational material will be organized and maintained.
+
+We will cover:
+
+1. Complete educational content taxonomy.
+2. Categories and subcategories.
+3. Tutorials versus articles versus write-ups.
+4. Learning path and lesson relationships.
+5. MDX file structure.
+6. Content metadata and frontmatter.
+7. Image and asset organization.
+8. Code block and diagram handling.
+9. Content versioning and revision management.
+10. SEO metadata and URL strategy.
+11. Internal linking and related content.
+12. Content validation and publishing workflow.
+13. Content scalability and maintainability.
+
+**A particularly important decision:** We need to design the content architecture so that adding 100 or 1,000 lessons does not require restructuring the application or filling the Supabase database.
+
+That is the foundation of a sustainable ForgeSec Academy.

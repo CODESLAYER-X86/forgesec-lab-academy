@@ -1,0 +1,1350 @@
+# **FORGESEC ACADEMY**
+
+## **Part 04 — Educational Content Architecture & Publishing System**
+
+Planning document 04/14
+
+Content engineering
+
+MDX / Git / TypeScript
+
+## **1. Purpose of this document**
+
+Parts 01–03 established the product, functionality and student experience.
+
+Part 04 defines how ForgeSec Academy's educational content will be structured, stored, validated, published and maintained.
+
+This is one of the most important architectural decisions because educational content will eventually become the largest part of the platform.
+
+We need an architecture that:
+
+- Supports hundreds or thousands of lessons.
+- Does not require a paid CMS.
+- Does not consume Supabase database storage for articles.
+- Works with Vercel's free hosting constraints.
+- Supports technical code examples and diagrams.
+- Allows content revision through Git.
+- Integrates cleanly with Next.js and TypeScript.
+- Keeps URLs stable.
+- Makes content easy to maintain.
+
+### **Core architectural decision**
+
+# **Git-based content architecture**
+
+Recommended baseline
+
+**Educational content:** MDX files in Git.
+
+**Content rendering:** Next.js.
+
+**Metadata validation:** TypeScript schemas.
+
+**Version history:** Git.
+
+**Student records:** Supabase PostgreSQL.
+
+**Deployment:** Vercel.
+
+Educational content will not be stored in Supabase.
+
+Think of Git as the Academy's educational library, Next.js as the library's display system, and Supabase as the student records office.
+
+Each system has a distinct responsibility.
+
+# **2. Educational content taxonomy**
+
+Before defining files, we need to establish what kinds of educational content ForgeSec Academy publishes.
+
+Not everything should be called a tutorial.
+
+## **2.1 Primary content types**
+
+| Content type    | Purpose                            | Example                         |
+| --------------- | ---------------------------------- | ------------------------------- |
+| Learning path   | Structured learning journey        | Linux Fundamentals              |
+| Tutorial        | Step-by-step teaching              | Understanding Linux Permissions |
+| Article         | Conceptual explanation             | How DNS Resolution Works        |
+| Write-up        | Technical investigation            | Analyzing a Web Vulnerability   |
+| Practical guide | Task-oriented instructions         | Setting Up SSH                  |
+| Reference       | Quick technical lookup             | Linux Command Reference         |
+| Glossary        | Technical definitions              | What is Privilege Escalation?   |
+| Resource        | Curated external learning material | Recommended Security Tools      |
+
+Each type should have its own presentation rules where necessary, but they should reuse a common content infrastructure.
+
+## **2.2 Content relationships**
+
+The hierarchy should look like this:
+
+\#chatgpt-mermaid-\_r_3df\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3df\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3df\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3df\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3df\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3df\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3df\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3df\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3df\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3df\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3df\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3df\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3df\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3df\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3df\_ p{margin:0;}#chatgpt-mermaid-\_r_3df\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3df\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3df\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3df\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3df\_ .label text,#chatgpt-mermaid-\_r_3df\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3df\_ .node rect,#chatgpt-mermaid-\_r_3df\_ .node circle,#chatgpt-mermaid-\_r_3df\_ .node ellipse,#chatgpt-mermaid-\_r_3df\_ .node polygon,#chatgpt-mermaid-\_r_3df\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3df\_ .rough-node .label text,#chatgpt-mermaid-\_r_3df\_ .node .label text,#chatgpt-mermaid-\_r_3df\_ .image-shape .label,#chatgpt-mermaid-\_r_3df\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3df\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3df\_ .rough-node .label,#chatgpt-mermaid-\_r_3df\_ .node .label,#chatgpt-mermaid-\_r_3df\_ .image-shape .label,#chatgpt-mermaid-\_r_3df\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3df\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3df\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3df\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3df\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3df\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3df\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3df\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3df\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3df\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3df\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3df\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3df\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3df\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3df\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3df\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3df\_ .icon-shape,#chatgpt-mermaid-\_r_3df\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3df\_ .icon-shape p,#chatgpt-mermaid-\_r_3df\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3df\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3df\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3df\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3df\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3df\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3df\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3df\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3df\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3df\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3df\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3df\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3df\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3df\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3df\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3df\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3df\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3df\_ .node rect,#chatgpt-mermaid-\_r_3df\_ .node circle,#chatgpt-mermaid-\_r_3df\_ .node ellipse,#chatgpt-mermaid-\_r_3df\_ .node polygon,#chatgpt-mermaid-\_r_3df\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3df\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3df\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3df\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3df\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3df\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}ForgeSec AcademyLearning PathsIndependent ContentReference LibraryLearning PathOrdered LessonsMDX ContentTutorialsArticlesWrite-upsPractical GuidesGlossaryCommand ReferencesExternal Resources
+
+Important distinction: A lesson is not necessarily a separate content format.
+
+A lesson can be an MDX document that is associated with a learning path. The same content infrastructure can also support independent tutorials.
+
+This avoids duplicating the same lesson just because it appears in multiple learning paths.
+
+# **3. Category and subcategory architecture**
+
+Categories organize educational material across the entire Academy.
+
+Learning paths organize lessons into a sequence.
+
+These two concepts should remain separate.
+
+## **3.1 Proposed initial categories**
+
+**Linux & System Administration**
+
+- Linux Fundamentals
+- Shell and Bash
+- Filesystem
+- Users and Permissions
+- Services and Processes
+- System Administration
+
+  **Networking**
+- Networking Fundamentals
+- TCP/IP
+- DNS
+- HTTP/HTTPS
+- Routing and Switching
+- Network Troubleshooting
+
+  **Programming & Development**
+- Python
+- JavaScript
+- TypeScript
+- Backend Development
+- APIs
+- Database Fundamentals
+
+  **Cybersecurity**
+- Security Fundamentals
+- Web Security
+- Penetration Testing
+- Vulnerability Research
+- Defensive Security
+- Digital Forensics
+- Cryptography
+
+  **Security Research & Write-ups**
+- CTF Write-ups
+- Vulnerability Analysis
+- Security Tool Research
+- Technical Case Studies
+
+These are initial categories, not a requirement to publish every category immediately.
+
+## **3.2 Category metadata**
+
+Each category should have:
+
+- Name.
+- Unique slug.
+- Description.
+- Icon identifier.
+- Optional parent category.
+- Display order.
+- Publication status.
+
+We should avoid hardcoding category information independently in multiple components.
+
+For initial implementation, category definitions can be stored in TypeScript configuration files in Git.
+
+## **3.3 Taxonomy rules**
+
+1. Every content item should have one primary category.
+2. Additional categories should only be used when genuinely relevant.
+3. Tags should describe narrower subjects.
+4. Categories should not duplicate learning paths.
+5. Categories should not become excessively deep.
+6. URLs should remain stable when display names change.
+
+A practical example:
+
+- Category: Linux & System Administration
+- Subcategory: File Permissions
+- Tags: `chmod`, `chown`, `permissions`, `linux`
+
+# **4. MDX content format**
+
+We will use MDX as the primary educational content format.
+
+MDX combines Markdown with reusable React components.
+
+This is particularly suitable for technical education because lessons frequently need:
+
+- Code blocks.
+- Tables.
+- Images.
+- Diagrams.
+- Warnings.
+- Command outputs.
+- Interactive elements in the future.
+
+## **4.1 Why MDX instead of HTML?**
+
+| Consideration        | MDX                      | Raw HTML                      |
+| -------------------- | ------------------------ | ----------------------------- |
+| Readability          | Excellent                | More verbose                  |
+| Code examples        | Native Markdown          | Manual markup                 |
+| Git revision         | Easy                     | More cumbersome               |
+| Reusability          | React components         | Requires additional structure |
+| Content authoring    | Simple                   | More technical                |
+| Frontend integration | Native Next.js ecosystem | Requires additional handling  |
+
+We should not manually write entire tutorials as HTML.
+
+That would make educational content harder to maintain.
+
+## **4.2 Example MDX lesson**
+
+A lesson file could look like this:
+
+```
+
+---
+title: "Understanding Linux File Permissions"
+slug: "linux-file-permissions"
+description: "Learn how Linux controls access to files and directories."
+contentType: "tutorial"
+category: "linux"
+subcategory: "permissions"
+difficulty: "beginner"
+readingTime: 8
+author: "ForgeSec Academy"
+tags:
+  - linux
+  - permissions
+  - chmod
+  - filesystem
+published: true
+publishedAt: "2026-11-16"
+updatedAt: "2026-11-16"
+---
+
+# Understanding Linux File Permissions
+
+## Introduction
+
+Linux uses permissions to control access
+to files and directories.
+
+## Viewing Permissions
+
+Run:
+
+\`\`\`bash
+ls -l
+\`\`\`
+
+## Changing Permissions
+
+Use the chmod command:
+
+\`\`\`bash
+chmod 644 example.txt
+\`\`\`
+
+<Callout type="warning">
+Understand the permission changes before
+applying them to important system files.
+</Callout>
+
+## Practical Task
+
+Create a test file and inspect its permissions.
+
+## Summary
+
+You should now understand basic Linux permissions.
+
+```
+
+This is an illustrative format. We will define the actual metadata schema and supported components later in this document.
+
+# **5. Content repository structure**
+
+We need a repository layout that remains understandable as content grows.
+
+I recommend separating application code from educational content.
+
+## **5.1 Proposed project structure**
+
+```
+
+forgesec-academy/
+│
+├── src/
+│   ├── app/
+│   │   ├── (public)/
+│   │   ├── (auth)/
+│   │   ├── dashboard/
+│   │   └── admin/
+│   │
+│   ├── components/
+│   │   ├── ui/
+│   │   ├── layout/
+│   │   ├── learning/
+│   │   └── content/
+│   │
+│   ├── lib/
+│   │   ├── content/
+│   │   ├── supabase/
+│   │   ├── auth/
+│   │   └── validation/
+│   │
+│   ├── types/
+│   └── config/
+│
+├── content/
+│   ├── tutorials/
+│   │   ├── linux/
+│   │   ├── networking/
+│   │   └── web-security/
+│   │
+│   ├── articles/
+│   ├── writeups/
+│   ├── guides/
+│   ├── references/
+│   ├── glossary/
+│   └── paths/
+│
+├── public/
+│   ├── images/
+│   ├── icons/
+│   └── assets/
+│
+├── scripts/
+│   ├── validate-content.ts
+│   ├── generate-index.ts
+│   └── check-links.ts
+│
+├── tests/
+│
+├── package.json
+├── tsconfig.json
+└── next.config.ts
+
+```
+
+## **5.2 Why separate&#x20;**`content/`**&#x20;from&#x20;**`src/`**?**
+
+Because content and application logic have different lifecycles.
+
+A developer might change the authentication system without changing a single tutorial.
+
+An instructor might update 20 lessons without changing the frontend.
+
+Separating these concerns makes the project easier to maintain.
+
+## **5.3 Content organization rules**
+
+- One primary content item per file.
+- Use descriptive filenames.
+- Keep filenames lowercase.
+- Use hyphens instead of spaces.
+- Do not use dates as the primary content identifier.
+- Avoid deeply nested directories.
+- Use metadata for classification rather than relying entirely on directory names.
+
+Example:
+
+```
+content/tutorials/linux/file-permissions.mdx
+content/tutorials/linux/user-management.mdx
+content/tutorials/networking/dns-fundamentals.mdx
+content/writeups/web-security/sql-injection-analysis.mdx
+```
+
+# **6. Content metadata and TypeScript validation**
+
+Architecture decision
+
+Frontmatter is the metadata at the beginning of an MDX file.
+
+However, we should not trust frontmatter simply because it exists.
+
+A missing slug, invalid difficulty value or malformed publication date could break content pages.
+
+We should validate every content file before deployment.
+
+## **6.1 Required metadata schema**
+
+I recommend the following common metadata structure:
+
+| Field          | Type         | Required          |
+| -------------- | ------------ | ----------------- |
+| title          | string       | Yes               |
+| slug           | string       | Yes               |
+| description    | string       | Yes               |
+| contentType    | enum         | Yes               |
+| category       | string       | Yes               |
+| difficulty     | enum         | Yes               |
+| author         | string       | Yes               |
+| tags           | string array | Yes               |
+| published      | boolean      | Yes               |
+| publishedAt    | date         | Published content |
+| updatedAt      | date         | Yes               |
+| readingTime    | number       | Yes               |
+| image          | string       | No                |
+| prerequisites  | string array | No                |
+| relatedContent | string array | No                |
+
+## **6.2 TypeScript content types**
+
+The application should have centralized types.
+
+```
+
+export type ContentType =
+  | "tutorial"
+  | "article"
+  | "writeup"
+  | "guide"
+  | "reference"
+  | "glossary";
+
+export type Difficulty =
+  | "beginner"
+  | "intermediate"
+  | "advanced";
+
+export interface ContentMetadata {
+  title: string;
+  slug: string;
+  description: string;
+  contentType: ContentType;
+  category: string;
+  difficulty: Difficulty;
+  author: string;
+  tags: string[];
+  published: boolean;
+  publishedAt?: string;
+  updatedAt: string;
+  readingTime: number;
+  image?: string;
+  prerequisites?: string[];
+  relatedContent?: string[];
+}
+
+export interface EducationalContent {
+  metadata: ContentMetadata;
+  body: string;
+  sourcePath: string;
+}
+
+```
+
+## **6.3 Runtime validation**
+
+TypeScript types alone cannot validate external or parsed data at runtime.
+
+We should use Zod for schema validation.
+
+```
+
+import { z } from "zod";
+
+export const ContentSchema = z.object({
+  title: z.string().min(3).max(120),
+  slug: z.string().regex(/^[a-z0-9-]+$/),
+  description: z.string().min(20).max(300),
+
+  contentType: z.enum([
+    "tutorial",
+    "article",
+    "writeup",
+    "guide",
+    "reference",
+    "glossary",
+  ]),
+
+  category: z.string().min(1),
+
+  difficulty: z.enum([
+    "beginner",
+    "intermediate",
+    "advanced",
+  ]),
+
+  author: z.string().min(1),
+  tags: z.array(z.string()),
+
+  published: z.boolean(),
+  publishedAt: z.string().optional(),
+  updatedAt: z.string(),
+
+  readingTime: z.number().int().positive(),
+
+  image: z.string().optional(),
+  prerequisites: z.array(z.string()).optional(),
+  relatedContent: z.array(z.string()).optional(),
+});
+
+export type ContentMetadata =
+  z.infer<typeof ContentSchema>;
+
+```
+
+We should add stricter date validation, publication-date requirements, duplicate-slug detection and reference validation in the actual implementation.
+
+### **Why this matters**
+
+Imagine an instructor writes 50 tutorials and accidentally gives two of them the same slug.
+
+Without validation, one tutorial might overwrite another in the content index.
+
+With validation, the build fails and identifies the conflict.
+
+**Decision:** Invalid content should fail the content validation process before deployment, rather than silently disappearing or breaking production pages.
+
+# **7. Learning path content architecture**
+
+Learning paths require special attention because they connect multiple content files.
+
+We should not duplicate lesson content inside learning path files.
+
+Instead, learning paths should reference existing content by stable identifiers.
+
+## **7.1 Example learning path file**
+
+Location:
+
+`content/paths/linux-fundamentals.yaml`
+
+```
+
+title: "Linux Fundamentals"
+slug: "linux-fundamentals"
+
+description: "Learn essential Linux skills."
+
+difficulty: beginner
+
+published: true
+
+estimatedHours: 12
+
+prerequisites: []
+
+objectives:
+  - Navigate Linux filesystems
+  - Manage files and directories
+  - Understand users and permissions
+  - Inspect processes and services
+  - Understand basic networking
+
+lessons:
+  - linux-introduction
+  - filesystem-navigation
+  - file-management
+  - user-management
+  - file-permissions
+  - process-management
+  - services-administration
+  - networking-commands
+  - ssh-remote-access
+
+```
+
+The actual YAML format will be parsed and validated by TypeScript.
+
+## **7.2 Lesson relationships**
+
+The relationship should be:
+
+- Learning path contains ordered lesson references.
+- Each lesson exists as an independent MDX document.
+- One lesson can appear in multiple learning paths.
+- Progress is calculated separately for each student and path.
+- Updating a lesson updates its appearance wherever it is referenced.
+
+This avoids content duplication.
+
+## **7.3 Stable identifiers**
+
+I recommend using a stable content ID in addition to a human-readable slug.
+
+For example:
+
+```
+id: "lsn_linux_permissions_001"
+slug: "linux-file-permissions"
+```
+
+The slug controls the URL.
+
+The ID identifies the content internally.
+
+If we later change the URL, the content ID can remain the same.
+
+This is particularly important when student progress records reference lessons.
+
+**Important:** Never use a lesson's title as its database identity. Titles change.
+
+# **8. Images and asset management**
+
+Images are necessary for technical explanations, diagrams, screenshots and illustrations.
+
+But we have a limited hosting budget.
+
+We need to avoid turning the Vercel deployment into an unnecessarily large media repository.
+
+## **8.1 Image categories**
+
+| Image type               | Example                   |
+| ------------------------ | ------------------------- |
+| Educational illustration | Linux filesystem diagram  |
+| Screenshot               | Terminal output           |
+| Architecture diagram     | HTTP request flow         |
+| Infographic              | TCP/IP model              |
+| Thumbnail                | Tutorial cover            |
+| Logo/icon                | Technology identification |
+
+## **8.2 Initial storage recommendation**
+
+Use the Git repository for small, optimized educational assets.
+
+Suggested structure:
+
+```
+public/
+└── images/
+    ├── tutorials/
+    │   ├── linux/
+    │   └── networking/
+    ├── diagrams/
+    ├── writeups/
+    └── thumbnails/
+```
+
+### **Image guidelines**
+
+- Prefer WebP or AVIF where supported.
+- Compress screenshots without making technical details unreadable.
+- Avoid uploading original multi-megabyte screenshots.
+- Use descriptive filenames.
+- Provide alternative text.
+- Avoid duplicate assets.
+- Do not use externally hosted images without checking licensing and reliability.
+
+## **8.3 Future external image storage**
+
+If the content library becomes large, we can move media to an external object-storage provider.
+
+However, we should not introduce another service during initial development.
+
+One limitation: Git is excellent for text, but not an ideal long-term solution for large binary media libraries. We should monitor repository size.
+
+# **9. Diagrams and technical illustrations**
+
+Cybersecurity education requires more than paragraphs and terminal screenshots.
+
+Students need to understand how systems interact.
+
+For example:
+
+- TCP three-way handshake.
+- DNS resolution.
+- HTTP request lifecycle.
+- Linux permission hierarchy.
+- Authentication flows.
+- Network segmentation.
+- Web application architecture.
+
+## **9.1 Recommended diagram formats**
+
+| Format          | Best use                      |
+| --------------- | ----------------------------- |
+| Mermaid         | Flowcharts and sequences      |
+| SVG             | Custom technical diagrams     |
+| PNG/WebP        | Screenshots and illustrations |
+| Markdown tables | Structured comparisons        |
+
+I recommend Mermaid for most diagrams because it is text-based and version-controlled.
+
+Example:
+
+Web ServerDNS ResolverClientWeb ServerDNS ResolverClient#chatgpt-mermaid-\_r_3f0\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3f0\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3f0\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3f0\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3f0\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3f0\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3f0\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3f0\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3f0\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3f0\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3f0\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3f0\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3f0\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3f0\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3f0\_ p{margin:0;}#chatgpt-mermaid-\_r_3f0\_ .actor{stroke:rgb(58, 132, 63);fill:rgb(17, 40, 19);stroke-width:1;}#chatgpt-mermaid-\_r_3f0\_ rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3f0\_ rect.note[data-look="neo"]{stroke:rgb(172, 79, 35);fill:rgb(48, 48, 48);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3f0\_ text.actor>tspan{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3f0\_ .actor-line{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3f0\_ .innerArc{stroke-width:1.5;stroke-dasharray:none;}#chatgpt-mermaid-\_r_3f0\_ .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3f0\_ .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3f0\_ [id$="-arrowhead"] path{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3f0\_ .sequenceNumber{fill:#505050;}#chatgpt-mermaid-\_r_3f0\_ [id$="-sequencenumber"]{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3f0\_ [id$="-crosshead"] path{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3f0\_ .messageText{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3f0\_ .labelBox{stroke:rgba(255, 255, 255, 0.15);fill:rgb(0, 0, 0);filter:none;}#chatgpt-mermaid-\_r_3f0\_ .labelText,#chatgpt-mermaid-\_r_3f0\_ .labelText>tspan{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3f0\_ .loopText,#chatgpt-mermaid-\_r_3f0\_ .loopText>tspan{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3f0\_ .sectionTitle,#chatgpt-mermaid-\_r_3f0\_ .sectionTitle>tspan{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3f0\_ .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:rgba(255, 255, 255, 0.15);fill:rgba(255, 255, 255, 0.15);}#chatgpt-mermaid-\_r_3f0\_ .note{stroke:rgb(172, 79, 35);fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3f0\_ .noteText,#chatgpt-mermaid-\_r_3f0\_ .noteText>tspan{fill:rgb(237, 237, 237);stroke:none;font-weight:normal;}#chatgpt-mermaid-\_r_3f0\_ .activation0{fill:rgb(48, 48, 48);stroke:hsl(0, 0%, 8.8235294118%);}#chatgpt-mermaid-\_r_3f0\_ .activation1{fill:rgb(48, 48, 48);stroke:hsl(0, 0%, 8.8235294118%);}#chatgpt-mermaid-\_r_3f0\_ .activation2{fill:rgb(48, 48, 48);stroke:hsl(0, 0%, 8.8235294118%);}#chatgpt-mermaid-\_r_3f0\_ .actorPopupMenu{position:absolute;}#chatgpt-mermaid-\_r_3f0\_ .actorPopupMenuPanel{position:absolute;fill:rgb(17, 40, 19);box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#chatgpt-mermaid-\_r_3f0\_ .actor-man circle,#chatgpt-mermaid-\_r_3f0\_ line{fill:rgb(17, 40, 19);stroke-width:2px;}#chatgpt-mermaid-\_r_3f0\_ g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3f0\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3f0\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3f0\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3f0\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3f0\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3f0\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3f0\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3f0\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}DNS queryIP addressHTTP requestHTTP response
+
+The Mermaid source should be stored directly in MDX code fences.
+
+The frontend renders it into a diagram.
+
+This means diagrams can be updated using Git without exporting new image files.
+
+## **9.2 Diagram requirements**
+
+- Support responsive rendering.
+- Maintain readable labels.
+- Support dark and light themes.
+- Avoid excessively large diagrams.
+- Provide textual explanations alongside complex diagrams.
+- Never make a diagram the only explanation of a critical concept.
+
+# **10. Reusable educational components**
+
+We should develop a small component library specifically for technical education.
+
+Instead of manually formatting every warning, command explanation and note, instructors can use reusable components.
+
+## **10.1 Proposed content components**
+
+| Component         | Purpose                      |
+| ----------------- | ---------------------------- |
+| Callout           | Warning, note, tip           |
+| Command           | Terminal command             |
+| Output            | Expected terminal output     |
+| Comparison        | Compare two technologies     |
+| LearningObjective | Display lesson objectives    |
+| Prerequisites     | Show required knowledge      |
+| KeyTakeaways      | Summarize important concepts |
+| PracticalTask     | Display assignments          |
+| KnowledgeCheck    | Link to a quiz               |
+| ResourceList      | Display references           |
+| ImageFigure       | Display images with captions |
+
+## **10.2 Example component usage**
+
+```
+
+<Callout type="warning" title="Important">
+  Do not run destructive commands
+  on production systems.
+</Callout>
+
+<Command language="bash">
+  ls -lah
+</Command>
+
+<Output>
+  total 16K
+  drwxr-xr-x  4 user user 4.0K .
+</Output>
+
+<KeyTakeaways>
+  - Linux uses a hierarchical filesystem.
+  - Permissions control access.
+  - Users and groups determine ownership.
+</KeyTakeaways>
+
+```
+
+The component library should remain small.
+
+We should only add components when they solve a recurring educational need.
+
+### **10.3 Security consideration**
+
+MDX can execute imported React components and expressions.
+
+Therefore:
+
+- Only trusted instructors or administrators should contribute MDX.
+- Never render arbitrary student-submitted MDX.
+- Do not allow students to upload executable content.
+- Keep content imports restricted to approved components.
+- Avoid evaluating arbitrary code during content rendering.
+
+This is an important security boundary for ForgeSec Academy.
+
+# **11. Content quality and lesson standards**
+
+A technically correct tutorial can still be a poor learning resource.
+
+We need a consistent lesson-writing standard.
+
+## **11.1 Recommended lesson structure**
+
+Every substantial tutorial should follow this sequence:
+
+## **ForgeSec lesson template**
+
+1. **Title and introduction**
+
+   Explain what the lesson covers.
+2. **Learning objectives**
+
+   Define what students should understand afterward.
+3. **Prerequisites**
+
+   Explain what knowledge or tools are needed.
+4. **Concept explanation**
+
+   Introduce the technical concept.
+5. **Practical demonstration**
+
+   Show commands, examples or configurations.
+6. **Expected output**
+
+   Explain what students should observe.
+7. **Common mistakes**
+
+   Discuss frequent errors.
+8. **Practical assignment**
+
+   Provide a task to perform independently.
+9. **Knowledge check**
+
+   Assess understanding.
+10. **Summary and references**
+
+    Reinforce important points and provide further reading.
+
+Not every article or write-up needs all ten sections.
+
+Forcing this template onto short reference entries would create unnecessary content.
+
+## **11.2 Technical accuracy requirements**
+
+Every practical lesson should ideally specify:
+
+- Operating system or platform.
+- Required privileges.
+- Required tools.
+- Commands used.
+- Expected results.
+- Potential risks.
+- Verification procedure.
+- External references where relevant.
+
+For security-related topics, also identify the authorized environment in which the exercise should be performed.
+
+## **11.3 Content review states**
+
+I recommend a slightly more detailed content lifecycle than simply Draft and Published.
+
+| Status    | Meaning                       |
+| --------- | ----------------------------- |
+| Draft     | Work in progress              |
+| Review    | Awaiting technical review     |
+| Approved  | Reviewed and ready to publish |
+| Published | Publicly available            |
+| Archived  | No longer actively maintained |
+
+Only Approved or Published content should be eligible for publication, depending on the publishing workflow.
+
+This is particularly valuable when the Academy eventually has multiple instructors.
+
+# **12. Content validation and automated quality checks**
+
+P0 — Required infrastructure
+
+We should not depend on instructors manually checking every file.
+
+A small collection of TypeScript scripts can automate much of the validation process.
+
+## **12.1 Required validation checks**
+
+| Check                        | What it prevents            |
+| ---------------------------- | --------------------------- |
+| Frontmatter validation       | Missing or invalid metadata |
+| Duplicate slug detection     | URL collisions              |
+| Duplicate ID detection       | Content identity conflicts  |
+| Missing image detection      | Broken images               |
+| Broken internal links        | Dead navigation             |
+| Missing lesson references    | Invalid learning paths      |
+| Invalid categories           | Inconsistent taxonomy       |
+| Invalid publication dates    | Incorrect metadata          |
+| Unpublished content exposure | Accidental disclosure       |
+| Missing required sections    | Incomplete lessons          |
+
+## **12.2 Proposed validation scripts**
+
+```
+scripts/
+├── validate-content.ts
+├── validate-paths.ts
+├── validate-assets.ts
+├── check-links.ts
+└── generate-search-index.ts
+```
+
+Each script should perform one clear responsibility.
+
+This follows a useful engineering principle: small scripts are easier to test, debug and maintain than one enormous content-management script.
+
+## **12.3 Automated validation pipeline**
+
+\#chatgpt-mermaid-\_r_3fg\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3fg\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3fg\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3fg\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3fg\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3fg\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3fg\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3fg\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3fg\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3fg\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3fg\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3fg\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3fg\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3fg\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3fg\_ p{margin:0;}#chatgpt-mermaid-\_r_3fg\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3fg\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3fg\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3fg\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3fg\_ .label text,#chatgpt-mermaid-\_r_3fg\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3fg\_ .node rect,#chatgpt-mermaid-\_r_3fg\_ .node circle,#chatgpt-mermaid-\_r_3fg\_ .node ellipse,#chatgpt-mermaid-\_r_3fg\_ .node polygon,#chatgpt-mermaid-\_r_3fg\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3fg\_ .rough-node .label text,#chatgpt-mermaid-\_r_3fg\_ .node .label text,#chatgpt-mermaid-\_r_3fg\_ .image-shape .label,#chatgpt-mermaid-\_r_3fg\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3fg\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3fg\_ .rough-node .label,#chatgpt-mermaid-\_r_3fg\_ .node .label,#chatgpt-mermaid-\_r_3fg\_ .image-shape .label,#chatgpt-mermaid-\_r_3fg\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3fg\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3fg\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3fg\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3fg\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3fg\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3fg\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3fg\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3fg\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3fg\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3fg\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3fg\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3fg\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3fg\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3fg\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3fg\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3fg\_ .icon-shape,#chatgpt-mermaid-\_r_3fg\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3fg\_ .icon-shape p,#chatgpt-mermaid-\_r_3fg\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3fg\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3fg\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3fg\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3fg\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3fg\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3fg\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3fg\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3fg\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3fg\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3fg\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3fg\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3fg\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3fg\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3fg\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3fg\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3fg\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3fg\_ .node rect,#chatgpt-mermaid-\_r_3fg\_ .node circle,#chatgpt-mermaid-\_r_3fg\_ .node ellipse,#chatgpt-mermaid-\_r_3fg\_ .node polygon,#chatgpt-mermaid-\_r_3fg\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3fg\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3fg\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3fg\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3fg\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3fg\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Instructor edits MDXGit CommitContent ValidationValid?Report ErrorsGenerate Content IndexBuild Next.jsBuild Successful?Report Build FailureDeploy to VercelPublish ContentNoYesNoYes
+
+### **12.4 Build failure policy**
+
+The deployment must fail when:
+
+- A published content item has invalid metadata.
+- A learning path references a nonexistent lesson.
+- Duplicate content IDs or slugs exist.
+- Required assets are missing.
+- An invalid content component is used.
+
+We should distinguish between errors and non-blocking warnings.
+
+For example, a missing optional related-content link may generate a warning rather than stopping the deployment.
+
+# **13. Content indexing and search architecture**
+
+We already decided that initial search should not require an external search service.
+
+Now we need to define exactly how it works.
+
+## **13.1 Static search index**
+
+During the build, a TypeScript script will read published content and generate a compact JSON search index.
+
+Example:
+
+```
+
+[
+  {
+    "id": "lsn_linux_permissions_001",
+    "title": "Linux File Permissions",
+    "slug": "linux-file-permissions",
+    "description": "Understand Linux file permissions.",
+    "type": "tutorial",
+    "category": "linux",
+    "tags": ["linux", "chmod", "permissions"]
+  }
+]
+
+```
+
+This is an illustrative data structure.
+
+The generated index should contain only information needed for searching, not the full MDX content.
+
+## **13.2 Search architecture**
+
+**MDX content repository**
+
+**TypeScript index generator**
+
+**search-index.json**
+
+**Client-side search**
+
+Search runs without querying Supabase for every keystroke.
+
+## **13.3 Search implementation**
+
+Possible libraries:
+
+- Fuse.js for fuzzy matching.
+- MiniSearch for lightweight full-text search.
+
+My recommendation is to start with MiniSearch if we want indexed field-based searching and good scaling for a growing content collection.
+
+We should benchmark the actual index size before choosing.
+
+### **Important optimization**
+
+Do not download the entire search index on every page navigation.
+
+Instead:
+
+- Load it when the student opens search.
+- Cache it in the browser.
+- Keep the index compact.
+- Limit the number of displayed results.
+- Use pagination or result limits.
+
+This reduces unnecessary bandwidth.
+
+# **14. Content URLs and SEO architecture**
+
+Educational content should be discoverable through search engines.
+
+We should design URLs carefully because changing them later can affect external links and search rankings.
+
+## **14.1 Proposed URL patterns**
+
+| Content         | URL                                       |
+| --------------- | ----------------------------------------- |
+| Tutorial        | `/learn/tutorials/linux-file-permissions` |
+| Learning path   | `/learn/paths/linux-fundamentals`         |
+| Article         | `/articles/how-dns-works`                 |
+| Write-up        | `/writeups/sql-injection-analysis`        |
+| Practical guide | `/guides/ssh-configuration`               |
+| Glossary        | `/glossary/privilege-escalation`          |
+| Category        | `/categories/linux`                       |
+| Search          | `/search?q=linux`                         |
+
+We should use a consistent URL pattern for each content type.
+
+## **14.2 SEO metadata**
+
+Each published content item should support:
+
+- SEO title.
+- Meta description.
+- Canonical URL.
+- Open Graph title.
+- Open Graph description.
+- Social preview image.
+- Structured data where appropriate.
+
+These fields can be optional initially, with sensible defaults generated from the normal content metadata.
+
+## **14.3 Technical SEO requirements**
+
+- XML sitemap.
+- Robots.txt.
+- Canonical URLs.
+- Descriptive page titles.
+- Semantic headings.
+- Internal linking.
+- Image alternative text.
+- Correct 404 handling.
+- No indexing of private dashboard pages.
+- No indexing of unpublished content.
+
+## **14.4 Content URL changes**
+
+If a published slug changes, the system should support a redirect from the old URL.
+
+We should maintain a small redirect configuration in Git.
+
+This avoids broken external links.
+
+# **15. Content versioning and revision management**
+
+Git gives us an important advantage: every educational update can be tracked.
+
+## **15.1 Revision workflow**
+
+An instructor changes a lesson.
+
+Git records:
+
+- What changed.
+- Who changed it.
+- When it changed.
+- Which version existed previously.
+
+We can revert a problematic change without building a separate version-history database.
+
+## **15.2 Recommended Git workflow**
+
+\#chatgpt-mermaid-\_r_3gm\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3gm\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3gm\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3gm\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3gm\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3gm\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3gm\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3gm\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3gm\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3gm\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3gm\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3gm\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3gm\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3gm\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3gm\_ p{margin:0;}#chatgpt-mermaid-\_r_3gm\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3gm\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3gm\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3gm\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3gm\_ .label text,#chatgpt-mermaid-\_r_3gm\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3gm\_ .node rect,#chatgpt-mermaid-\_r_3gm\_ .node circle,#chatgpt-mermaid-\_r_3gm\_ .node ellipse,#chatgpt-mermaid-\_r_3gm\_ .node polygon,#chatgpt-mermaid-\_r_3gm\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3gm\_ .rough-node .label text,#chatgpt-mermaid-\_r_3gm\_ .node .label text,#chatgpt-mermaid-\_r_3gm\_ .image-shape .label,#chatgpt-mermaid-\_r_3gm\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3gm\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3gm\_ .rough-node .label,#chatgpt-mermaid-\_r_3gm\_ .node .label,#chatgpt-mermaid-\_r_3gm\_ .image-shape .label,#chatgpt-mermaid-\_r_3gm\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3gm\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3gm\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3gm\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3gm\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3gm\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3gm\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3gm\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3gm\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3gm\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3gm\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3gm\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3gm\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3gm\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3gm\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3gm\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3gm\_ .icon-shape,#chatgpt-mermaid-\_r_3gm\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3gm\_ .icon-shape p,#chatgpt-mermaid-\_r_3gm\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3gm\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3gm\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3gm\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3gm\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3gm\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3gm\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3gm\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3gm\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3gm\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3gm\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3gm\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3gm\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3gm\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3gm\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3gm\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3gm\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3gm\_ .node rect,#chatgpt-mermaid-\_r_3gm\_ .node circle,#chatgpt-mermaid-\_r_3gm\_ .node ellipse,#chatgpt-mermaid-\_r_3gm\_ .node polygon,#chatgpt-mermaid-\_r_3gm\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3gm\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3gm\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3gm\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3gm\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3gm\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Main BranchCreate Content BranchWrite or Edit LessonRun ValidationCreate Pull RequestReview ContentApproved?Merge to MainAutomatic DeploymentNoYes
+
+### **15.3 Who should publish?**
+
+For the initial stage:
+
+- Administrator: can approve and publish.
+- Instructor: can prepare content changes.
+- Contributors: can propose changes through Git.
+
+If there is only one content maintainer, the workflow can be simplified.
+
+We should not introduce complicated approval bureaucracy when the team is small.
+
+## **15.4 Revision history on the website**
+
+The initial public interface does not need a full revision-history viewer.
+
+However, we should preserve the information in Git.
+
+A future enhancement could display:
+
+- Last updated date.
+- Change summary.
+- Version history.
+- Contributors.
+
+# **16. Content publishing and instructor workflow**
+
+We need a publishing process that does not require an instructor to understand the entire Next.js application.
+
+## **16.1 Initial workflow**
+
+## **Instructor publishing workflow**
+
+1. **Create content**
+
+   Start with an approved lesson template.
+2. **Write the lesson**
+
+   Use MDX and supported educational components.
+3. **Add resources**
+
+   Include images, commands, diagrams and references.
+4. **Validate**
+
+   Run automated content checks.
+5. **Review**
+
+   Check technical accuracy, readability and safety.
+6. **Approve**
+
+   Administrator approves the contribution.
+7. **Publish**
+
+   Merge the approved change into the production branch.
+
+## **16.2 Content authoring templates**
+
+We should maintain separate templates:
+
+```
+content-templates/
+├── tutorial.mdx
+├── article.mdx
+├── writeup.mdx
+├── practical-guide.mdx
+├── reference.mdx
+└── glossary-entry.mdx
+```
+
+Each template should contain:
+
+- Required frontmatter.
+- Recommended headings.
+- Writing guidance.
+- Example components.
+- Technical accuracy reminders.
+
+This will make content creation faster and more consistent.
+
+## **16.3 Future content administration**
+
+Later, we could build an instructor portal that:
+
+- Creates lesson files.
+- Generates frontmatter.
+- Provides an MDX editor.
+- Previews content.
+- Runs validation.
+- Creates Git pull requests.
+- Displays review status.
+
+But this requires Git provider integration and additional permission management.
+
+It is not required for the first release.
+
+# **17. Content architecture and free-tier infrastructure**
+
+This section is particularly important because the Academy must operate without paid hosting initially.
+
+## **17.1 Responsibility separation**
+
+| Service             | Responsibility                              |
+| ------------------- | ------------------------------------------- |
+| GitHub              | Source code and educational content         |
+| Vercel              | Next.js deployment and page delivery        |
+| Supabase Auth       | Student authentication                      |
+| Supabase PostgreSQL | Student records and application data        |
+| Browser             | Client-side search and reading interactions |
+
+We should avoid putting educational content into Supabase just because it is convenient.
+
+The content is largely static. It belongs in Git.
+
+## **17.2 What consumes Supabase resources?**
+
+| Operation               | Supabase required?        |
+| ----------------------- | ------------------------- |
+| Read public tutorial    | No                        |
+| Browse learning paths   | No, if generated from Git |
+| Search tutorials        | No                        |
+| Read write-up           | No                        |
+| View glossary           | No                        |
+| Register student        | Yes                       |
+| Save bookmark           | Yes                       |
+| Track lesson completion | Yes                       |
+| Save quiz attempt       | Yes                       |
+| Load private dashboard  | Yes                       |
+
+This separation significantly reduces unnecessary database traffic.
+
+## **17.3 What consumes Vercel resources?**
+
+- Building the application.
+- Serving static pages and assets.
+- Executing dynamic server functions.
+- Rendering authenticated pages.
+- Serving generated search indexes.
+
+The main optimization is to generate public content pages statically whenever possible.
+
+We should not run a server function for every public lesson request.
+
+## **17.4 Important Vercel consideration**
+
+Static generation does not mean unlimited hosting.
+
+The free plan has usage limits, and commercial usage eligibility and restrictions must be checked before deployment.
+
+We should also avoid configuring a deployment process that rebuilds the entire Academy for every minor administrative action.
+
+For initial development, however, Git-triggered builds are a reasonable approach.
+
+# **18. Content architecture scalability**
+
+We should design for growth without building infrastructure we cannot afford.
+
+## **18.1 Expected growth scenarios**
+
+| Content volume    | Recommended approach                                   |
+| ----------------- | ------------------------------------------------------ |
+| 10–50 lessons     | MDX + static generation                                |
+| 50–200 lessons    | MDX + generated indexes                                |
+| 200–500 lessons   | Optimize indexing and build process                    |
+| 500–1,000 lessons | Benchmark build time and asset size                    |
+| 1,000+ lessons    | Consider content packages or external content delivery |
+
+These are planning thresholds, not hard technical limits.
+
+A well-designed MDX system can support considerably more content. The actual constraints will depend on build duration, memory, repository size, asset volume and deployment quotas.
+
+## **18.2 Scalability principles**
+
+1. Keep public content independent of Supabase.
+2. Generate static pages whenever possible.
+3. Keep metadata compact.
+4. Avoid unnecessary database queries.
+5. Avoid loading all content into the browser.
+6. Compress images.
+7. Separate large assets from source code when necessary.
+8. Maintain stable content identifiers.
+9. Validate content automatically.
+10. Keep the content ingestion system modular.
+
+## **18.3 Future migration options**
+
+If the Academy becomes successful, we can eventually migrate the content system to:
+
+- A headless CMS.
+- Git-based remote content storage.
+- Dedicated object storage for media.
+- A dedicated search service.
+
+None of these migrations should require changing the student progress model if we maintain stable content IDs.
+
+# **19. Recommended technical dependencies**
+
+These are the proposed libraries for the content system.
+
+| Technology                                | Responsibility                                | Priority             |
+| ----------------------------------------- | --------------------------------------------- | -------------------- |
+| Next.js                                   | Rendering and routing                         | Required             |
+| TypeScript                                | Application and scripts                       | Required             |
+| MDX                                       | Educational content                           | Required             |
+| `@next/mdx` or compatible MDX integration | MDX rendering                                 | Required             |
+| Zod                                       | Metadata validation                           | Required             |
+| Gray-matter                               | Frontmatter parsing, if using a custom loader | Required if selected |
+| MiniSearch                                | Client-side search                            | Recommended          |
+| Shiki                                     | Code syntax highlighting                      | Recommended          |
+| Mermaid                                   | Technical diagrams                            | Recommended          |
+| ESLint                                    | Code quality                                  | Required             |
+
+A technical distinction: `@next/mdx` and a custom filesystem content loader are not interchangeable configuration choices. We should select one content-loading approach during the implementation architecture phase and avoid unnecessary duplicate parsing systems.
+
+I recommend a filesystem-based content layer with a centralized TypeScript loader, metadata validation and controlled MDX compilation.
+
+We should also pin dependency versions and verify compatibility with the selected Next.js version.
+
+# **20. Final content architecture**
+
+Here is the proposed complete architecture.
+
+\#chatgpt-mermaid-\_r_3h2\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3h2\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3h2\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3h2\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3h2\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3h2\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3h2\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3h2\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3h2\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3h2\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3h2\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3h2\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3h2\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3h2\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3h2\_ p{margin:0;}#chatgpt-mermaid-\_r_3h2\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3h2\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3h2\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3h2\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3h2\_ .label text,#chatgpt-mermaid-\_r_3h2\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3h2\_ .node rect,#chatgpt-mermaid-\_r_3h2\_ .node circle,#chatgpt-mermaid-\_r_3h2\_ .node ellipse,#chatgpt-mermaid-\_r_3h2\_ .node polygon,#chatgpt-mermaid-\_r_3h2\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3h2\_ .rough-node .label text,#chatgpt-mermaid-\_r_3h2\_ .node .label text,#chatgpt-mermaid-\_r_3h2\_ .image-shape .label,#chatgpt-mermaid-\_r_3h2\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3h2\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3h2\_ .rough-node .label,#chatgpt-mermaid-\_r_3h2\_ .node .label,#chatgpt-mermaid-\_r_3h2\_ .image-shape .label,#chatgpt-mermaid-\_r_3h2\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3h2\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3h2\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3h2\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3h2\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3h2\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3h2\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3h2\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3h2\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3h2\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3h2\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3h2\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3h2\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3h2\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3h2\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3h2\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3h2\_ .icon-shape,#chatgpt-mermaid-\_r_3h2\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3h2\_ .icon-shape p,#chatgpt-mermaid-\_r_3h2\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3h2\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3h2\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3h2\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3h2\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3h2\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3h2\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3h2\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3h2\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3h2\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3h2\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3h2\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3h2\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3h2\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3h2\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3h2\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3h2\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3h2\_ .node rect,#chatgpt-mermaid-\_r_3h2\_ .node circle,#chatgpt-mermaid-\_r_3h2\_ .node ellipse,#chatgpt-mermaid-\_r_3h2\_ .node polygon,#chatgpt-mermaid-\_r_3h2\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3h2\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3h2\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3h2\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3h2\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3h2\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}HostingNext.js ApplicationTypeScript Content PipelineGit RepositoryVercelGitHubContent LoaderMDX RendererStatic Page GenerationSearch InterfaceLearning Path InterfaceFrontmatter ParserZod ValidationReference ValidationSearch Index GeneratorMDX TutorialsMDX ArticlesMDX Write-upsLearning Path YAMLImages and Diagrams
+
+This is the architecture I recommend implementing first.
+
+It provides a clear separation between educational content, application functionality and infrastructure.
+
+# **21. Final decisions for Part 04**
+
+## **Content architecture specification**
+
+Proposed baseline
+
+| Area              | Decision                    |
+| ----------------- | --------------------------- |
+| Primary format    | MDX                         |
+| Metadata          | YAML frontmatter            |
+| Validation        | Zod                         |
+| Content language  | English initially           |
+| Content storage   | Git repository              |
+| Content rendering | Next.js                     |
+| Search            | Generated JSON index        |
+| Search engine     | MiniSearch candidate        |
+| Code highlighting | Shiki                       |
+| Diagrams          | Mermaid                     |
+| Images            | Optimized repository assets |
+| Learning paths    | YAML configuration          |
+| Stable identity   | Permanent content IDs       |
+| Version history   | Git                         |
+| Publishing        | Git-based workflow          |
+| Public delivery   | Static generation           |
+| Student progress  | Supabase                    |
+
+## **21.1 Non-negotiable content rules**
+
+- Never store public tutorial bodies in Supabase.
+- Never make students register to read public lessons.
+- Every content item must have a stable identifier.
+- Validate metadata before deployment.
+- Prevent duplicate slugs and IDs.
+- Use reusable educational components.
+- Keep MDX restricted to trusted contributors.
+- Keep content independent of the UI implementation.
+- Support technical diagrams and code blocks.
+- Preserve revision history.
+- Avoid unnecessary paid content services.
+
+# **22. Completion checklist**
+
+- Established content taxonomy.
+- Defined categories and subcategories.
+- Defined MDX format.
+- Designed repository structure.
+- Defined TypeScript metadata types.
+- Defined runtime validation.
+- Designed learning path relationships.
+- Defined stable content identifiers.
+- Designed image storage.
+- Defined diagram support.
+- Proposed reusable educational components.
+- Defined lesson quality standards.
+- Designed content validation scripts.
+- Designed search indexing.
+- Defined URL and SEO strategy.
+- Established Git revision workflow.
+- Designed publishing workflow.
+- Considered Vercel and Supabase constraints.
+- Defined scalability and migration strategy.
+
+Part 04 completed
+
+# **Next: Part 05 — System Architecture & Technical Architecture**
+
+This is where we move from product and content design into the actual engineering architecture.
+
+I recommend covering:
+
+1. Complete application architecture.
+2. Next.js architecture and rendering strategy.
+3. Node.js runtime responsibilities.
+4. TypeScript project organization.
+5. Frontend/backend separation.
+6. Supabase architecture.
+7. Database access patterns.
+8. Authentication and session architecture.
+9. API design and server actions.
+10. Middleware and authorization.
+11. Environment configuration.
+12. Error handling and logging.
+13. Security architecture.
+14. Vercel deployment architecture.
+15. Free-tier resource optimization.
+16. Future migration and expansion.
+
+**One important distinction for Part 05:** Fully TypeScript does not mean forcing every operation into an API endpoint. We should use the appropriate Next.js mechanisms—Server Components, Server Actions, Route Handlers and static generation—while keeping all application logic and scripts in TypeScript.
+
+The objective is a genuinely TypeScript-based Node.js application, not simply a JavaScript application with TypeScript filenames.

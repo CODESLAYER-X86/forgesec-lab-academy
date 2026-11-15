@@ -1,0 +1,487 @@
+# **Part 26 — Search & Content Discovery**
+
+**Objective:** Allow students and visitors to quickly discover tutorials, learning paths, write-ups, references and glossary terms without requiring an expensive search service.
+
+**Architecture decision:** Use a statically generated search index with MiniSearch. No Elasticsearch, Algolia, external search API or additional database tables.
+
+## **1. Search architecture**
+
+The search system reads content from the existing Git-managed repository and generates a JSON index during the build.
+
+**Git-managed content**
+
+MDX lessons, YAML paths, write-ups, guides, references, glossary
+
+**Search index generator**
+
+Extract, normalize and validate searchable fields
+
+**Static JSON search index**
+
+Generated at build time
+
+**MiniSearch**
+
+Browser-side search and filtering
+
+**Search interface**
+
+Results, categories, tags and suggestions
+
+This works like an offline catalogue: the catalogue is prepared before visitors arrive rather than querying a database for every search.
+
+## **2. Searchable content**
+
+The initial search engine should index these content types:
+
+| Content type          | Searchable     |
+| --------------------- | -------------- |
+| Tutorials and lessons | Yes            |
+| Learning paths        | Yes            |
+| Write-ups             | Yes            |
+| Guides                | Yes            |
+| References            | Yes            |
+| Glossary              | Yes            |
+| Quizzes               | Optional later |
+| Assignments           | Optional later |
+| Student profiles      | No             |
+| Admin records         | No             |
+
+Only published content should appear in public search results.
+
+Draft and archived content must not leak into the generated public index.
+
+## **3. Search index structure**
+
+Each indexed document should contain:
+
+```
+export type SearchDocument = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  type:
+    | "tutorial"
+    | "learning_path"
+    | "writeup"
+    | "guide"
+    | "reference"
+    | "glossary";
+  category: string;
+  tags: string[];
+  searchableText: string;
+  url: string;
+};
+```
+
+Example generated JSON:
+
+```
+[
+  {
+    "id": "linux-001",
+    "title": "Introduction to Linux",
+    "slug": "introduction-to-linux",
+    "description": "Learn Linux fundamentals.",
+    "type": "tutorial",
+    "category": "linux",
+    "tags": ["linux", "operating-system"],
+    "searchableText": "Linux kernel operating system...",
+    "url": "/learn/tutorials/introduction-to-linux"
+  }
+]
+```
+
+The example is illustrative. Actual index entries should be generated from validated content metadata.
+
+## **4. Search index generator**
+
+Create:
+
+```
+scripts/
+└── generate-search-index.ts
+```
+
+Responsibilities:
+
+1. Read published content.
+2. Extract metadata.
+3. Extract useful plain text from MDX.
+4. Remove code blocks and unnecessary markup from searchable text.
+5. Normalize tags and categories.
+6. Generate document URLs.
+7. Exclude drafts and archived content.
+8. Detect duplicate IDs and invalid URLs.
+9. Write the final JSON index.
+
+Output:
+
+```
+public/
+└── search/
+    └── index.json
+```
+
+Do not include the entire lesson body in the search index. Index titles, descriptions, tags and a limited amount of plain-text content.
+
+This keeps the download small.
+
+## **5. MiniSearch configuration**
+
+Use the already selected package:
+
+```
+npm install minisearch
+```
+
+Example configuration:
+
+```
+import MiniSearch from "minisearch";
+
+const miniSearch = new MiniSearch({
+  fields: [
+    "title",
+    "description",
+    "tags",
+    "category",
+    "searchableText",
+  ],
+
+  storeFields: [
+    "id",
+    "title",
+    "description",
+    "type",
+    "category",
+    "tags",
+    "url",
+  ],
+
+  searchOptions: {
+    boost: {
+      title: 5,
+      tags: 3,
+      category: 2,
+      description: 2,
+    },
+    prefix: true,
+    fuzzy: 0.2,
+  },
+});
+```
+
+Search should prioritize exact title matches over generic text matches.
+
+For example, searching `SSH` should prioritize SSH tutorials and references instead of every lesson that happens to mention SSH.
+
+## **6. Search interface**
+
+Create:
+
+```
+src/components/search/
+├── search-dialog.tsx
+├── search-input.tsx
+├── search-results.tsx
+├── search-result-card.tsx
+├── search-filters.tsx
+├── search-empty-state.tsx
+└── search-provider.tsx
+```
+
+The interface should support:
+
+- Search input.
+- Search suggestions.
+- Result titles and descriptions.
+- Content-type labels.
+- Categories and tags.
+- Keyboard navigation.
+- Empty results state.
+- Loading state.
+- Clear search action.
+
+Suggested layout:
+
+**Search FORGESEC ACADEMY**
+
+Search Linux, networking, web security...
+
+Ctrl K
+
+All
+
+Tutorials
+
+Paths
+
+Write-ups
+
+References
+
+**Introduction to Linux**
+
+Tutorial · Linux · Beginner
+
+Learn the fundamentals of Linux operating systems and their core concepts.
+
+**Linux Fundamentals**
+
+Learning Path · Linux
+
+A structured introduction to Linux commands, filesystem navigation and permissions.
+
+**Linux Command Reference**
+
+Reference · Linux
+
+A practical reference for frequently used Linux commands.
+
+Illustrative search interface with example results.
+
+## **7. Search interactions**
+
+### **Keyboard shortcut**
+
+Support:
+
+- `Ctrl + K` on Windows/Linux.
+- `Cmd + K` on macOS.
+- `Escape` to close the dialog.
+- Arrow keys to navigate results.
+- `Enter` to open the selected result.
+
+The shortcut should not intercept typing when the user is already inside an input or editable field.
+
+### **Search behavior**
+
+| User action      | System behavior          |
+| ---------------- | ------------------------ |
+| Types a query    | Debounced search         |
+| Clears input     | Reset results            |
+| Selects category | Filter results           |
+| Selects result   | Navigate to content      |
+| No match         | Show helpful empty state |
+| Presses Escape   | Close search dialog      |
+
+Use a small debounce, around 150–250 ms. Search is local, so avoid unnecessary delays.
+
+## **8. Search filters**
+
+Initial filters:
+
+| Filter       | Options                                              |
+| ------------ | ---------------------------------------------------- |
+| Content type | Tutorial, path, write-up, guide, reference, glossary |
+| Category     | Linux, networking, web, security                     |
+| Difficulty   | Beginner, intermediate, advanced                     |
+| Tags         | Derived from content metadata                        |
+
+Difficulty should only apply to content types that actually have a difficulty field.
+
+Do not add advanced filters before there is enough content to justify them.
+
+## **9. Categories and tags**
+
+Create a consistent taxonomy.
+
+Example:
+
+```
+Categories
+├── Linux
+├── Networking
+├── Web Technologies
+├── Web Security
+├── System Administration
+├── Digital Forensics
+└── General Security
+
+Tags
+├── bash
+├── ssh
+├── tcp
+├── dns
+├── http
+├── sql
+├── authentication
+└── permissions
+```
+
+Rules:
+
+- Categories classify the main subject.
+- Tags identify narrower concepts.
+- Use consistent lowercase slugs.
+- Avoid creating duplicate tags with different spellings.
+- Do not let each article invent an unrelated category.
+
+For example, `web-security` should not coexist with `web_security` as two separate tags.
+
+## **10. Category and tag pages**
+
+Recommended routes:
+
+```
+/learn/tutorials/category/[slug]
+/writeups/category/[slug]
+/resources/category/[slug]
+
+/tags/[slug]
+```
+
+Each category page should display:
+
+- Category title.
+- Description.
+- Related content.
+- Number of published resources.
+- Available tags.
+- Pagination when needed.
+
+Do not create a separate database table for categories and tags initially. Store the taxonomy in Git-managed content metadata.
+
+## **11. Glossary discovery**
+
+The glossary is especially useful for beginners learning cybersecurity terminology.
+
+Example:
+
+```
+Glossary
+
+A
+├── API
+├── Authentication
+└── Authorization
+
+B
+├── Backend
+└── Bandwidth
+
+C
+├── Cipher
+├── Client
+└── Cookie
+```
+
+Recommended routes:
+
+```
+/glossary
+/glossary/[term]
+```
+
+Features:
+
+- Alphabetical browsing.
+- Search terms.
+- Short definitions.
+- Related terms.
+- Links to relevant tutorials.
+
+Glossary entries should use the existing Git-managed content architecture.
+
+## **12. Search performance and limitations**
+
+| Concern                 | Strategy                      |
+| ----------------------- | ----------------------------- |
+| Search engine           | MiniSearch                    |
+| Index storage           | Static JSON                   |
+| Search processing       | Browser                       |
+| Search database queries | None                          |
+| Search API              | None                          |
+| External search service | None                          |
+| Index updates           | New deployment                |
+| Search permissions      | Public published content only |
+
+One limitation: static client-side search requires downloading the index. This is appropriate for a small educational platform, but if the index grows significantly, split it into category-specific indexes or load it on demand.
+
+Also, MiniSearch is not a full semantic search engine. It will not reliably understand that two completely different phrases mean the same thing. Semantic search can remain a future enhancement.
+
+## **13. Testing requirements**
+
+| Test                    | Expected result            |
+| ----------------------- | -------------------------- |
+| Search by title         | Correct result             |
+| Search by tag           | Related content found      |
+| Search by category      | Relevant results           |
+| Search by partial word  | Prefix matching works      |
+| Typo in query           | Fuzzy matching helps       |
+| Search draft content    | No result                  |
+| Search archived content | No result                  |
+| Empty query             | No unnecessary result list |
+| No matching content     | Empty state                |
+| Keyboard navigation     | Fully functional           |
+| Mobile search           | Responsive                 |
+| Broken content URL      | Build validation fails     |
+| Duplicate search IDs    | Build validation fails     |
+
+## **14. Implementation checklist**
+
+**Part 26 progress**
+
+0/20
+
+Create search document TypeScript type
+
+Create content extraction utilities
+
+Implement static search index generator
+
+Exclude drafts and archived content
+
+Normalize categories and tags
+
+Integrate MiniSearch
+
+Build search dialog
+
+Build search input and suggestions
+
+Build search results
+
+Implement content-type filters
+
+Implement category filters
+
+Implement difficulty filters
+
+Add Ctrl/Cmd + K shortcut
+
+Add keyboard navigation
+
+Create category pages
+
+Create tag pages
+
+Create glossary index
+
+Create glossary detail pages
+
+Add search index validation
+
+Test index size and performance
+
+## **Final decisions**
+
+| Component                | Decision                         |
+| ------------------------ | -------------------------------- |
+| Search engine            | MiniSearch                       |
+| Search source            | Git-managed content              |
+| Index format             | Static JSON                      |
+| Index generation         | Build time                       |
+| Search API               | Not required                     |
+| Search database          | Not required                     |
+| Filters                  | Type, category, difficulty, tags |
+| Searchable content       | Published public content         |
+| Glossary                 | Git-managed                      |
+| Semantic search          | Deferred                         |
+| External search services | Not used                         |
+
+**Part 26 complete.** Search and discovery will operate without adding database load or requiring paid search infrastructure.
+
+**Next: Part 27 — User Roles, Permissions & Permanent Admin Authorization.** This will consolidate the `ADMIN_EMAILS` environment-based design, Google OAuth verification, instructor permissions, database authorization, RLS and security rules into one implementation specification.

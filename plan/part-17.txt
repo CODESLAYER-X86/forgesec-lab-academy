@@ -1,0 +1,509 @@
+# **Part 17 — Monitoring, Maintenance, Analytics & Operational Management**
+
+**Objective:** Define how FORGESEC ACADEMY will be maintained after launch: how we detect failures, monitor platform health, protect student data, maintain dependencies, and measure whether the Academy is actually useful.
+
+Deployment is not the end of development. Once real students start using the platform, we need a lightweight operational system that helps us identify problems before they become serious.
+
+The key principle: **monitor what matters, automate repetitive maintenance, and avoid expensive infrastructure until actual usage justifies it.**
+
+## **1. Operational architecture**
+
+We will divide platform operations into five areas.
+
+| Area                   | Responsibility                                     |
+| ---------------------- | -------------------------------------------------- |
+| Application monitoring | Detect application errors and failures             |
+| Database monitoring    | Track database health and resource consumption     |
+| Security monitoring    | Identify suspicious activity and access violations |
+| Content maintenance    | Keep tutorials accurate and functional             |
+| Product analytics      | Understand student activity and learning outcomes  |
+
+These are separate responsibilities, but they should work together.
+
+For example, a sudden drop in quiz submissions could mean a broken quiz, a database issue, or simply that students aren't finding the quiz.
+
+## **2. Application error monitoring**
+
+We need to know when the application fails.
+
+Examples:
+
+- Homepage returns an error.
+- Student dashboard fails to load.
+- Google OAuth callback fails.
+- Quiz submission produces an exception.
+- An administrator cannot publish an assignment.
+- A database operation times out.
+
+### **Recommended approach**
+
+Start with:
+
+1. Vercel deployment and function logs.
+2. Supabase logs and dashboard.
+3. Structured application error logging.
+4. A lightweight external error-monitoring service only when necessary.
+
+We can consider Sentry later if the free offering fits the project's usage.
+
+Do not install several monitoring services that collect the same information.
+
+### **Application logging format**
+
+Use structured logs rather than arbitrary console messages.
+
+Example:
+
+```
+logger.error("quiz_submission_failed", {
+  quizId,
+  userId,
+  errorCode: "SUBMISSION_FAILED",
+});
+```
+
+Avoid logging:
+
+- OAuth tokens.
+- Session cookies.
+- Service-role keys.
+- Passwords or authentication secrets.
+- Full student submissions containing sensitive information.
+
+A log should help diagnose a problem without exposing the information we are trying to protect.
+
+## **3. Database monitoring**
+
+Supabase PostgreSQL is responsible for the platform's dynamic data.
+
+Monitor:
+
+- Database availability.
+- Database size.
+- Connection usage.
+- Query performance.
+- Failed queries.
+- Authentication errors.
+- RLS-related access failures.
+- Backup availability.
+
+### **Important database principle**
+
+Don't assume that a free-tier database has unlimited capacity.
+
+We should monitor actual consumption rather than design around guessed quotas.
+
+For example, a content-heavy tutorial website may have thousands of public page views without thousands of database queries because public content is statically generated.
+
+That is an advantage of our architecture.
+
+### **Database optimization rules**
+
+- Avoid unnecessary database queries.
+- Select only required columns.
+- Paginate large tables.
+- Index frequently queried fields.
+- Avoid duplicate records.
+- Use upserts for progress and activity.
+- Avoid storing every page view as a separate record.
+- Review slow queries before adding indexes indiscriminately.
+
+**Analogy:** A database index is like an organized library catalogue. It helps locate a book quickly, but creating unnecessary catalogues consumes resources and makes maintenance harder.
+
+## **4. Security monitoring**
+
+Security monitoring is especially important because FORGESEC ACADEMY teaches cybersecurity.
+
+We should monitor security-relevant events, not every normal student action.
+
+### **Events to record**
+
+| Event                                     | Importance |
+| ----------------------------------------- | ---------- |
+| Failed authentication/session validation  | Medium     |
+| Repeated unauthorized admin access        | High       |
+| Role changes                              | High       |
+| Quiz publication                          | Medium     |
+| Assignment publication                    | Medium     |
+| Repeated invalid submissions              | Medium     |
+| Unexpected privileged database operations | High       |
+| Security configuration changes            | High       |
+
+These events should feed into the `admin_audit_logs` system defined in Part 06.
+
+### **Alerting priorities**
+
+
+
+Critical
+
+&#x20;Privilege escalation, exposed secrets, suspected account compromise.
+
+
+
+
+
+High
+
+&#x20;Repeated unauthorized access, suspicious admin activity, database availability problems.
+
+
+
+
+
+Normal
+
+&#x20;Ordinary validation errors, failed searches, noncritical UI errors.
+
+
+
+Do not generate an alert for every failed login. That creates noise and makes meaningful events harder to identify.
+
+## **5. Uptime and availability monitoring**
+
+We need a way to know whether the public Academy is accessible.
+
+A simple uptime monitor can periodically check:
+
+```
+GET /
+GET /learn
+GET /api/health
+```
+
+The health endpoint should return a small response indicating whether the application is functioning.
+
+Example:
+
+```
+export async function GET() {
+  return Response.json({
+    status: "ok",
+    service: "forgesec-academy",
+  });
+}
+```
+
+This example checks application responsiveness, not full database health.
+
+A separate, protected diagnostic check can verify database connectivity if needed. Avoid exposing internal infrastructure details through a public health endpoint.
+
+Potential tools include:
+
+- UptimeRobot
+- Better Stack
+
+Start with one monitor, not both.
+
+Check the current free-tier limits before choosing a service.
+
+## **6. Content maintenance**
+
+Content is the core product. It needs its own maintenance process.
+
+A tutorial may become inaccurate when:
+
+- A Linux command changes.
+- A package is deprecated.
+- A software version changes.
+- A website changes its interface.
+- A security recommendation becomes outdated.
+- A previously safe procedure becomes risky.
+
+### **Content review metadata**
+
+Add these fields to the content metadata:
+
+```
+title: Linux File Permissions
+slug: linux-file-permissions
+content_id: linux-file-permissions
+
+status: published
+created_at: 2026-11-16
+updated_at: 2026-11-16
+reviewed_at: 2026-11-16
+
+review_interval_days: 180
+```
+
+The dates above are examples, not actual review commitments.
+
+### **Suggested review schedule**
+
+| Content category              | Review interval                     |
+| ----------------------------- | ----------------------------------- |
+| Linux fundamentals            | 180 days                            |
+| Networking fundamentals       | 180 days                            |
+| Web technologies              | 90–180 days                         |
+| Security tools and techniques | 60–90 days                          |
+| Vulnerability write-ups       | Review when new information emerges |
+| Historical write-ups          | Review for factual corrections      |
+
+These intervals are starting guidelines. High-risk or fast-changing material needs more frequent review.
+
+### **Content lifecycle**
+
+**Published**
+
+Available to students
+
+**Review due**
+
+Content needs technical inspection
+
+**Technical review**
+
+Check commands, references and explanations
+
+**Approved**
+
+Republish
+
+**Outdated**
+
+Revise
+
+A simple script can identify overdue reviews from the Git-managed metadata.
+
+We do not need a database table for every tutorial review.
+
+## **7. Product analytics**
+
+Analytics should answer useful questions about student behavior.
+
+It should not become a system for collecting as much personal information as possible.
+
+### **Metrics worth tracking**
+
+| Metric                   | What it tells us                        |
+| ------------------------ | --------------------------------------- |
+| Registered students      | Account growth                          |
+| Monthly active learners  | Actual engagement                       |
+| Lessons completed        | Learning activity                       |
+| Learning path completion | Curriculum effectiveness                |
+| Quiz attempts            | Assessment engagement                   |
+| Quiz pass rate           | Assessment difficulty and understanding |
+| Assignment completion    | Practical engagement                    |
+| Returning learners       | Whether students come back              |
+
+### **Avoid vanity metrics**
+
+For example:
+
+- Total page views alone don't prove learning.
+- Total registrations don't prove engagement.
+- Total bookmarks don't prove understanding.
+
+A student who completes a learning path and passes its assessment is more meaningful than a visitor who opens 20 pages and leaves.
+
+### **Initial analytics implementation**
+
+Use PostgreSQL data we already collect:
+
+- `lesson_progress`
+- `content_activity`
+- `quiz_attempts`
+- `assignment_progress`
+
+Generate aggregated dashboard statistics from these records.
+
+Do not create a large analytics warehouse or install a complex event-streaming platform.
+
+## **8. Privacy and analytics boundaries**
+
+We should collect only the information necessary to operate the Academy.
+
+Initial analytics should avoid:
+
+- Keystroke tracking.
+- Recording student screens.
+- Collecting device fingerprints.
+- Tracking precise location.
+- Recording every interaction.
+- Selling student activity data.
+
+If external analytics are introduced later, review their privacy implications and disclose their use in the privacy policy.
+
+We should also define how long activity records are retained and how users can request account deletion.
+
+## **9. Dependency and maintenance management**
+
+Our platform depends on several technologies:
+
+- Next.js.
+- React.
+- TypeScript.
+- Supabase libraries.
+- MDX tooling.
+- Testing libraries.
+- Other npm packages.
+
+These dependencies can introduce security vulnerabilities or breaking changes.
+
+### **Maintenance procedure**
+
+Run periodically:
+
+```
+npm outdated
+npm audit
+```
+
+Review the output before updating packages.
+
+Do not automatically upgrade every dependency just because a new version exists.
+
+Recommended policy:
+
+1. Review critical security advisories promptly.
+2. Update patch releases after testing.
+3. Review minor releases periodically.
+4. Plan major upgrades separately.
+5. Run the full CI pipeline after dependency changes.
+6. Keep `package-lock.json` committed.
+
+GitHub Dependabot can help identify dependency updates. Enable it when the repository is ready for routine maintenance.
+
+## **10. Backups and disaster recovery**
+
+We must prepare for:
+
+- Accidental deletion.
+- Database corruption.
+- Incorrect migrations.
+- Compromised administrator accounts.
+- Lost deployment configuration.
+- Repository damage.
+
+### **Recovery strategy**
+
+| Asset                    | Recovery method                 |
+| ------------------------ | ------------------------------- |
+| Application source       | GitHub repository               |
+| Educational content      | Git history                     |
+| Database schema          | Supabase migrations             |
+| Student records          | Supported database backups      |
+| Environment secrets      | Securely managed secret storage |
+| Deployment configuration | Documented configuration        |
+
+Do not assume that a free Supabase plan provides the backup and point-in-time recovery features we need. Verify the actual plan and retention options before production launch.
+
+### **Recovery testing**
+
+A backup that has never been restored is an unverified backup.
+
+Perform an occasional recovery exercise using an isolated environment.
+
+Record:
+
+- Backup source.
+- Recovery procedure.
+- Recovery time.
+- Missing data, if any.
+- Steps needed to restore the application.
+
+## **11. Operational maintenance schedule**
+
+A small team can maintain the Academy with a simple schedule.
+
+| Frequency      | Activities                                                          |
+| -------------- | ------------------------------------------------------------------- |
+| Daily          | Check critical failures and deployment status                       |
+| Weekly         | Review errors, security events and failed workflows                 |
+| Monthly        | Review dependencies, database usage and content health              |
+| Every 3 months | Review permissions, backup recovery and platform performance        |
+| Every 6 months | Review architecture, privacy policy and long-term maintenance needs |
+
+This is a maintenance target, not a requirement to spend hours checking dashboards every day. Automate routine checks wherever possible.
+
+## **12. Suggested monitoring architecture**
+
+```
+                  FORGESEC ACADEMY
+                         |
+          +--------------+--------------+
+          |              |              |
+      Next.js         Supabase        GitHub
+          |              |              |
+     App errors      DB/Auth logs   Code changes
+     Build status    RLS failures   Dependency alerts
+          |              |              |
+          +--------------+--------------+
+                         |
+                Operational review
+                         |
+          +--------------+--------------+
+          |              |              |
+        Alerts        Maintenance     Improvements
+```
+
+Keep this architecture simple. We don't need a separate monitoring backend or microservice.
+
+## **13. Implementation priorities**
+
+| Priority | Feature                   | Approach                    |
+| -------- | ------------------------- | --------------------------- |
+| P0       | Deployment logs           | Use hosting provider        |
+| P0       | Database monitoring       | Supabase dashboard          |
+| P0       | Error logging             | Structured application logs |
+| P0       | Security audit events     | Existing audit table        |
+| P0       | Content review metadata   | Git/MDX                     |
+| P0       | Database recovery plan    | Verify backup options       |
+| P1       | Uptime monitoring         | One external monitor        |
+| P1       | Dependency alerts         | Dependabot                  |
+| P1       | Operational dashboard     | Basic admin statistics      |
+| P1       | Content review script     | Node.js script              |
+| P2       | External error monitoring | If needed                   |
+| P2       | Advanced analytics        | Only when justified         |
+| P3       | Centralized observability | Only at larger scale        |
+
+## **14. Final decisions**
+
+For the initial release, I recommend:
+
+- Use Vercel and Supabase's existing monitoring facilities.
+- Keep logs structured and avoid sensitive information.
+- Record security-relevant administrative events.
+- Use Git metadata to maintain content quality.
+- Derive analytics from existing database records.
+- Introduce one uptime monitor.
+- Review dependencies regularly.
+- Verify database backup and recovery capabilities before onboarding real students.
+- Avoid paid monitoring and analytics infrastructure until there is a demonstrated need.
+
+**The important distinction:** We are building an educational platform, not an enterprise observability product. Monitoring should protect the Academy and improve its reliability without becoming another product we have to maintain.
+
+## **Part 17 implementation checklist**
+
+**Operational readiness**
+
+0/11
+
+Enable and review Vercel application logs
+
+Review Supabase database and Auth logs
+
+Implement structured error logging
+
+Record security-critical administrative events
+
+Add content review metadata
+
+Create a script for overdue content reviews
+
+Configure one uptime monitor
+
+Enable dependency update alerts
+
+Verify production backup options
+
+Document and test database recovery
+
+Create basic learning activity statistics
+
+**Recap:** Part 17 establishes how we operate and maintain the Academy after launch: error monitoring, database health, security events, content reviews, analytics, dependency updates and disaster recovery.
+
+**Next: Part 18 — Project Implementation Roadmap & Development Execution Plan.**
+
+This will consolidate the previous architecture and feature decisions into a practical development sequence: what to build first, dependencies between modules, milestones, acceptance criteria and what must be postponed until the platform proves successful.

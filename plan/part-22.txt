@@ -1,0 +1,861 @@
+# **Part 22 — Google OAuth Implementation: Supabase Configuration, Next.js SSR, Login, Callback, Logout & Session Protection**
+
+**Objective:** Implement secure Google-only authentication for FORGESEC ACADEMY using Supabase Auth and Next.js App Router.
+
+The implementation must support:
+
+- Google login and logout.
+- Automatic student account provisioning.
+- Secure server-side session verification.
+- Protected student and administrator routes.
+- No email/password authentication.
+- No custom password-reset or email-verification workflow.
+- No authentication tokens stored manually in browser `localStorage`.
+
+## **1. Authentication architecture**
+
+The authentication flow will be:
+
+**Student**
+
+Clicks Continue with Google
+
+**Next.js login action**
+
+Initiates OAuth through Supabase
+
+**Supabase Auth**
+
+Redirects to Google
+
+**Google OAuth**
+
+User grants authorization
+
+**Next.js OAuth callback**
+
+Exchanges authorization code for session
+
+**Authenticated application**
+
+Student profile, role and dashboard
+
+Think of Supabase as the identity verification office: Google confirms the identity, Supabase issues the session, and FORGESEC ACADEMY decides what the authenticated user is allowed to do.
+
+**Important distinction:** Google authenticates the person. Your PostgreSQL `user_roles` table authorizes what that person can access.
+
+## **2. Configure Google OAuth**
+
+You need a Google Cloud project and a Supabase project.
+
+### **Step 1 — Google Cloud Console**
+
+Open [Google Cloud Console](https://console.cloud.google.com/?utm_source=chatgpt.com).
+
+1. Create a project named `FORGESEC ACADEMY`.
+2. Open **Google Auth Platform**.
+3. Configure the OAuth consent screen.
+4. Select the appropriate audience for your intended users.
+5. Add the application name, support email and authorized domains.
+6. Create an OAuth client.
+7. Select **Web application**.
+
+Configure the authorized redirect URI using the callback URL shown by Supabase.
+
+It will have this form:
+
+```
+https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
+```
+
+Do not use your Next.js callback URL here. Google redirects to Supabase first.
+
+### **Step 2 — Supabase Auth**
+
+Open [Supabase Dashboard](https://supabase.com/dashboard?utm_source=chatgpt.com).
+
+Navigate to:
+
+**Authentication → Sign In / Providers → Google**
+
+Enable Google and enter:
+
+- Google OAuth Client ID.
+- Google OAuth Client Secret.
+
+Save the configuration.
+
+Keep the client secret inside Supabase's provider configuration. Never put it in frontend environment variables.
+
+### **Step 3 — Configure application URLs**
+
+In Supabase, open:
+
+**Authentication → URL Configuration**
+
+Set:
+
+- Site URL: your actual application origin.
+- Redirect URLs: your approved local and production callback URLs.
+
+For local development:
+
+```
+http://localhost:3000/auth/callback
+```
+
+For production:
+
+```
+https://YOUR_DOMAIN/auth/callback
+```
+
+Add preview URLs only if you deliberately support them. Avoid unrestricted wildcard redirects in production.
+
+## **3. Install dependencies and configure environment**
+
+The required packages were installed in Part 20, but verify them:
+
+```
+npm install @supabase/supabase-js @supabase/ssr
+```
+
+Create `.env.local` in the project root:
+
+```
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+```
+
+Get the URL and publishable key from your Supabase project's API settings.
+
+The publishable key is designed to be exposed to the browser. It does not grant administrator privileges; database access remains governed by PostgreSQL permissions and RLS.
+
+Do not put the following in `.env.local` unless a future, specifically justified server operation requires it:
+
+```
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+Never expose a service-role or secret key through a `NEXT_PUBLIC_` variable.
+
+## **4. Create the Supabase clients**
+
+We need two clients:
+
+- Browser client: used by Client Components when browser-side Supabase access is necessary.
+- Server client: used by Server Components, Server Actions and Route Handlers.
+
+Create this structure:
+
+```
+src/
+└── lib/
+    └── supabase/
+        ├── client.ts
+        └── server.ts
+```
+
+### `src/lib/supabase/client.ts`
+
+```
+import { createBrowserClient } from "@supabase/ssr";
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  );
+}
+```
+
+### `src/lib/supabase/server.ts`
+
+```
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Server Components cannot write cookies.
+            // Session refresh is handled by proxy.ts.
+          }
+        },
+      },
+    }
+  );
+}
+```
+
+The server client must be created per request. Do not store a user-specific Supabase client in a global variable.
+
+## **5. Implement automatic session refresh**
+
+A user can have a valid login session that eventually needs refreshing.
+
+Supabase's SSR integration handles this through cookies and a request interception layer. In Next.js 16, that layer is named `proxy.ts`; in Next.js 15 and earlier, use `middleware.ts` instead.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://supabase.com\&sz=32)
+
+Supabase Docs+1
+
+
+
+Create:
+
+```
+src/lib/supabase/proxy.ts
+```
+
+```
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function updateSession(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  // Verifies the token and refreshes the session when needed.
+  await supabase.auth.getClaims();
+
+  return supabaseResponse;
+}
+```
+
+### **Next.js 16:&#x20;**`src/proxy.ts`
+
+```
+import { type NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/proxy";
+
+export async function proxy(request: NextRequest) {
+  return updateSession(request);
+}
+
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
+```
+
+If your project uses Next.js 15 or earlier, place the wrapper at `src/middleware.ts` and export `middleware` instead of `proxy`.
+
+**Security note:** This proxy maintains sessions. It is not your authorization system. Every protected page and every server operation must independently verify the user and their permissions.
+
+## **6. Implement Google login**
+
+Create:
+
+```
+src/modules/auth/actions/
+└── sign-in.ts
+```
+
+### `src/modules/auth/actions/sign-in.ts`
+
+```
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+
+function safeNextPath(value: FormDataEntryValue | null) {
+  if (
+    typeof value !== "string" ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\")
+  ) {
+    return "/dashboard";
+  }
+
+  return value;
+}
+
+export async function signInWithGoogle(formData: FormData) {
+  const supabase = await createClient();
+
+  const next = safeNextPath(formData.get("next"));
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (!siteUrl) {
+    throw new Error("NEXT_PUBLIC_SITE_URL is not configured.");
+  }
+
+  const redirectTo = new URL("/auth/callback", siteUrl);
+  redirectTo.searchParams.set("next", next);
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: redirectTo.toString(),
+      queryParams: {
+        access_type: "offline",
+        prompt: "select_account",
+      },
+    },
+  });
+
+  if (error || !data.url) {
+    redirect("/login?error=google_login_failed");
+  }
+
+  redirect(data.url);
+}
+```
+
+The `next` parameter is restricted to local application paths to prevent open-redirect vulnerabilities.
+
+The `prompt` option asks Google to show an account selection prompt. It does not force users to create a new Google account.
+
+## **7. Implement the OAuth callback**
+
+Google returns to Supabase first. Supabase then redirects the user to our Next.js callback with an authorization code.
+
+Our application exchanges that code for a cookie-backed session.
+
+Create:
+
+```
+src/app/auth/callback/route.ts
+```
+
+```
+import { NextResponse, type NextRequest } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+function safeNextPath(value: string | null) {
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\")
+  ) {
+    return "/dashboard";
+  }
+
+  return value;
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams, origin } = request.nextUrl;
+
+  const code = searchParams.get("code");
+  const next = safeNextPath(searchParams.get("next"));
+
+  if (!code) {
+    return NextResponse.redirect(
+      new URL("/login?error=missing_code", origin)
+    );
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error) {
+    return NextResponse.redirect(
+      new URL("/login?error=oauth_callback_failed", origin)
+    );
+  }
+
+  return NextResponse.redirect(new URL(next, origin));
+}
+```
+
+The authorization code is exchanged on the server. Do not put it in browser storage or manually construct authentication cookies.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://supabase.com\&sz=32)
+
+Supabase Docs+1
+
+
+
+## **8. Build the login page**
+
+Create:
+
+```
+src/app/login/page.tsx
+```
+
+```
+import { signInWithGoogle } from "@/modules/auth/actions/sign-in";
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const params = await searchParams;
+
+  return (
+    <main className="flex min-h-screen items-center justify-center p-6">
+      <section className="w-full max-w-md space-y-6 rounded-xl border p-8">
+        <div>
+          <h1 className="text-2xl font-bold">
+            Sign in to FORGESEC ACADEMY
+          </h1>
+
+          <p className="mt-2 text-sm text-gray-500">
+            Access your learning progress, bookmarks and assessments.
+          </p>
+        </div>
+
+        {params.error && (
+          <p role="alert" className="text-sm text-red-500">
+            Google authentication failed. Please try again.
+          </p>
+        )}
+
+        <form action={signInWithGoogle}>
+          <button
+            type="submit"
+            className="w-full rounded-lg border px-4 py-3 font-medium"
+          >
+            Continue with Google
+          </button>
+        </form>
+
+        <p className="text-xs text-gray-500">
+          Public learning materials are available without an account.
+        </p>
+      </section>
+    </main>
+  );
+}
+```
+
+There is deliberately no:
+
+- Email field.
+- Password field.
+- Registration form.
+- Password-reset link.
+- Email-verification workflow.
+
+A Google account is the only authentication method.
+
+## **9. Implement logout**
+
+Create:
+
+```
+src/modules/auth/actions/sign-out.ts
+```
+
+```
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+
+export async function signOut() {
+  const supabase = await createClient();
+
+  await supabase.auth.signOut();
+
+  redirect("/");
+}
+```
+
+Use it in a server-rendered navigation component:
+
+```
+import { signOut } from "@/modules/auth/actions/sign-out";
+
+export function LogoutButton() {
+  return (
+    <form action={signOut}>
+      <button type="submit">
+        Sign out
+      </button>
+    </form>
+  );
+}
+```
+
+The server action signs out the current session. Handle errors explicitly in the production UI rather than silently assuming logout succeeded.
+
+## **10. Create authentication guards**
+
+Authentication guards prevent guests from accessing private pages.
+
+Create:
+
+```
+src/modules/auth/guards/
+├── require-user.ts
+└── require-admin.ts
+```
+
+### `require-user.ts`
+
+```
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+
+export async function requireUser() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    redirect("/login");
+  }
+
+  return user;
+}
+```
+
+`getUser()` verifies the authenticated user against Supabase Auth. Do not use `getSession()` alone as server-side proof of identity.
+
+### `require-admin.ts`
+
+```
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+
+export async function requireAdmin() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/login");
+  }
+
+  const { data: role, error: roleError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (roleError || !role) {
+    redirect("/dashboard");
+  }
+
+  return user;
+}
+```
+
+The role is read from PostgreSQL, not from:
+
+- Browser state.
+- A URL parameter.
+- A form field.
+- User-editable profile metadata.
+- A hardcoded frontend variable.
+
+The role query must be permitted by the `user_roles` SELECT RLS policy for the authenticated user to read their own role.
+
+## **11. Protect student and admin pages**
+
+A protected dashboard can use the guard directly.
+
+### `src/app/dashboard/page.tsx`
+
+```
+import { requireUser } from "@/modules/auth/guards/require-user";
+
+export default async function DashboardPage() {
+  const user = await requireUser();
+
+  return (
+    <main>
+      <h1>Student Dashboard</h1>
+      <p>Welcome, {user.user_metadata?.full_name ?? "Student"}.</p>
+    </main>
+  );
+}
+```
+
+### `src/app/admin/page.tsx`
+
+```
+import { requireAdmin } from "@/modules/auth/guards/require-admin";
+
+export default async function AdminPage() {
+  await requireAdmin();
+
+  return (
+    <main>
+      <h1>FORGESEC Administration</h1>
+      <p>Administrator access verified.</p>
+    </main>
+  );
+}
+```
+
+These guards protect page rendering. They do **not** automatically protect every database operation.
+
+Every Server Action, Route Handler and service that accesses private data must also authenticate and authorize its own request.
+
+Think of the page guard as the security guard at the building entrance. Each sensitive office inside the building still needs its own access control.
+
+## **12. Protect Server Actions**
+
+For example, consider an action that marks a lesson complete.
+
+The client must never be allowed to choose another student's `user_id`.
+
+Use the authenticated identity:
+
+```
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/modules/auth/guards/require-user";
+
+export async function completeLesson(lessonId: string) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  // Validate lessonId against the trusted Git content registry here.
+
+  const { error } = await supabase
+    .from("lesson_progress")
+    .upsert(
+      {
+        user_id: user.id,
+        lesson_id: lessonId,
+      },
+      {
+        onConflict: "user_id,lesson_id",
+      }
+    );
+
+  if (error) {
+    throw new Error("Could not update lesson progress.");
+  }
+
+  return { success: true };
+}
+```
+
+The database RLS policy provides another layer of protection by requiring the row's `user_id` to match `auth.uid()`.
+
+For production, validate `lessonId` with the project's Zod schema and content registry before performing the operation.
+
+## **13. Correct the callback's redirect origin**
+
+One security improvement to the callback code in Section 7: do not blindly trust the incoming request's host when constructing the final redirect.
+
+Use the configured application URL as the destination origin.
+
+For example, in the callback:
+
+```
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+if (!siteUrl) {
+  throw new Error("Application URL is not configured.");
+}
+
+const destination = new URL(next, siteUrl);
+
+return NextResponse.redirect(destination);
+```
+
+The callback must still validate `next` as a local path, as shown earlier.
+
+This avoids turning a manipulated Host header into an authentication redirect destination.
+
+## **14. Account provisioning and role handling**
+
+The database trigger from Part 21 handles the first-login process.
+
+**First Google login**
+
+1. Google authenticates the account.
+2. Supabase creates or identifies the Auth user.
+3. Database trigger creates `profiles` row.
+4. Database trigger creates the default `student` role.
+5. Next.js establishes the cookie-backed session.
+6. Student is redirected to `/dashboard`.
+
+There is no need to create a separate registration workflow.
+
+For an existing account, the trigger does not run again because the Auth user is not being inserted again.
+
+**Administrator promotion remains a separate trusted operation.** Never let OAuth metadata, email domain, or a student-controlled form assign the `admin` role.
+
+## **15. Authentication file structure**
+
+The resulting structure should look like this:
+
+```
+src/
+├── app/
+│   ├── login/
+│   │   └── page.tsx
+│   ├── auth/
+│   │   └── callback/
+│   │       └── route.ts
+│   ├── dashboard/
+│   │   └── page.tsx
+│   └── admin/
+│       └── page.tsx
+│
+├── lib/
+│   └── supabase/
+│       ├── client.ts
+│       ├── server.ts
+│       └── proxy.ts
+│
+├── modules/
+│   └── auth/
+│       ├── actions/
+│       │   ├── sign-in.ts
+│       │   └── sign-out.ts
+│       └── guards/
+│           ├── require-user.ts
+│           └── require-admin.ts
+│
+└── proxy.ts
+```
+
+## **16. Authentication testing**
+
+Test these cases before integrating the dashboard.
+
+| Test                                     | Expected result         |
+| ---------------------------------------- | ----------------------- |
+| Guest opens homepage                     | Allowed                 |
+| Guest opens public tutorial              | Allowed                 |
+| Guest opens `/dashboard`                 | Redirected to login     |
+| Guest opens `/admin`                     | Redirected to login     |
+| Student uses Google login                | Student session created |
+| Student opens dashboard                  | Allowed                 |
+| Student opens admin                      | Redirected to dashboard |
+| Student logs out                         | Session ends            |
+| Student refreshes after login            | Session remains valid   |
+| OAuth callback receives invalid code     | Login error             |
+| Callback receives external redirect path | Redirect rejected       |
+| Student attempts to assign admin role    | Denied                  |
+| Student accesses another user's records  | Denied by RLS           |
+
+### **Test commands**
+
+```
+npm run lint
+npm run typecheck
+npm run build
+```
+
+Then manually test the complete OAuth flow using a real Google account in your development environment.
+
+For automated testing, use a dedicated test project and test accounts. Do not use your production administrator account in routine automated tests.
+
+## **17. Production security checklist**
+
+**OAuth release checklist**
+
+0/15
+
+Google is the only enabled authentication provider
+
+Google OAuth redirect URI matches Supabase callback
+
+Supabase application redirect URLs are restricted
+
+Publishable key is used only as intended
+
+No service-role key is exposed in frontend code
+
+Secure cookie-based SSR sessions work
+
+Proxy or middleware refreshes sessions correctly
+
+Protected pages verify authenticated identity
+
+Admin guard checks the database role
+
+Every sensitive Server Action checks authorization
+
+RLS blocks cross-user access
+
+OAuth callback rejects unsafe redirects
+
+Logout invalidates the current session
+
+Admin account has stronger authentication protection
+
+Production and development OAuth configurations are separated
+
+## **18. Final implementation decisions**
+
+| Area                      | FORGESEC decision                                                                |
+| ------------------------- | -------------------------------------------------------------------------------- |
+| Authentication provider   | Google                                                                           |
+| Auth service              | Supabase Auth                                                                    |
+| Session storage           | Secure cookies through SSR                                                       |
+| Browser authentication    | Supabase SSR browser client                                                      |
+| Server authentication     | Supabase SSR server client                                                       |
+| Session refresh           | Next.js Proxy / Middleware                                                       |
+| Identity verification     | `getUser()` in protected server operations; `getClaims()` for token verification |
+| Authorization             | PostgreSQL `user_roles` + RLS + server checks                                    |
+| Default role              | Student                                                                          |
+| Admin provisioning        | Trusted manual operation                                                         |
+| Password management       | Not applicable                                                                   |
+| Custom email verification | Not implemented                                                                  |
+
+**Recap:** Google handles identity, Supabase handles sessions, and FORGESEC's database controls permissions. The implementation now has a defined login flow, callback, logout, session refresh and server-side authorization structure.
+
+**Next: Part 23 — Student Profile & Account Management: Profile Creation, Editing, Avatar Handling, Account Settings and Data Privacy.**
+
+This will implement the student account experience without introducing unnecessary account-management features or additional authentication providers.

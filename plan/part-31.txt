@@ -1,0 +1,499 @@
+# **Part 31 — UI Design System & Responsive Implementation**
+
+**Objective:** Establish a consistent visual language and reusable component system for FORGESEC ACADEMY before implementing the remaining interfaces.
+
+Part 30 defined what the public pages contain. This part defines how those pages should look, behave and adapt across devices.
+
+The priority is a professional cybersecurity identity without unnecessary visual effects, heavy animations or expensive frontend dependencies.
+
+## **1. Design direction**
+
+# **FORGESEC**
+
+ACADEMY
+
+# **Security at Every Layer.**
+
+Learn systems. Understand vulnerabilities. Build secure foundations.
+
+**Explore Academy**
+
+Read Write-ups
+
+LINUX FUNDAMENTALS
+
+BEGINNER
+
+## **Understand the Linux environment.**
+
+A structured introduction to the command line and operating system fundamentals.
+
+Illustrative visual direction: dark technical interface, restrained green accent and typography-led identity.
+
+### **Recommended visual characteristics**
+
+- Dark-first interface.
+- Metallic grey and neutral surfaces.
+- One restrained accent color.
+- Clear typography.
+- Technical but readable code presentation.
+- Minimal decorative elements.
+- Consistent spacing and alignment.
+
+The design should feel like a professional engineering platform, not a movie-style hacker dashboard.
+
+## **2. Color system**
+
+Use semantic color tokens instead of writing arbitrary colors inside every component.
+
+Suggested palette:
+
+| Token            | Dark theme | Purpose                        |
+| ---------------- | ---------- | ------------------------------ |
+| Background       | `#101418`  | Main page                      |
+| Surface          | `#171D23`  | Cards and panels               |
+| Elevated surface | `#202831`  | Menus and dialogs              |
+| Primary text     | `#F3F4F6`  | Main content                   |
+| Secondary text   | `#AAB4BE`  | Descriptions                   |
+| Border           | `#303A44`  | Dividers and outlines          |
+| Accent           | `#A3E635`  | Primary actions                |
+| Success          | `#22C55E`  | Completed states               |
+| Warning          | `#F59E0B`  | Warnings                       |
+| Danger           | `#EF4444`  | Errors and destructive actions |
+
+For the light theme, use a light neutral background, dark text and the same semantic accent system.
+
+**Recommendation:** Implement dark mode first, but keep tokens theme-independent so light mode can be introduced without rebuilding components.
+
+Analogy: color tokens work like variables in a program. Changing one central definition updates every component using that token.
+
+## **3. Typography system**
+
+Use a limited number of font families.
+
+Recommended:
+
+- **Inter:** General interface and body text.
+- **JetBrains Mono:** Code, terminal commands and technical identifiers.
+
+| Element         | Suggested size |
+| --------------- | -------------- |
+| Hero heading    | 40–56 px       |
+| Page heading    | 32–40 px       |
+| Section heading | 24–28 px       |
+| Card heading    | 18–20 px       |
+| Body text       | 15–17 px       |
+| Secondary text  | 13–14 px       |
+| Code            | 13–15 px       |
+
+Use readable line lengths for lessons. A long line of text stretching across a 1080p monitor makes technical explanations harder to read.
+
+For lesson content, target approximately 65–80 characters per line where practical.
+
+## **4. Spacing and layout system**
+
+Use a consistent spacing scale based on multiples of four.
+
+| Token      | Value | Typical use      |
+| ---------- | ----- | ---------------- |
+| `space-1`  | 4 px  | Small icon gaps  |
+| `space-2`  | 8 px  | Compact elements |
+| `space-3`  | 12 px | Form controls    |
+| `space-4`  | 16 px | Standard spacing |
+| `space-6`  | 24 px | Card padding     |
+| `space-8`  | 32 px | Section gaps     |
+| `space-12` | 48 px | Large sections   |
+| `space-16` | 64 px | Page separation  |
+
+Suggested content widths:
+
+- Main page: maximum 1200 px.
+- Lesson reading column: maximum 800 px.
+- Forms: maximum 480 px.
+- Dialogs: 480–640 px depending on purpose.
+
+Avoid stretching every content section to full screen width.
+
+## **5. Component design system**
+
+Build reusable components instead of implementing buttons, cards and forms differently on every page.
+
+Suggested structure:
+
+```
+src/components/ui/
+├── button.tsx
+├── input.tsx
+├── textarea.tsx
+├── select.tsx
+├── checkbox.tsx
+├── radio-group.tsx
+├── badge.tsx
+├── card.tsx
+├── dialog.tsx
+├── dropdown-menu.tsx
+├── tooltip.tsx
+├── tabs.tsx
+├── progress.tsx
+├── skeleton.tsx
+├── alert.tsx
+├── table.tsx
+└── separator.tsx
+```
+
+### **Button variants**
+
+**Primary action**
+
+**Secondary**
+
+**Outline**
+
+**Destructive**
+
+Visual examples of the intended button variants.
+
+Standardize:
+
+- Primary.
+- Secondary.
+- Outline.
+- Ghost.
+- Destructive.
+- Disabled.
+- Loading.
+
+Buttons should have consistent heights, padding, border radius and focus indicators.
+
+### **Cards**
+
+Use cards for:
+
+- Learning paths.
+- Lessons.
+- Write-ups.
+- Dashboard statistics.
+- Admin data summaries.
+
+Do not put every paragraph inside a card. Too many boxed elements make the interface visually noisy.
+
+### **Forms**
+
+All forms should have:
+
+- Visible labels.
+- Validation messages.
+- Clear required-field indicators.
+- Disabled and loading states.
+- Server-side validation.
+
+Client-side validation improves usability but never replaces Zod validation on the server.
+
+## **6. Code block design**
+
+This is particularly important for FORGESEC ACADEMY.
+
+Students will frequently copy commands and code from lessons.
+
+A code block should contain:
+
+**BASH**
+
+Copy
+
+```
+pwd
+ls -la
+cd /home/user
+```
+
+Example command block.
+
+Requirements:
+
+- Language label.
+- Syntax highlighting.
+- Copy button.
+- Horizontal scrolling on narrow screens.
+- Consistent monospace font.
+- Clear distinction between commands and expected output.
+- No accidental line wrapping that changes commands.
+
+For dangerous or destructive commands, include warnings outside the code block. Do not rely on color alone to communicate risk.
+
+Continue using the MDX rendering and Shiki configuration established in Part 25.
+
+## **7. Responsive breakpoints**
+
+Use a small, consistent breakpoint system.
+
+| Device class  | Suggested breakpoint |
+| ------------- | -------------------- |
+| Mobile        | Below 640 px         |
+| Tablet        | 640–1023 px          |
+| Desktop       | 1024–1279 px         |
+| Large desktop | 1280 px and above    |
+
+These are design breakpoints, not strict device categories.
+
+### **Mobile requirements**
+
+- Collapsible navigation.
+- Single-column learning cards.
+- Full-width primary buttons where appropriate.
+- Readable lesson content.
+- Collapsible curriculum.
+- Scrollable code blocks and tables.
+- Touch targets around 44 × 44 CSS pixels where practical.
+
+### **Tablet requirements**
+
+- Two-column catalog where space allows.
+- Compact navigation.
+- Reduced side-panel widths.
+- Responsive dashboard cards.
+
+### **Desktop requirements**
+
+- Full navigation.
+- Multi-column layouts.
+- Lesson curriculum and table of contents panels.
+- Wider dashboard tables.
+
+## **8. Responsive layout examples**
+
+Mobile
+
+**FORGESEC**
+
+**Linux Fundamentals**
+
+Learn Linux step by step.
+
+**Networking**
+
+Understand network systems.
+
+**Web Security**
+
+Learn web fundamentals.
+
+Desktop
+
+**FORGESEC**
+
+Learn · Write-ups · Resources
+
+**Linux**
+
+Fundamentals
+
+**Networking**
+
+Fundamentals
+
+**Web**
+
+Technologies
+
+**Security**
+
+Fundamentals
+
+The content remains the same; only its arrangement changes.
+
+## **9. Theme management**
+
+Implement theme support through semantic CSS variables.
+
+Recommended behavior:
+
+- Dark theme as initial default.
+- Optional light theme.
+- Respect system preference if the user has not selected a preference.
+- Persist the explicit preference locally.
+- Avoid flashing the wrong theme during initial rendering.
+
+Theme preference is a UI preference, not a security setting. It does not need to be stored in Supabase initially.
+
+## **10. Accessibility and interaction states**
+
+Every interactive component needs more than its default appearance.
+
+Define:
+
+- Default.
+- Hover.
+- Focus.
+- Active.
+- Disabled.
+- Loading.
+- Error.
+- Success.
+
+Use keyboard-accessible dialogs, dropdowns, menus and tabs.
+
+Do not communicate state through color alone. For example, a completed lesson should have both a visual indicator and a text label.
+
+Use `prefers-reduced-motion` for users who prefer reduced animation.
+
+## **11. Icon system**
+
+Use Lucide React consistently.
+
+Examples:
+
+| Purpose    | Icon                     |
+| ---------- | ------------------------ |
+| Learning   | `book-open`              |
+| Linux      | `terminal`               |
+| Networking | `network`                |
+| Security   | `shield-check`           |
+| Search     | `search`                 |
+| Dashboard  | `layout-dashboard`       |
+| Bookmarks  | `bookmark`               |
+| Settings   | `settings`               |
+| Users      | `users`                  |
+| Analytics  | `chart-no-axes-combined` |
+
+Avoid mixing multiple icon libraries.
+
+Icons should clarify meaning rather than decorate every heading.
+
+## **12. Frontend implementation structure**
+
+Suggested design system organization:
+
+```
+src/
+├── components/
+│   ├── ui/
+│   ├── layout/
+│   ├── learning/
+│   ├── dashboard/
+│   └── admin/
+│
+├── styles/
+│   ├── globals.css
+│   ├── tokens.css
+│   └── themes.css
+│
+└── lib/
+    └── utils/
+        └── cn.ts
+```
+
+Use Tailwind CSS and a small set of semantic design tokens.
+
+A component library such as shadcn/ui can be used selectively if it saves implementation time. It is not necessary to install every available component.
+
+Do not build a custom design system framework on top of Tailwind.
+
+## **13. Performance constraints**
+
+The design system must not make the platform unnecessarily heavy.
+
+Rules:
+
+- No large animation framework unless genuinely needed.
+- No background video.
+- No unnecessary WebGL or 3D effects.
+- No oversized image assets.
+- No duplicate icon libraries.
+- Avoid unnecessary Client Components.
+- Load fonts efficiently; self-host optimized font files if licensing and deployment permit.
+- Prefer CSS transitions over JavaScript animations.
+- Use optimized image dimensions and formats.
+
+The objective is a fast educational platform, not a graphics benchmark.
+
+## **14. Testing requirements**
+
+| Test                | Expected result                   |
+| ------------------- | --------------------------------- |
+| 360 px viewport     | No horizontal page overflow       |
+| 768 px viewport     | Layout adapts correctly           |
+| 1080 px viewport    | Desktop layout works              |
+| 1440 px viewport    | Content width remains controlled  |
+| Keyboard navigation | All controls accessible           |
+| Focus visibility    | Clearly visible                   |
+| Color contrast      | Meets WCAG AA where applicable    |
+| Code copy           | Copies exact code                 |
+| Dialog              | Keyboard and focus behavior works |
+| Theme change        | No broken colors                  |
+| Reduced motion      | Animations appropriately reduced  |
+| Loading state       | No layout-breaking shifts         |
+
+## **15. Implementation checklist**
+
+**Part 31 implementation tracker**
+
+0/22
+
+Define semantic color tokens
+
+Implement dark theme
+
+Implement light theme tokens
+
+Define typography scale
+
+Define spacing and layout tokens
+
+Configure Inter and JetBrains Mono
+
+Build reusable buttons
+
+Build inputs and form controls
+
+Build cards and badges
+
+Build dialogs and dropdowns
+
+Build tables and progress components
+
+Standardize code block styling
+
+Implement responsive breakpoints
+
+Implement mobile navigation styling
+
+Implement theme preference
+
+Standardize Lucide icons
+
+Implement focus and interaction states
+
+Check keyboard accessibility
+
+Check color contrast
+
+Test 360px, 768px, 1080px and 1440px
+
+Run responsive visual regression checks
+
+Audit frontend bundle size
+
+## **16. Final decisions**
+
+| Area                 | Decision                      |
+| -------------------- | ----------------------------- |
+| Design direction     | Dark-first technical          |
+| Accent               | Restrained lime green         |
+| Typography           | Inter + JetBrains Mono        |
+| Styling              | Tailwind CSS                  |
+| Components           | Reusable custom components    |
+| Component library    | Selective shadcn/ui           |
+| Icons                | Lucide React                  |
+| Theme                | Dark default, light supported |
+| Responsive design    | Mobile-first                  |
+| Animation            | Minimal CSS                   |
+| Code blocks          | Shiki-based                   |
+| Accessibility        | WCAG AA target                |
+| Frontend performance | Lightweight                   |
+
+**Part 31 complete.**
+
+The design system now provides a consistent foundation for the homepage, learning experience, student dashboard and admin panel.
+
+**Next: Part 32 — SEO, Performance & Accessibility.**

@@ -1,0 +1,450 @@
+# **Part 19 — Initial Release Scope, MVP Feature Freeze & Launch Acceptance Criteria**
+
+**Objective:** Define exactly what FORGESEC ACADEMY version 1.0 will contain, what we will deliberately exclude, and what conditions must be met before public launch.
+
+We have designed a fairly large platform across the previous parts. However, implementing everything immediately would increase development time, testing requirements and maintenance costs.
+
+My recommendation is to freeze the initial scope now.
+
+**Version 1.0 should be a lightweight cybersecurity learning platform with excellent educational content, basic student accounts, progress tracking and assessments.**
+
+It should not attempt to become a complete LMS, community platform or cyber range.
+
+## **1. What is version 1.0?**
+
+The first release should solve five problems:
+
+1. Students need accessible cybersecurity learning materials.
+2. They need structured learning paths instead of disconnected tutorials.
+3. They need to track their learning progress.
+4. They need a way to assess their understanding.
+5. Administrators need a manageable way to maintain the platform.
+
+Everything else is secondary.
+
+# **FORGESEC ACADEMY 1.0**
+
+Initial product definition
+
+**Learning content**
+
+Tutorials, guides and write-ups
+
+**Learning paths**
+
+Structured curriculum
+
+**Student progress**
+
+Bookmarks and completion
+
+**Assessments**
+
+Quizzes and assignments
+
+## **2. Final MVP feature scope**
+
+We will classify features into three categories:
+
+- **P0:** Required before launch.
+- **P1:** Useful, but can be introduced after launch.
+- **P2:** Explicitly deferred.
+
+| Feature                      | Priority | Version 1.0 decision             |
+| ---------------------------- | -------- | -------------------------------- |
+| Homepage                     | P0       | Include                          |
+| Public tutorials             | P0       | Include                          |
+| Learning paths               | P0       | Include                          |
+| MDX content rendering        | P0       | Include                          |
+| Code blocks and copy buttons | P0       | Include                          |
+| Write-ups                    | P0       | Include                          |
+| Resources and glossary       | P0       | Include                          |
+| Static search                | P0       | Include                          |
+| Google OAuth                 | P0       | Include                          |
+| Student profiles             | P0       | Include                          |
+| Student dashboard            | P0       | Include                          |
+| Lesson progress              | P0       | Include                          |
+| Bookmarks                    | P0       | Include                          |
+| Learning history             | P1       | Defer if necessary               |
+| Quizzes                      | P0       | Include basic version            |
+| Practical assignments        | P0       | Include basic version            |
+| Admin panel                  | P0       | Include essential operations     |
+| Audit logs                   | P0       | Include security-critical events |
+| Announcements                | P1       | Later                            |
+| Discussions                  | P2       | Exclude                          |
+| Notifications                | P2       | Exclude                          |
+| Certificates                 | P2       | Exclude                          |
+| Hosted labs                  | P2       | Exclude                          |
+| AI recommendations           | P2       | Exclude                          |
+| Full CMS                     | P2       | Exclude                          |
+| Real-time chat               | P2       | Exclude                          |
+
+One important distinction: P0 means required for the planned release, not necessarily that every feature must be implemented at the beginning of development.
+
+## **3. Public website scope**
+
+The public website is the most important part of the initial product.
+
+### **Required pages**
+
+```
+/
+├── /about
+├── /learn
+│   ├── /tutorials
+│   ├── /tutorials/[slug]
+│   ├── /paths
+│   └── /paths/[slug]
+├── /writeups
+│   └── /writeups/[slug]
+├── /resources
+│   └── /resources/[slug]
+├── /glossary
+│   └── /glossary/[term]
+├── /search
+├── /login
+├── /auth/callback
+├── /privacy
+└── /terms
+```
+
+### **Public experience requirements**
+
+- Visitors can read educational content without an account.
+- Tutorials are readable on mobile.
+- Code blocks support copying.
+- Learning paths show their curriculum.
+- Search returns relevant results.
+- Internal links work.
+- Content has proper metadata.
+- Public pages are indexable by search engines.
+
+No login wall should block basic learning.
+
+## **4. Student account scope**
+
+Google OAuth is the only authentication method.
+
+### **Required student features**
+
+- Sign in with Google.
+- Automatic first-login account creation.
+- Default student role.
+- Profile information.
+- Dashboard.
+- Mark lesson complete.
+- Undo completion.
+- Bookmark content.
+- View learning path progress.
+- Continue from the next incomplete lesson.
+
+### **Excluded account features**
+
+- Email/password registration.
+- Password reset.
+- Custom email verification.
+- Social login providers other than Google.
+- Profile customization beyond basic fields.
+- Public student profiles.
+- Friends and followers.
+- Private messaging.
+
+This keeps the account system small and avoids unnecessary identity-management features.
+
+## **5. Learning content scope**
+
+Content will be managed through Git, not a custom CMS.
+
+### **Initial content categories**
+
+I recommend launching with a focused set of subjects:
+
+| Category                | Initial scope                                   |
+| ----------------------- | ----------------------------------------------- |
+| Linux Fundamentals      | Essential commands, files, permissions, users   |
+| Networking Fundamentals | TCP/IP, DNS, ports, protocols                   |
+| Web Technologies        | HTTP, HTML, JavaScript, browser fundamentals    |
+| Web Security            | Introductory security concepts and safe testing |
+| Write-ups               | Practical technical explanations                |
+| References              | Commands, tools and useful documentation        |
+
+Do not publish a large quantity of unfinished material merely to make the platform look populated.
+
+### **Suggested initial content target**
+
+# **20–30**
+
+**Quality-controlled educational articles and lessons**
+
+# **2–3**
+
+**Complete learning paths**
+
+# **2**
+
+**Initial subject areas with meaningful depth**
+
+These are proposed launch targets, not existing content counts or hard technical requirements.
+
+I would rather launch with 20 useful lessons than 100 shallow articles.
+
+## **6. Assessment scope**
+
+### **Quizzes**
+
+Include:
+
+- Single-choice questions.
+- Multiple-select questions.
+- True/false questions.
+- Server-side scoring.
+- Pass/fail results.
+- Explanations.
+- Attempt history for registered students.
+
+Defer:
+
+- Timed examinations.
+- Proctoring.
+- Adaptive quizzes.
+- AI-generated questions.
+- Leaderboards.
+- Complex question types.
+
+### **Practical assignments**
+
+Include:
+
+- Assignment description.
+- Difficulty.
+- Prerequisites.
+- Instructions.
+- Expected outcomes.
+- Safety instructions.
+- Self-reported completion.
+
+Do not build evidence uploads or instructor grading for version 1.0.
+
+## **7. Administration scope**
+
+The initial admin panel should be deliberately small.
+
+Required:
+
+1. Admin dashboard.
+2. User search.
+3. Role management.
+4. Quiz management.
+5. Assignment management.
+6. Audit log viewing.
+7. Essential settings.
+
+Content management remains Git-based.
+
+No full CMS, drag-and-drop curriculum builder, advanced analytics or instructor-management system is necessary at launch.
+
+## **8. Explicitly excluded infrastructure**
+
+These exclusions are important because they prevent the project from expanding beyond its financial and operational limits.
+
+| Infrastructure                          | Version 1.0 |
+| --------------------------------------- | ----------- |
+| Cyber range                             | Excluded    |
+| Hosted vulnerable machines              | Excluded    |
+| Student virtual machines                | Excluded    |
+| Browser terminal                        | Excluded    |
+| Docker lab provisioning                 | Excluded    |
+| Remote command execution                | Excluded    |
+| Hosted CTF platform                     | Excluded    |
+| Real-time attack/defense infrastructure | Excluded    |
+| Dedicated analytics server              | Excluded    |
+| Separate Express backend                | Excluded    |
+| Microservices                           | Excluded    |
+
+Students practice on their own computers and explicitly authorized systems.
+
+This is a conscious product decision, not a temporary technical workaround.
+
+## **9. Launch acceptance criteria**
+
+We need measurable conditions to decide whether version 1.0 is ready.
+
+### **A. Functional acceptance**
+
+- Public pages load.
+- Tutorials render correctly.
+- Code copy buttons work.
+- Learning paths display the correct lessons.
+- Search works.
+- Google OAuth works.
+- First login creates a student account.
+- Lesson completion persists.
+- Bookmarks persist.
+- Dashboard displays accurate progress.
+- Quizzes score correctly.
+- Assignments can be marked complete.
+- Admin operations work.
+
+### **B. Security acceptance**
+
+- RLS is enabled on exposed user-data tables.
+- Students cannot access other students' records.
+- Students cannot change their own roles.
+- Students cannot read answer keys.
+- Quiz scores are calculated server-side.
+- Admin operations verify permissions.
+- Service-role credentials never enter client bundles.
+- No secrets are committed to Git.
+- Authentication redirects are restricted.
+- Admin authentication protections are configured and tested.
+
+### **C. Quality acceptance**
+
+- TypeScript checks pass.
+- Lint checks pass.
+- Unit tests pass.
+- Integration tests pass.
+- Critical Playwright workflows pass.
+- MDX validation passes.
+- No known critical security vulnerabilities remain unaddressed.
+- Mobile layout is usable.
+- Keyboard navigation works.
+- Production build succeeds.
+
+### **D. Content acceptance**
+
+- At least two complete learning paths are ready.
+- Every published lesson has been reviewed.
+- Commands have been tested in an appropriate environment.
+- Safety instructions are included where necessary.
+- Internal links are valid.
+- No unfinished placeholder content is published.
+
+## **10. Launch strategy**
+
+I recommend three stages.
+
+Stage 1
+
+**Private testing**
+
+- Test with the development team.
+- Verify authentication and authorization.
+- Test the core student workflows.
+- Fix critical bugs.
+
+Stage 2
+
+**Limited public launch**
+
+- Invite a small group of students.
+- Observe real usage.
+- Collect feedback.
+- Fix usability and content issues.
+
+Stage 3
+
+**Public launch**
+
+- Announce FORGESEC ACADEMY.
+- Publish the initial learning paths.
+- Promote the educational resources.
+- Monitor errors and engagement.
+
+Do not announce a public launch while critical authorization or data-isolation problems remain unresolved.
+
+## **11. Version 1.0 versus future versions**
+
+| Version | Main objective            | Major additions                                          |
+| ------- | ------------------------- | -------------------------------------------------------- |
+| 1.0     | Educational platform      | Content, paths, accounts, progress, quizzes, assignments |
+| 1.1     | Better student experience | Announcements, history improvements                      |
+| 1.2     | Student interaction       | Discussions and moderation                               |
+| 1.3     | Better assessment         | Evidence submissions and instructor review               |
+| 2.0     | Structured recognition    | Achievements and verified certificates                   |
+| 3.0     | Practical infrastructure  | Hosted labs, if funding and demand justify them          |
+
+These are conceptual release milestones, not commitments to fixed dates.
+
+## **12. My recommendation: Freeze the MVP**
+
+I recommend freezing the following decisions for version 1.0:
+
+- Next.js, React, TypeScript and Node.js.
+- Supabase PostgreSQL and Google OAuth.
+- Vercel deployment.
+- Git-managed MDX/YAML content.
+- No full CMS.
+- No hosted labs or VMs.
+- No separate backend.
+- No email/password authentication.
+- No discussion system.
+- No certificates.
+- No paid infrastructure unless essential.
+- Focus on educational quality and a reliable student experience.
+
+Changing these decisions should require a concrete technical or product reason, not simply because a new feature sounds interesting.
+
+## **13. MVP feature-freeze checklist**
+
+**Version 1.0 scope approval**
+
+0/21
+
+**Public platform**
+
+Homepage and navigation
+
+Tutorial and write-up pages
+
+Learning paths
+
+MDX rendering and code blocks
+
+Search and glossary
+
+**Student system**
+
+Google OAuth
+
+Student profiles
+
+Dashboard
+
+Lesson progress
+
+Bookmarks
+
+**Learning tools**
+
+Basic quizzes
+
+Practical assignments
+
+Server-side quiz scoring
+
+**Administration**
+
+User and role management
+
+Quiz management
+
+Assignment management
+
+Audit logs
+
+**Launch requirements**
+
+Security and RLS verification
+
+Automated testing
+
+Content quality review
+
+Production deployment and recovery checks
+
+**Recap:** Version 1.0 is now defined as a content-first cybersecurity learning platform with secure student accounts, progress tracking, quizzes, assignments and essential administration. Hosted infrastructure, community features and certificates remain outside the initial release.
+
+**Next: Part 20 — Technical Implementation Blueprint: Exact Stack, Dependencies, Configuration & Initial Repository Setup.**
+
+This will translate the approved MVP into concrete technical decisions: package dependencies, configuration files, environment variables, folder structure and the initial scripts needed to start development.

@@ -1,0 +1,641 @@
+# **Part 20 — Technical Implementation Blueprint: Exact Stack, Dependencies, Configuration & Initial Repository Setup**
+
+**Objective:** Turn the approved FORGESEC ACADEMY 1.0 architecture into an actual development-ready repository.
+
+Parts 01–19 established what we are building. This part establishes the technical foundation: which technologies to use, which packages to install, how to organize the code, and how to configure the project.
+
+My recommendation is to start with a **single Next.js application using TypeScript**, with Supabase handling authentication and persistent data. We will not introduce a separate Express backend, microservices, or a CMS.
+
+## **1. Final technology stack**
+
+[Making a custom 404 page in Next.js - DEV Community](https://images.openai.com/static-rsc-4/bLlalbNp6jrlR_MDbXrZboKQVewUYbl540tPaxrKHfeYhkUuIbcY24EuZwqdvoz2T6syE51AVhW2nzEAnbXMhFU1S9FS9hfRUHcmE0rqe4-MftFGYbc3hxELPbunRQ4RO1h7brQUYFBkCbuY4CGkHzzUDPnQR728ILI1Y17qp2M?purpose=inline)
+
+**Next.js + React**
+
+Application framework and user interface
+
+Core
+
+[Portfolio](https://images.openai.com/static-rsc-4/vBHLfYRQR-V3ZNJUIFcZ4bMZ_rylIH3-WLJW27VpQ2510QfQtCa-9KxXWoN2Dqc1cc-6_jiuvhtmK8enCgBdGD0jUWQQt9yn-Qqk-Uy4LIvFtr0TCycSCY_3UEr2kdAc9rlB96aGfw-SicMeeFncdnrvRwNDCUFJUSlQL-nW1f8?purpose=inline)
+
+**TypeScript**
+
+Application language and type safety
+
+Core
+
+[Supabase - Review, Pricing & Alternatives | Delv](https://images.openai.com/static-rsc-4/Y5ZDSxXptYusc6H-LwOOaZr1NWv-6ygntImLJOKjpPj8gi7OO-ulh46sVJe68pAacXXvq-aTuWbHCQovewzGDpgVcsJzw4P2NDGIRmNGQr8cG17fL3q3QkbhUsuBD8Wjm_ApkkhY2VZF0beqJvbGpHfIjw9gN_44Snv9ComAw_I?purpose=inline)
+
+**Supabase**
+
+PostgreSQL database and Google OAuth authentication
+
+Core
+
+**Vercel**
+
+Application hosting and deployment
+
+Core
+
+[Logo Tailwind CSS – Logos PNG](https://images.openai.com/static-rsc-4/p2CaJ-lTaLliSDsT11iqWnIoGte3Nn-TqPb9vx0DnyG3pNRUFwKyiTrRHTwujxkE6-RzemIctP2lxY9E0XJeCNWCKYEUVo0TyTjc4LaSTeziWZAyyGkkz-wN5Ks1fjXzGErpQ9TRRBN7BQ3LHCxkpLKHwRbW6Cr8Hq8vCvRr4x0?purpose=inline)
+
+**Tailwind CSS**
+
+Styling and responsive layouts
+
+Core
+
+[Oakstone & Github | Executive Search for GTM SaaS](https://images.openai.com/static-rsc-4/HQnzkeZepdcbz6yki5F911xaI7qZFrq-EjoAnoh5focKQlZBBR_xVRxmdszYIh8CF9ZImt1zDUWQIDbeJm9vx6gJmTSUYpEpChiHmY_gLt1gXp9uq4lq-oxfEEM9g7FJhQpCYi7WHrUwBF9vcV_4-kwArSHYrPmmA6I2uBI6wFE?purpose=inline)
+
+**GitHub**
+
+Source control, content management and CI
+
+Core
+
+### **Supporting technologies**
+
+| Technology     | Responsibility                |
+| -------------- | ----------------------------- |
+| MDX            | Educational content           |
+| Zod            | Input and metadata validation |
+| MiniSearch     | Static content search         |
+| Shiki          | Code syntax highlighting      |
+| Vitest         | Unit testing                  |
+| Playwright     | Browser testing               |
+| GitHub Actions | Automated CI                  |
+| Supabase CLI   | Local database and migrations |
+
+**Architecture decision:** Next.js is both our frontend and application server. Server Components, Server Actions and Route Handlers provide the server-side functionality we need.
+
+We do not need a separate Express server.
+
+## **2. Runtime and project configuration**
+
+Use:
+
+- Node.js LTS supported by the selected Next.js release.
+- npm as the package manager.
+- TypeScript strict mode.
+- Next.js App Router.
+- React Server Components by default.
+- ESLint for code quality.
+- Git for version control.
+
+Check your local installation:
+
+```
+node --version
+npm --version
+git --version
+```
+
+Create the application:
+
+```
+npx create-next-app@latest forgesec-academy
+cd forgesec-academy
+```
+
+Recommended setup selections:
+
+| Prompt           | Selection                 |
+| ---------------- | ------------------------- |
+| TypeScript       | Yes                       |
+| ESLint           | Yes                       |
+| Tailwind CSS     | Yes                       |
+| App Router       | Yes                       |
+| `src/` directory | Yes                       |
+| Import alias     | `@/*`                     |
+| React Compiler   | Optional; defer initially |
+
+Use the stable release rather than an experimental Next.js release.
+
+## **3. Package dependencies**
+
+We should avoid installing unnecessary packages.
+
+### **A. Core application dependencies**
+
+```
+npm install \
+  @supabase/supabase-js \
+  @supabase/ssr \
+  zod \
+  lucide-react \
+  clsx \
+  tailwind-merge
+```
+
+Responsibilities:
+
+| Package                 | Purpose                         |
+| ----------------------- | ------------------------------- |
+| `@supabase/supabase-js` | Supabase client                 |
+| `@supabase/ssr`         | Cookie-based SSR authentication |
+| `zod`                   | Validation                      |
+| `lucide-react`          | Icons                           |
+| `clsx`                  | Conditional CSS classes         |
+| `tailwind-merge`        | Merge Tailwind classes safely   |
+
+### **B. Content dependencies**
+
+```
+npm install \
+  next-mdx-remote \
+  gray-matter \
+  remark-gfm \
+  rehype-pretty-code \
+  shiki \
+  fast-glob \
+  minisearch
+```
+
+Responsibilities:
+
+- `next-mdx-remote`: Render MDX content in the App Router.
+- `gray-matter`: Read YAML frontmatter.
+- `remark-gfm`: Support GitHub-flavored Markdown.
+- `rehype-pretty-code` and `shiki`: Highlight technical code blocks.
+- `fast-glob`: Discover content files.
+- `minisearch`: Search the generated content index.
+
+**Important:** MDX must only come from trusted repository contributors. Never compile arbitrary student-submitted MDX.
+
+Also, keep the rendering pipeline consistent: do not install multiple MDX renderers or syntax highlighters for the same job.
+
+### **C. Development dependencies**
+
+```
+npm install -D \
+  vitest \
+  @vitejs/plugin-react \
+  jsdom \
+  @testing-library/react \
+  @testing-library/user-event \
+  @testing-library/jest-dom \
+  @playwright/test \
+  @axe-core/playwright \
+  tsx
+```
+
+These provide:
+
+- Unit tests.
+- React component tests.
+- Browser automation.
+- Accessibility checks.
+- TypeScript script execution.
+
+Some testing packages may need version-compatible configuration with the selected React and Vite versions.
+
+### **D. Packages to postpone**
+
+Do not install these without a specific requirement:
+
+- Redux or another global state library.
+- Socket.IO.
+- Prisma or another ORM alongside Supabase's client.
+- Elasticsearch.
+- Redis.
+- BullMQ.
+- An analytics warehouse.
+- A separate authentication library.
+- A full UI component framework.
+
+We already have enough tools to build the initial product.
+
+## **4. Final repository structure**
+
+This is the recommended starting architecture.
+
+```
+forgesec-academy/
+│
+├── public/
+│   ├── images/
+│   ├── icons/
+│   └── fonts/
+│
+├── content/
+│   ├── tutorials/
+│   ├── articles/
+│   ├── writeups/
+│   ├── guides/
+│   ├── references/
+│   ├── glossary/
+│   └── paths/
+│
+├── src/
+│   ├── app/
+│   │   ├── (public)/
+│   │   ├── (auth)/
+│   │   ├── dashboard/
+│   │   ├── admin/
+│   │   ├── api/
+│   │   ├── layout.tsx
+│   │   └── globals.css
+│   │
+│   ├── components/
+│   │   ├── ui/
+│   │   ├── layout/
+│   │   ├── learning/
+│   │   ├── content/
+│   │   ├── quizzes/
+│   │   └── admin/
+│   │
+│   ├── modules/
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── learning/
+│   │   ├── bookmarks/
+│   │   ├── assessments/
+│   │   ├── assignments/
+│   │   └── admin/
+│   │
+│   ├── lib/
+│   │   ├── supabase/
+│   │   ├── content/
+│   │   ├── validation/
+│   │   ├── permissions/
+│   │   ├── search/
+│   │   └── utils/
+│   │
+│   ├── types/
+│   └── config/
+│
+├── scripts/
+│   ├── validate-content.ts
+│   └── generate-search-index.ts
+│
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   ├── e2e/
+│   └── fixtures/
+│
+├── supabase/
+│   ├── migrations/
+│   └── seed/
+│
+├── .github/
+│   └── workflows/
+│
+├── .env.example
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+├── next.config.ts
+└── README.md
+```
+
+Do not create every directory and file immediately. Build the structure as the corresponding module is implemented.
+
+## **5. Environment configuration**
+
+Create `.env.local`:
+
+```
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+For the example file, create `.env.example`:
+
+```
+NEXT_PUBLIC_SITE_URL=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+These are placeholders. Obtain the actual Supabase URL and publishable key from your project settings.
+
+### **Important security rules**
+
+- `.env.local` must be excluded from Git.
+- `.env.example` must contain no real secrets.
+- Google OAuth client credentials belong in the appropriate Supabase/provider configuration.
+- Never expose a Supabase secret or service-role key through `NEXT_PUBLIC_` variables.
+- Do not introduce a privileged service-role client unless a specific operation requires it and has a carefully tested authorization boundary.
+
+For normal student and administrator operations, prefer authenticated, user-scoped Supabase clients combined with RLS.
+
+## **6. Supabase client architecture**
+
+We need separate browser and server clients.
+
+```
+src/lib/supabase/
+├── client.ts
+├── server.ts
+└── middleware.ts
+```
+
+The third filename is illustrative: its actual implementation should follow the session-refresh convention supported by the selected Next.js version. In newer Next.js conventions, this may be a `proxy.ts` at the project root rather than a middleware module.
+
+### **Browser client**
+
+Used only for browser-side operations that genuinely require it.
+
+### **Server client**
+
+Used in Server Components, Server Actions and Route Handlers.
+
+### **Session refresh**
+
+Responsible for refreshing authentication sessions and updating cookies according to the Supabase SSR integration.
+
+**Important:** Never trust a user ID or role received from a browser. Retrieve the verified identity from the server-side Supabase Auth session.
+
+## **7. Content file format**
+
+Our educational content should be easy to maintain and validate.
+
+Example:
+
+`content/tutorials/linux/file-permissions.mdx`
+
+````
+---
+id: linux-file-permissions
+title: Linux File Permissions
+slug: linux-file-permissions
+description: Understand Linux file permissions.
+category: linux
+difficulty: beginner
+tags:
+  - linux
+  - permissions
+status: published
+updated_at: 2026-11-16
+---
+
+# Linux File Permissions
+
+Linux uses permissions to control access
+to files and directories.
+
+## Viewing permissions
+
+Use the following command:
+
+```bash
+ls -l
+````
+
+## **Understanding the output**
+
+The output displays permission information\
+for the selected files.
+
+````
+
+The frontmatter schema should be defined using Zod.
+
+One additional recommendation: use a stable lesson ID independently of its URL slug. That way, renaming a URL does not accidentally erase a student's progress.
+
+## 8. TypeScript configuration
+
+Keep strict type checking enabled.
+
+The important settings should include:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+````
+
+This is a configuration reference, not a complete replacement for the generated `tsconfig.json`. Preserve the other options required by the installed Next.js version.
+
+Avoid `any` unless there is a justified interoperability requirement.
+
+## **9. Package scripts**
+
+Add these project scripts to `package.json` while preserving the scripts generated by Next.js:
+
+```
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "validate-content": "tsx scripts/validate-content.ts",
+    "generate-search": "tsx scripts/generate-search-index.ts",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run validate-content"
+  }
+}
+```
+
+Do not run `generate-search` as part of every test. Generate the search index when content changes or during the production build, depending on the final content pipeline.
+
+## **10. UI design system**
+
+We should establish a small set of design rules before building the homepage.
+
+### **Visual direction**
+
+- Dark-first interface.
+- Charcoal backgrounds.
+- Muted silver typography.
+- Restrained green or teal accent.
+- Clear technical typography.
+- Minimal animations.
+- Strong readability.
+
+**Primary background**
+
+## **#111315**
+
+**Secondary surface**
+
+## **#202428**
+
+**Primary text**
+
+## **#E5E7EB**
+
+**Accent**
+
+## **#173D35**
+
+These are starting design tokens, not a finished visual identity. Test text contrast and interactive states before finalizing them.
+
+### **Component priorities**
+
+Build reusable components for:
+
+1. Button.
+2. Card.
+3. Navigation.
+4. Input.
+5. Badge.
+6. Modal/dialog.
+7. Code block.
+8. Breadcrumbs.
+9. Pagination.
+10. Loading and error states.
+
+Don't build a massive design system before the first pages exist.
+
+## **11. Development conventions**
+
+These rules should apply to all future development.
+
+| Area              | Convention                                      |
+| ----------------- | ----------------------------------------------- |
+| Naming            | `kebab-case` files, PascalCase React components |
+| Functions         | camelCase                                       |
+| Types             | PascalCase                                      |
+| Database          | snake_case                                      |
+| Validation        | Zod                                             |
+| Server logic      | Server Actions or services                      |
+| UI                | Server Components by default                    |
+| Client components | Only where interaction requires them            |
+| Database changes  | Versioned migrations                            |
+| Content           | Git-managed MDX/YAML                            |
+| Errors            | Structured, sanitized errors                    |
+| Tests             | Added with features                             |
+
+### **Example feature module**
+
+```
+src/modules/learning/
+├── schemas/
+│   └── progress.schema.ts
+├── services/
+│   └── progress.service.ts
+├── repositories/
+│   └── progress.repository.ts
+├── actions/
+│   └── update-progress.ts
+├── components/
+└── types/
+```
+
+The separation is intentional:
+
+- Schema validates data.
+- Repository handles database access.
+- Service implements business logic.
+- Action connects the service to the application interface.
+
+A small feature may not need every layer. Don't create abstractions simply to fill directories.
+
+## **12. Initial development sequence**
+
+After the repository is created, follow this order:
+
+| Step | Task                                 | Output                     |
+| ---- | ------------------------------------ | -------------------------- |
+| 1    | Initialize Next.js                   | Working application        |
+| 2    | Configure TypeScript and ESLint      | Quality baseline           |
+| 3    | Configure Tailwind and global styles | Design foundation          |
+| 4    | Add Supabase dependencies            | Auth/database foundation   |
+| 5    | Configure environment variables      | Safe configuration         |
+| 6    | Create Supabase clients              | Server/browser integration |
+| 7    | Create first database migrations     | Initial schema             |
+| 8    | Implement Google OAuth               | Working login              |
+| 9    | Build MDX content pipeline           | Working tutorials          |
+| 10   | Create initial CI workflow           | Automated checks           |
+
+This order lets us verify each layer before building on it.
+
+## **13. Initial verification commands**
+
+After the initial setup:
+
+```
+npm run dev
+```
+
+Open the local application at:
+
+```
+http://localhost:3000
+```
+
+Then run:
+
+```
+npm run lint
+npm run typecheck
+npm run build
+```
+
+The project should pass all three before we add significant application features.
+
+## **14. Part 20 completion checklist**
+
+**Technical foundation tracker**
+
+0/12
+
+Initialize Next.js with TypeScript and App Router
+
+Configure strict TypeScript and ESLint
+
+Install core dependencies
+
+Install MDX and content dependencies
+
+Install testing dependencies
+
+Create environment configuration
+
+Configure Supabase browser and server clients
+
+Establish repository structure
+
+Configure package scripts
+
+Create initial global design tokens
+
+Verify development server
+
+Verify lint, typecheck and production build
+
+## **Final technical decisions**
+
+The initial implementation will use:
+
+- Next.js + React + TypeScript.
+- Node.js runtime.
+- Supabase PostgreSQL and Google OAuth.
+- Tailwind CSS.
+- Git-managed MDX/YAML.
+- Zod validation.
+- MiniSearch.
+- Shiki code highlighting.
+- Vitest and Playwright.
+- GitHub Actions.
+- Vercel deployment.
+
+No separate backend, CMS, Redis, hosted labs or microservices.
+
+**Recap:** Part 20 establishes the concrete technical foundation for building the application. The next logical step is to turn this blueprint into actual project files and verify the initial repository.
+
+**Next: Part 21 — Database Implementation: SQL Migrations, Tables, Constraints, Indexes, RLS Policies & Initial Admin Provisioning.**
+
+This will move from architectural database planning in Part 06 to the actual SQL implementation, including the security policies that protect student data.

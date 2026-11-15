@@ -1,0 +1,617 @@
+# **Part 33 — Privacy, Legal & Platform Policies**
+
+**Objective:** Establish the rules governing user data, account usage, educational content, cybersecurity activities, intellectual property and platform administration.
+
+FORGESEC ACADEMY will be a public educational platform. Even if it is free and initially small, it needs clear policies before accepting student accounts.
+
+The important distinction is that **a privacy policy explains how data is handled, while terms of use explain what users are allowed to do.** Both are necessary.
+
+This part defines the product requirements and policy structure. It is not a substitute for legal review under applicable Bangladesh law.
+
+## **1. Required legal and policy documents**
+
+The initial platform should have these documents:
+
+| Document                          | Purpose                                                   | Priority    |
+| --------------------------------- | --------------------------------------------------------- | ----------- |
+| Privacy Policy                    | Explains personal-data collection and processing          | Essential   |
+| Terms of Use                      | Defines platform usage rules                              | Essential   |
+| Acceptable Use Policy             | Prohibits misuse and unauthorized activities              | Essential   |
+| Cybersecurity Learning Disclaimer | Defines authorized practice boundaries                    | Essential   |
+| Cookie and Session Notice         | Explains authentication and necessary cookies             | Essential   |
+| Content & Copyright Policy        | Defines ownership and permitted reuse                     | Essential   |
+| Responsible Disclosure Policy     | Provides a channel for reporting platform vulnerabilities | Recommended |
+| Community Guidelines              | Rules for future community features                       | Deferred    |
+
+These documents should be accessible through the public footer.
+
+Do not create a complex legal-document management system. Version-controlled Markdown files are sufficient initially.
+
+## **2. Privacy policy**
+
+The privacy policy must accurately describe what the Academy collects, why it collects it, where it is stored and how users can exercise their rights.
+
+### **Data categories**
+
+| Data                | Source                       | Purpose                      |
+| ------------------- | ---------------------------- | ---------------------------- |
+| Google account ID   | Google OAuth / Supabase Auth | Authentication               |
+| Email address       | Google OAuth                 | Account identification       |
+| Display name        | Google profile               | Student profile              |
+| Profile information | Student input                | Personalization              |
+| Lesson progress     | Platform activity            | Learning dashboard           |
+| Bookmarks           | Student actions              | Saved content                |
+| Quiz attempts       | Student submissions          | Assessment history           |
+| Assignment progress | Student actions              | Learning tracking            |
+| Security logs       | Platform operations          | Security and troubleshooting |
+| Content activity    | Platform interaction         | Learning analytics           |
+
+Do not collect personal information simply because a field might be useful someday.
+
+### **Data minimization**
+
+The initial profile should only need:
+
+- Display name.
+- Email address from Google.
+- Optional biography.
+- Account creation date.
+- Learning-related records.
+
+Avoid collecting:
+
+- National ID numbers.
+- Home addresses.
+- Phone numbers.
+- Precise location.
+- Student photographs beyond an optional Google profile image.
+- Unnecessary demographic information.
+
+For example, a cybersecurity learning platform does not need a student's home address to record completed Linux lessons.
+
+## **3. Authentication and third-party services**
+
+Explain that the Academy uses Google OAuth through Supabase Auth.
+
+The policy should identify the relevant service providers:
+
+- Google: identity authentication.
+- Supabase: authentication and database infrastructure.
+- Vercel: application hosting.
+- GitHub: source-code hosting and deployment workflow, where applicable.
+
+Explain that these services may process data as necessary to provide their infrastructure.
+
+Do not claim that data never leaves Bangladesh unless the actual infrastructure configuration and provider arrangements establish that fact.
+
+Also explain that Google authentication is not the same as giving FORGESEC unrestricted access to a user's Google account.
+
+Request only the authentication permissions actually needed.
+
+## **4. Data retention and account deletion**
+
+Create an explicit retention policy.
+
+| Data                        | Proposed handling                                               |
+| --------------------------- | --------------------------------------------------------------- |
+| Active account              | Retained while the account is active                            |
+| Profile                     | Retained until deletion request or other justified removal      |
+| Learning progress           | Retained while needed to provide the learning service           |
+| Quiz history                | Retained according to the published assessment-retention policy |
+| Security logs               | Retained for a defined security period                          |
+| Deleted account identifiers | Removed or anonymized where appropriate                         |
+| Backups                     | Removed according to provider backup-retention schedules        |
+
+Do not promise immediate deletion from every backup if the hosting provider cannot guarantee it.
+
+### **Account deletion workflow**
+
+Provide a clear way to request account deletion.
+
+Suggested process:
+
+1. Student submits a deletion request.
+2. Server verifies account ownership.
+3. Account is marked for deletion or enters a controlled deletion workflow.
+4. Authentication account and related personal data are deleted or anonymized.
+5. Necessary records are retained only where a valid legal or security reason exists.
+6. Completion is recorded without retaining unnecessary personal information.
+
+Deletion must account for foreign-key dependencies, audit logs and backups.
+
+**Important:** Do not implement account deletion as a simple database cascade without reviewing the effect on historical records and audit requirements.
+
+## **5. Bangladesh legal compliance**
+
+Because FORGESEC ACADEMY will operate from Bangladesh and process student information, the legal requirements must be checked against current Bangladeshi legislation.
+
+**Important current development:** Bangladesh has enacted the Personal Data Protection Act, 2026 (Act No. 63 of 2026). Available legal records indicate that it replaced the 2025 Personal Data Protection Ordinance and that most provisions are deemed effective from 6 November 2025, with certain provisions subject to later commencement.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://www.cybersecuritydatabase.org\&sz=32)
+
+Cybersecurity Database+1
+
+
+
+The platform should therefore be designed around these principles:
+
+- Have a lawful basis for collecting and processing personal data.
+- Tell users what data is collected and why.
+- Collect only data necessary for stated purposes.
+- Provide appropriate access and correction mechanisms.
+- Provide a process for withdrawal of consent and deletion requests where applicable.
+- Protect data against unauthorized access and disclosure.
+- Review requirements for international data transfers.
+- Maintain appropriate records of data processing.
+
+Do not assume that a free educational website is automatically exempt from data protection obligations.
+
+The Cyber Security Act, 2026 and its subsequent amendments should also be reviewed when finalizing the cybersecurity learning disclaimer and acceptable-use policy.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://www.dpp.gov.bd\&sz=32)
+
+Bangladesh Government Press+1
+
+
+
+**Implementation requirement:** Have a Bangladesh-qualified lawyer review the final policy documents before public launch, particularly the rules concerning minors, international hosting, data transfers, consent and breach notification.
+
+## **6. Acceptable Use Policy**
+
+This policy defines prohibited activities on the Academy platform.
+
+### **Allowed activities**
+
+- Reading public educational materials.
+- Practicing commands on personal computers.
+- Completing authorized cybersecurity exercises.
+- Testing applications owned by the student.
+- Testing systems with explicit authorization.
+- Participating in legally authorized competitions.
+- Publishing educational write-ups that respect privacy and authorization.
+
+### **Prohibited activities**
+
+- Attacking FORGESEC infrastructure.
+- Attempting to access other users' accounts.
+- Stealing credentials or session tokens.
+- Uploading malware or malicious payloads to the platform.
+- Abusing platform APIs.
+- Scraping private student information.
+- Attempting to bypass authorization controls.
+- Using Academy resources to facilitate unauthorized access.
+- Disrupting platform availability.
+
+The policy must apply to the platform itself, not imply that all cybersecurity research is prohibited.
+
+## **7. Cybersecurity learning disclaimer**
+
+This document is especially important because the Academy teaches security topics.
+
+Recommended policy:
+
+**Educational and authorized-use notice**
+
+FORGESEC ACADEMY provides educational materials for learning about computer systems, networking, software development and cybersecurity.
+
+Students are responsible for ensuring that their practical activities are authorized and lawful.
+
+Testing must only be performed on systems that students own or have explicit permission to assess.
+
+The Academy does not authorize users to test, scan, exploit, disrupt or access third-party systems without permission.
+
+Educational examples are provided for learning purposes. Students must independently assess the risks and consequences before executing commands or using security tools.
+
+### **Practical lesson requirements**
+
+Each security lesson should distinguish:
+
+- Conceptual explanation.
+- Demonstration.
+- Authorized practice environment.
+- Potentially destructive operations.
+- Legal and safety considerations.
+
+For example, a port-scanning lesson should clearly state that students must scan only systems they own or are authorized to test.
+
+This is particularly important for networking, web security, vulnerability research and penetration-testing content.
+
+## **8. Cookie and session policy**
+
+The platform uses Supabase Auth and Google OAuth.
+
+The policy should explain:
+
+- Authentication cookies maintain login sessions.
+- Cookies are used for necessary platform functionality.
+- Session handling is managed through the authentication implementation.
+- Users can sign out to terminate their active session.
+- Clearing cookies may sign them out.
+- Any future analytics or advertising cookies require a separate review and appropriate disclosures or consent where required.
+
+Do not install advertising trackers or third-party behavioral tracking by default.
+
+**Technical rule:** Use secure cookie settings appropriate to the production environment, including `HttpOnly`, `Secure` and suitable `SameSite` behavior where supported by the authentication integration.
+
+Do not store authentication tokens in ordinary browser local storage.
+
+## **9. Content and copyright policy**
+
+The Academy will contain original tutorials, write-ups, code examples and reference materials.
+
+Define ownership and permitted use clearly.
+
+### **Content ownership**
+
+- Original content created by FORGESEC contributors remains subject to its stated copyright or license.
+- Third-party material remains owned by its respective rights holders.
+- External references must be attributed appropriately.
+- Contributors must have permission to submit content they do not own.
+
+### **Code examples**
+
+Code snippets may have different licensing requirements from explanatory text.
+
+Choose and publish a clear reuse policy rather than assuming all code is automatically open source.
+
+For example, the platform could use:
+
+- A stated license for original written content.
+- An appropriate open-source license for separately published code.
+- Explicit attribution for third-party examples.
+
+Do not apply an open-source license to third-party material without permission.
+
+### **Copyright complaints**
+
+Provide a process for reporting:
+
+1. The allegedly infringing content.
+2. The relevant page URL.
+3. The complainant's contact details.
+4. An explanation of the ownership or authorization claim.
+
+An administrator should review the report and document the outcome.
+
+Do not automatically remove content solely because someone submits an unverified complaint.
+
+## **10. Responsible disclosure policy**
+
+FORGESEC ACADEMY should provide a clear way to report vulnerabilities affecting the Academy itself.
+
+Recommended scope:
+
+**In scope**
+
+- Authentication vulnerabilities.
+- Authorization bypasses.
+- Exposed student information.
+- SQL injection.
+- Stored or reflected XSS.
+- Sensitive information disclosure.
+- Security misconfiguration.
+
+**Out of scope**
+
+- Attacks against other students.
+- Social engineering.
+- Physical attacks.
+- Denial-of-service testing.
+- Destructive testing.
+- Accessing, modifying or deleting another user's data beyond what is strictly necessary to demonstrate a finding.
+
+### **Reporting process**
+
+1. Researcher identifies a potential vulnerability.
+2. Researcher submits a responsible disclosure report through the designated security contact.
+3. Administrator acknowledges and investigates it.
+4. The vulnerability is assessed and remediated.
+5. The researcher receives an appropriate response.
+
+Do not promise bug bounties or financial rewards unless a funded program actually exists.
+
+The contact address should be configured before publication; do not publish a placeholder that appears operational.
+
+## **11. Security incident and breach response**
+
+A privacy policy is not enough. The platform also needs an internal incident-response procedure.
+
+Suggested process:
+
+**Incident detected**
+
+Unexpected access, exposed data or compromised credentials
+
+**Containment**
+
+Restrict access, revoke affected credentials and isolate the issue
+
+**Investigation**
+
+Determine affected systems, records and individuals
+
+**Notification and remediation**
+
+Follow applicable legal notification requirements and fix the cause
+
+**Post-incident review**
+
+Document lessons and prevent recurrence
+
+The incident-response plan should define:
+
+- Who can declare an incident.
+- Who can disable affected functionality.
+- How credentials and sessions are revoked.
+- How evidence is preserved.
+- How affected users are identified.
+- Who evaluates legal notification requirements.
+- How remediation is verified.
+
+Do not invent a fixed breach-notification deadline. Use the applicable legislation and regulations in force at the time of the incident.
+
+## **12. User rights and support requests**
+
+Provide a clear contact route for users who want to:
+
+- Access their personal information.
+- Correct inaccurate profile details.
+- Request account deletion.
+- Ask questions about data processing.
+- Report security incidents.
+- Report copyright issues.
+
+For the initial release, these can be handled manually by an authorized administrator.
+
+A dedicated privacy-request management system is not necessary.
+
+However, requests should be tracked securely, with limited access and a record of how each request was handled.
+
+## **13. Policy versioning and user consent**
+
+All policy documents should be version-controlled.
+
+Suggested structure:
+
+```
+content/
+└── legal/
+    ├── privacy-policy.mdx
+    ├── terms-of-use.mdx
+    ├── acceptable-use.mdx
+    ├── cybersecurity-disclaimer.mdx
+    ├── cookie-notice.mdx
+    ├── copyright-policy.mdx
+    └── responsible-disclosure.mdx
+```
+
+Maintain metadata for each document:
+
+```
+---
+id: privacy-policy
+title: Privacy Policy
+version: 1.0
+effectiveDate: 2026-11-16
+lastUpdated: 2026-11-16
+status: published
+---
+```
+
+These are example dates and version values, not a claim that the policies have already been legally approved.
+
+### **Consent implementation**
+
+The system should distinguish:
+
+- Acceptance of terms where required for account use.
+- Acknowledgement of the privacy notice.
+- Optional consent for processing that genuinely relies on consent.
+- Optional future marketing communications.
+
+Do not bundle unrelated optional consent into one mandatory checkbox.
+
+Record the policy version, user ID, timestamp and relevant acceptance action where appropriate.
+
+If a material policy change requires renewed acceptance, implement a version check during login or account use.
+
+## **14. Third-party service and data-processing review**
+
+Before launch, review the providers used by the application.
+
+| Provider | Data or role to review                          |
+| -------- | ----------------------------------------------- |
+| Google   | OAuth identity information and requested scopes |
+| Supabase | Authentication and database processing          |
+| Vercel   | Application hosting and request logs            |
+| GitHub   | Repository and deployment access                |
+
+For each provider, review:
+
+- Data-processing terms.
+- Applicable privacy terms.
+- Storage and processing locations.
+- International transfer arrangements.
+- Retention and deletion capabilities.
+- Security documentation.
+- Incident notification provisions.
+
+This matters because the Academy may be operated from Bangladesh while its hosting and authentication providers process information in other jurisdictions.
+
+Do not assume that selecting a regional database automatically makes all associated processing local.
+
+## **15. Age and minors policy**
+
+Because the Academy is an educational platform, students may include minors.
+
+Before public registration, decide:
+
+- The minimum permitted account age.
+- Whether parental or guardian consent is required.
+- How age-related restrictions are enforced.
+- Whether instructors can access student records.
+- How minors' personal information is protected.
+- Whether public profiles or community features are permitted.
+
+Do not collect dates of birth unnecessarily.
+
+If the platform cannot reliably support the legal requirements for minors at launch, obtain legal advice on an appropriate initial eligibility policy rather than inventing an age restriction.
+
+## **16. Admin responsibilities**
+
+The administrator has access to sensitive operational and student information.
+
+Admin responsibilities should include:
+
+- Using accounts only for legitimate administrative work.
+- Enabling MFA where supported.
+- Never sharing administrator credentials.
+- Never exporting student data unnecessarily.
+- Protecting service-role credentials.
+- Reviewing security logs.
+- Handling privacy requests appropriately.
+- Documenting sensitive administrative actions.
+
+Admin access is not permission to inspect students' private information without a legitimate operational reason.
+
+## **17. Implementation requirements**
+
+No large legal-management backend is necessary.
+
+Recommended additions:
+
+```
+src/
+├── app/
+│   ├── privacy/
+│   ├── terms/
+│   ├── acceptable-use/
+│   ├── cybersecurity-disclaimer/
+│   ├── copyright/
+│   └── responsible-disclosure/
+│
+├── modules/
+│   └── privacy/
+│       ├── schemas/
+│       ├── services/
+│       └── actions/
+│
+content/
+└── legal/
+```
+
+The privacy module can initially support:
+
+- Account deletion requests.
+- Profile correction requests.
+- Data-access requests.
+- Request status tracking.
+
+Use the existing authentication, authorization and audit infrastructure.
+
+Do not create a separate user database or store copies of Google authentication tokens.
+
+## **18. Acceptance criteria**
+
+| Requirement              | Acceptance condition                             |
+| ------------------------ | ------------------------------------------------ |
+| Privacy policy           | Published and legally reviewed                   |
+| Terms of use             | Published                                        |
+| Acceptable use           | Clearly defines prohibited activity              |
+| Cybersecurity disclaimer | Explains authorization boundaries                |
+| Cookie notice            | Accurately describes session handling            |
+| Copyright policy         | Defines ownership and reuse                      |
+| Responsible disclosure   | Working contact process                          |
+| Account deletion         | Secure request and processing workflow           |
+| Data correction          | Supported request process                        |
+| Data retention           | Defined for each relevant data category          |
+| Third-party providers    | Reviewed and disclosed                           |
+| Minors                   | Eligibility and consent requirements established |
+| Consent records          | Version and acceptance recorded where necessary  |
+| Incident response        | Documented and tested                            |
+| Admin privacy            | Restricted access and auditability               |
+| Legal compliance         | Reviewed against applicable Bangladesh law       |
+
+## **19. Implementation checklist**
+
+**Part 33 implementation tracker**
+
+0/26
+
+Draft Privacy Policy
+
+Draft Terms of Use
+
+Draft Acceptable Use Policy
+
+Draft Cybersecurity Learning Disclaimer
+
+Draft Cookie and Session Notice
+
+Draft Content and Copyright Policy
+
+Draft Responsible Disclosure Policy
+
+Define personal data inventory
+
+Define data retention periods
+
+Review Google OAuth permissions
+
+Review Supabase data processing terms
+
+Review Vercel data processing terms
+
+Review international data transfers
+
+Define account deletion workflow
+
+Define data correction workflow
+
+Define data access request workflow
+
+Define minors and guardian policy
+
+Implement policy version metadata
+
+Implement required acceptance records
+
+Implement privacy request handling
+
+Document security incident response
+
+Configure responsible disclosure contact
+
+Configure copyright complaint contact
+
+Add legal links to public footer
+
+Obtain Bangladesh legal review
+
+Test privacy and deletion workflows
+
+## **20. Final decisions**
+
+| Area                   | Decision                                             |
+| ---------------------- | ---------------------------------------------------- |
+| Legal documents        | Version-controlled MDX                               |
+| Privacy                | Minimal data collection                              |
+| Authentication         | Google OAuth only                                    |
+| Account deletion       | Controlled request workflow                          |
+| Student data           | Restricted access                                    |
+| Cybersecurity practice | Authorized systems only                              |
+| Copyright              | Explicit ownership and reuse rules                   |
+| Responsible disclosure | Dedicated reporting process                          |
+| Cookies                | Necessary authentication cookies initially           |
+| Third-party services   | Disclosed and reviewed                               |
+| Minors                 | Legal review before registration policy is finalized |
+| Incident response      | Documented process                                   |
+| Legal jurisdiction     | Bangladesh requirements reviewed before launch       |
+
+**Part 33 complete.**
+
+The platform now has defined requirements for privacy, acceptable use, cybersecurity education, copyright, account deletion and incident response.
+
+**Next: Part 34 — Final Integration & Production Deployment.**
+
+Only two planning parts remain: Part 34 and the final acceptance and project closure in Part 35. After that, the planning phase ends and implementation begins.

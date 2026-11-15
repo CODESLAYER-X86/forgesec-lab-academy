@@ -1,0 +1,505 @@
+# **Part 16 — Deployment Architecture, Hosting, Free-Tier Limits & Cost Management**
+
+**Objective:** Deploy FORGESEC ACADEMY with the lowest possible operating cost while keeping the architecture reliable enough to support real students.
+
+Our financial constraint changes the deployment strategy. We should not build an architecture that requires paid servers, continuously running processes, dedicated databases or hosted cybersecurity labs.
+
+My recommendation remains:
+
+- **Vercel:** Next.js application hosting.
+- **Supabase:** Google authentication and PostgreSQL.
+- **GitHub:** Source code and educational content.
+- **GitHub Actions:** Automated testing and validation.
+- **No separate backend server.**
+- **No hosted lab infrastructure.**
+- **No paid external search service.**
+
+The key is to use static generation wherever possible and reserve dynamic infrastructure for features that genuinely need it.
+
+## **1. Complete deployment architecture**
+
+**Students and visitors**
+
+Desktop, mobile and tablet browsers
+
+**Vercel**
+
+Next.js · Node.js · Static pages · Server-side operations
+
+**Supabase**
+
+Google Auth + PostgreSQL
+
+**GitHub**
+
+Source + MDX content + CI
+
+The application uses Supabase for dynamic data and GitHub as the source of truth for educational content.
+
+This is a modular monolith deployed through managed services. We don't need to operate our own Linux server just to serve tutorials and manage student progress.
+
+## **2. What should be hosted where?**
+
+| Component             | Platform       | Reason            |
+| --------------------- | -------------- | ----------------- |
+| Homepage              | Vercel         | Static generation |
+| Linux tutorials       | Vercel         | Static generation |
+| Learning paths        | Vercel         | Static generation |
+| Write-ups             | Vercel         | Static generation |
+| Search index          | Vercel         | Static JSON       |
+| Google authentication | Supabase Auth  | Managed OAuth     |
+| Student profiles      | Supabase       | PostgreSQL        |
+| Learning progress     | Supabase       | Dynamic records   |
+| Quiz results          | Supabase       | Dynamic records   |
+| Assignment progress   | Supabase       | Dynamic records   |
+| Source code           | GitHub         | Version control   |
+| Educational content   | GitHub         | MDX/YAML files    |
+| Automated checks      | GitHub Actions | CI                |
+
+**Important:** GitHub is the source repository, not the runtime database. Visitors do not need to query GitHub every time they read a tutorial.
+
+## **3. Why static generation matters**
+
+This is probably the most important cost-saving decision in our architecture.
+
+Consider two approaches.
+
+**Approach A — Dynamic tutorial pages**
+
+Every visitor opens a tutorial, and the application executes server-side work and potentially queries a database.
+
+**Approach B — Static tutorial pages**
+
+The page is generated during deployment. Visitors receive the already-built HTML and assets.
+
+For FORGESEC, Approach B is better.
+
+**Recommended content delivery**
+
+**MDX source files**
+
+**Next.js build**
+
+**Pre-generated HTML, CSS and JavaScript**
+
+**Visitors receive cached static assets**
+
+The analogy is a printed textbook: you prepare the material once, and many students can read it without asking a server to recreate the textbook every time.
+
+This reduces dynamic server execution and unnecessary database traffic.
+
+## **4. Vercel free tier: An important limitation**
+
+Check before choosing
+
+Vercel Hobby is free, but its official terms position it for **personal, non-commercial projects**. Because FORGESEC is being developed under a named Labs project, we should not automatically assume that its use qualifies. If the Academy becomes a commercial service or is operated as a business, Hobby may not be appropriate.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://vercel.com\&sz=32)
+
+Vercel+1
+
+
+
+Its current published Hobby limits include:
+
+- 4 active CPU-hours.
+- 360 GB-hours provisioned memory.
+- 1 million function invocations.
+- 100 GB fast data transfer under its published usage guidelines.
+- One concurrent build.
+- 45 minutes maximum build time per deployment.&#x20;
+
+  [image](https://www.google.com/s2/favicons?domain=https://vercel.com\&sz=32)
+
+  Vercel+2
+
+
+
+These limits are not a reason to avoid static generation. They are a reason to avoid unnecessary server-side execution.
+
+**My recommendation:** Treat Vercel Hobby as a possible deployment option only after checking the usage terms for your intended project. We should also evaluate a free Cloudflare deployment route rather than making the entire architecture dependent on Vercel.
+
+## **5. Cloudflare as an alternative**
+
+Worth evaluating for FORGESEC
+
+Cloudflare offers two relevant deployment options:
+
+**Option A — Cloudflare Pages**
+
+Suitable for a fully static website. Its Free plan currently allows 500 builds per month, one concurrent build and up to 20,000 files per site.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://developers.cloudflare.com\&sz=32)
+
+Cloudflare Pages docs
+
+
+
+However, a static export cannot provide all the server-side features in our current Next.js architecture. We would need to move dynamic application operations elsewhere.
+
+**Option B — Cloudflare Workers**
+
+This can run a Next.js application using a deployment adapter.
+
+Cloudflare's current Free Workers plan includes:
+
+| Resource    | Free allowance |
+| ----------- | -------------- |
+| Requests    | 100,000/day    |
+| CPU time    | 10 ms/request  |
+| Memory      | 128 MB         |
+| Subrequests | 50/request     |
+| Worker size | 64 MiB         |
+
+[image](https://www.google.com/s2/favicons?domain=https://developers.cloudflare.com\&sz=32)
+
+Cloudflare Workers docs+1
+
+Cloudflare currently recommends `vinext` as its default approach for new Next.js deployments. OpenNext remains an available alternative, particularly for existing projects.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://developers.cloudflare.com\&sz=32)
+
+Cloudflare Workers docs+1
+
+
+
+Official guides:
+
+- [Cloudflare Next.js deployment guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/?utm_source=chatgpt.com)
+- [OpenNext for Cloudflare](https://opennext.js.org/cloudflare?utm_source=chatgpt.com)
+
+**My assessment:** Cloudflare may be a better long-term free hosting option if Vercel's Hobby terms don't fit the project. But it introduces an adapter and compatibility layer. We should test Google OAuth callbacks, Server Actions, SSR and database access before committing.
+
+I would not choose a more complicated deployment just because its free quota looks larger.
+
+## **6. Supabase free tier: Database and authentication**
+
+Supabase is the most important paid-service dependency in our initial architecture.
+
+Its current Free plan includes:
+
+| Resource             | Free allowance               |
+| -------------------- | ---------------------------- |
+| Monthly active users | 50,000                       |
+| Database size        | 500 MB                       |
+| Egress               | 5 GB uncached + 5 GB cached  |
+| File storage         | 1 GB                         |
+| Active free projects | 2                            |
+| Social OAuth         | Included                     |
+| Automatic backups    | Not included                 |
+| Inactivity pausing   | After 7 days of low activity |
+
+[image](https://www.google.com/s2/favicons?domain=https://supabase.com\&sz=32)
+
+Supabase+3
+
+### **What does this mean for our application?**
+
+50,000 monthly active users is more than enough to start. The database storage and egress limits deserve more attention.
+
+We can reduce database usage by:
+
+- Storing tutorials in Git rather than PostgreSQL.
+- Storing only necessary student activity.
+- Avoiding duplicate learning-progress records.
+- Paginating quiz history.
+- Avoiding unnecessary analytics events.
+- Not uploading screenshots or documents initially.
+- Avoiding storing every page view as a separate database row.
+
+### **Important: Supabase inactivity pausing**
+
+This is a real operational risk.
+
+If the Academy receives very little database activity for seven days, its Free project may be paused. A paused project needs to be restored before its database-backed functionality becomes available again.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://supabase.com\&sz=32)
+
+Supabase Docs+1
+
+
+
+Don't try to defeat this with artificial traffic. Accept the limitation during the early stage and document how to restore the project.
+
+### **Backup strategy**
+
+The Free plan does not include automatic database backups.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://supabase.com\&sz=32)
+
+Supabase+1
+
+
+
+Therefore:
+
+1. Keep migrations in Git.
+2. Export important database data periodically.
+3. Keep protected backup copies outside the production project.
+4. Test restoration.
+5. Never store database credentials inside the backup repository.
+
+A backup should be treated as a separate protected asset.
+
+## **7. GitHub and automated deployment**
+
+GitHub Free provides unlimited public and private repositories. Its Free plan includes 2,000 GitHub Actions minutes per month for private repositories; public repositories have free standard hosted runner usage.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://github.com\&sz=32)
+
+GitHub+1
+
+
+
+Recommended workflow:
+
+```
+Local development
+      |
+      v
+Git push
+      |
+      v
+GitHub repository
+      |
+      v
+Automated validation
+      |
+      v
+Deployment platform
+      |
+      v
+FORGESEC ACADEMY
+```
+
+Don't run expensive browser tests on every tiny documentation change. Separate workflows:
+
+- Content-only change: validate MDX, metadata, links and build.
+- Application change: lint, typecheck, unit tests and build.
+- Major release: add integration and browser tests.
+
+This keeps CI usage low.
+
+## **8. Storage strategy**
+
+I recommend avoiding external file storage initially.
+
+Our educational content is mostly text and code, so Git is sufficient.
+
+| File type                | Storage                 |
+| ------------------------ | ----------------------- |
+| MDX tutorials            | GitHub                  |
+| YAML learning paths      | GitHub                  |
+| Small tutorial images    | GitHub                  |
+| Icons and illustrations  | GitHub                  |
+| Student profile data     | Supabase                |
+| Quiz records             | Supabase                |
+| Assignment progress      | Supabase                |
+| Student evidence uploads | Not supported initially |
+
+Do not use Supabase Storage just because it is available. File uploads create additional security, storage and egress responsibilities.
+
+If evidence submissions become necessary later, evaluate storage separately.
+
+## **9. Domain and website address**
+
+The hosting platform may be free, but a custom domain generally isn't.
+
+Initially, you can use the free subdomain provided by your hosting provider.
+
+Later, you can connect a custom domain such as:
+
+```
+academy.yourdomain.com
+```
+
+The actual domain should be chosen and registered when your budget allows.
+
+Also configure:
+
+- HTTPS.
+- DNS records.
+- OAuth callback URLs.
+- Canonical domain redirects.
+- Search engine verification.
+
+Don't buy a domain before you are ready to publish unless you have a clear branding reason.
+
+## **10. How to keep server resource usage low**
+
+We should design the application so that most visitors never need dynamic server execution.
+
+| Operation             | Recommended execution  |
+| --------------------- | ---------------------- |
+| Read tutorial         | Static page            |
+| Read write-up         | Static page            |
+| Browse learning path  | Static page            |
+| Search content        | Browser                |
+| View glossary         | Static page            |
+| Google login          | Supabase Auth          |
+| Read student progress | Database query         |
+| Mark lesson complete  | Server action          |
+| Submit quiz           | Server-side scoring    |
+| Manage users          | Admin server operation |
+| Publish quiz          | Admin server operation |
+
+### **One important correction about authentication CPU**
+
+Google OAuth reduces the amount of authentication code we need to maintain, but it does not eliminate authentication requests.
+
+The application still needs to validate sessions and authorize protected operations.
+
+The real CPU savings come from:
+
+- Not running a custom authentication server.
+- Not implementing password hashing and reset workflows.
+- Avoiding unnecessary server-side rendering.
+- Using static pages for public content.
+- Avoiding repeated authorization and database queries within a request.
+
+Don't compromise security by skipping session verification to save a few milliseconds.
+
+## **11. Estimated operating cost**
+
+Initial platform hosting target
+
+# **$0/month**
+
+Assuming usage stays within free allowances and hosting terms permit the project.
+
+| Service                    | Initial target      |
+| -------------------------- | ------------------- |
+| GitHub                     | $0                  |
+| Supabase                   | $0                  |
+| Vercel Hobby or Cloudflare | $0                  |
+| GitHub Actions             | $0 within allowance |
+| Search infrastructure      | $0                  |
+| External database          | Not needed          |
+| Hosted labs                | Not included        |
+| Custom domain              | Optional paid cost  |
+
+**Potential additional costs**
+
+- Domain registration and renewal.
+- Paid hosting if usage or licensing requirements exceed free tiers.
+- Backup storage if local/offline backups become insufficient.
+
+This is a target, not a guarantee. Free-plan limits, eligibility and terms can change.
+
+## **12. My recommended hosting decision**
+
+There are two reasonable deployment paths.
+
+| Consideration        | Vercel Hobby            | Cloudflare Workers Free                     |
+| -------------------- | ----------------------- | ------------------------------------------- |
+| Next.js deployment   | Native integration      | Adapter required                            |
+| Static content       | Excellent               | Excellent                                   |
+| Server-side features | Supported               | Supported with compatibility considerations |
+| Free usage limits    | Function and CPU quotas | Request and CPU quotas                      |
+| Commercial use       | Hobby is non-commercial | Check applicable Cloudflare terms           |
+| Initial complexity   | Lower                   | Higher                                      |
+
+**My recommendation for FORGESEC:**
+
+1. Keep the application framework as Next.js + TypeScript.
+2. Keep Supabase as the database and authentication provider.
+3. Keep GitHub as the content and source-code repository.
+4. Evaluate Cloudflare Workers for the deployment target.
+5. Use Vercel Hobby only if the project's intended use qualifies under its terms.
+
+If Cloudflare's adapter introduces too many issues, we should reconsider the hosting choice rather than redesigning the entire application.
+
+## **13. Practical deployment roadmap**
+
+1. **Local development**
+
+   Build and test the Academy using Next.js and local environment variables.
+2. **GitHub integration**
+
+   Push the repository and configure automated validation.
+3. **Supabase setup**
+
+   Create the database, Google OAuth configuration, migrations and RLS policies.
+4. **Hosting evaluation**
+
+   Deploy a small proof of concept to Cloudflare and test all required Next.js features. Compare with Vercel if its terms permit.
+5. **Preview testing**
+
+   Test Google login, student dashboard, quizzes and database operations.
+6. **Production release**
+
+   Configure production secrets, domain, HTTPS and deployment settings.
+7. **Monitor usage**
+
+   Review database size, egress, function execution and project activity regularly.
+
+## **14. Free-tier resource monitoring**
+
+These are the metrics I would monitor monthly:
+
+| Resource              | Warning condition                             |
+| --------------------- | --------------------------------------------- |
+| Supabase database     | Approaching 500 MB                            |
+| Supabase egress       | Approaching 10 GB combined                    |
+| Supabase activity     | Risk of inactivity pause                      |
+| Vercel function usage | Approaching included CPU or invocation limits |
+| Cloudflare requests   | Approaching 100,000/day                       |
+| GitHub Actions        | Approaching included minutes                  |
+| Build time            | Repeatedly approaching timeout                |
+
+Don't wait until a limit is reached. Keep a reasonable safety margin.
+
+## **15. Final architectural decisions**
+
+Part 16 baseline
+
+| Area                 | Decision                             |
+| -------------------- | ------------------------------------ |
+| Frontend and backend | Next.js + TypeScript                 |
+| Runtime              | Node.js-compatible deployment        |
+| Authentication       | Google OAuth through Supabase        |
+| Database             | Supabase PostgreSQL                  |
+| Educational content  | GitHub MDX/YAML                      |
+| Source control       | GitHub                               |
+| CI/CD                | GitHub Actions                       |
+| Deployment candidate | Cloudflare Workers                   |
+| Alternative          | Vercel, subject to Hobby eligibility |
+| Public content       | Static generation                    |
+| Student data         | Dynamic database access              |
+| File uploads         | Not initially                        |
+| Hosted labs          | Not initially                        |
+| Paid infrastructure  | Avoid until justified                |
+
+**The most important lesson:** Free hosting isn't achieved by finding a provider with the largest quota. It's achieved by designing the application so that it consumes very little infrastructure in the first place.
+
+## **16. Implementation checklist**
+
+**Part 16 deployment tracker**
+
+0/12
+
+Create GitHub repository
+
+Create Supabase project
+
+Configure Google OAuth
+
+Configure environment variables
+
+Deploy a static tutorial proof of concept
+
+Test Cloudflare Next.js deployment compatibility
+
+Test authenticated server operations
+
+Configure isolated preview and production environments
+
+Set up automated deployment
+
+Document Supabase backup and restoration
+
+Set up usage monitoring
+
+Verify hosting terms and domain configuration
+
+**Next: Part 17 — Analytics, Monitoring & Growth Strategy.** We'll decide how to measure student engagement, learning progress and platform health without collecting unnecessary personal data or consuming excessive free-tier resources.

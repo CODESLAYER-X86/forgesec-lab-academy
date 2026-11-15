@@ -1,0 +1,719 @@
+# **Part 09 — Assessment System**
+
+## **Quizzes, Question Management, Scoring, Attempts & Results**
+
+**Objective:** Build a lightweight assessment system that helps students measure their understanding of FORGESEC ACADEMY's educational content.
+
+The assessment system should support knowledge checks without turning the Academy into an expensive examination platform.
+
+It will use:
+
+- Next.js + TypeScript for application logic.
+- Supabase PostgreSQL for questions, answers and results.
+- Supabase Auth for student identity.
+- Server-side scoring to protect correct answers.
+- Git/MDX content to provide educational explanations and references.
+
+**Core principle:** A quiz should measure understanding, not simply reward students for clicking through lessons.
+
+## **1. Assessment system architecture**
+
+The assessment system will be an internal module of the existing Next.js application.
+
+**Student Interface**
+
+Quiz instructions · Questions · Answers · Results
+
+**Next.js Assessment Module**
+
+Validation · Attempt management · Scoring · Authorization
+
+**Supabase PostgreSQL**
+
+Quizzes · Questions · Options · Answer keys · Attempts · Results
+
+### **Responsibilities**
+
+| Component          | Responsibility                          |
+| ------------------ | --------------------------------------- |
+| Quiz interface     | Display questions and collect answers   |
+| Assessment service | Manage quiz rules and scoring           |
+| Database           | Store quiz configuration and results    |
+| Admin interface    | Create and manage quizzes               |
+| RLS                | Protect student records and answer keys |
+
+The quiz engine must never trust scores calculated by the browser.
+
+## **2. Types of questions**
+
+Start with three question types.
+
+[Course Based Test UI Design by James Adeshina on Dribbble](https://images.openai.com/static-rsc-4/Yu27eAr3cwliNmncTaEUSvYWoOcH2EZabw5O-Qh1i7d8mouDswBSt_GvNds4uCMX5jLVnz9q6F8HAK6vRnZelGA0gQgT3eaifJCp9co1CkKDBnuucZ0bZBdRmOm2NC5PrmU9hD--F4wb9SmhOKlq1G80CtVJO-cq7SLDxdQrHnE?purpose=inline)
+
+**A. Single choice**
+
+One correct answer from multiple options.
+
+Example: Which command displays the current working directory?
+
+- `pwd`
+- `ls`
+- `cd`
+- `mkdir`
+
+[CBT Nuggets Reviews 2026: Details, Pricing, & Features | G2](https://images.openai.com/static-rsc-4/ejHuO7e4u9EYpEqIjoU7MLLGKZE2vWsXV88lSL1kInOO96Ueyf-kyvsTfC6HTz_tpQbUuxhPwv7WSkwDO_7S6odd6d6N6f62Pzd_vVq9qG9PYBv2h6SixK-S5Fjb7OXyvJf-SDRGYpIQ-HGKjVuocWwgE1ncFYo1SmM2S53UnZQ?purpose=inline)
+
+**B. Multiple select**
+
+More than one correct answer.
+
+Example: Which of these are Linux file permissions?
+
+- Read
+- Write
+- Execute
+- Compile
+
+[3 Alternatives to NotebookLM for Smarter Learning - boterview](https://images.openai.com/static-rsc-4/Zx4nHLE6O1cQOuO_hGAJ5OvUiiNKydJQiB8Wnp2oTOXzzkAXvYZ4_XKy62N-yAYyD8FKBInA_ByWupyn_qoBs7MGvJZnh4bztFy4Ktj6OC5snJWiygrFL-GY5r4C-dYHbiRH4k0DEIJPOL-68eylG4csphj7lfAyg91ABrcGXsE?purpose=inline)
+
+**C. True or False**
+
+Two possible answers.
+
+Example: Linux treats filenames as case-sensitive.
+
+- True
+- False
+
+### **Why only three initially?**
+
+They cover most beginner and intermediate knowledge checks.
+
+Do not immediately introduce:
+
+- Drag-and-drop questions.
+- Matching questions.
+- Essay grading.
+- Code execution questions.
+- Complex adaptive examinations.
+
+Those features would increase development and testing requirements.
+
+Later, short-answer questions could be introduced with manual instructor evaluation.
+
+## **3. Quiz structure and configuration**
+
+Each quiz should have:
+
+| Field               | Purpose                              |
+| ------------------- | ------------------------------------ |
+| Title               | Quiz name                            |
+| Slug                | Unique URL                           |
+| Description         | What the quiz evaluates              |
+| Related lesson/path | Educational context                  |
+| Difficulty          | Beginner, intermediate or advanced   |
+| Passing score       | Required percentage                  |
+| Attempt limit       | Maximum submissions                  |
+| Status              | Draft, published or archived         |
+| Questions           | Ordered question collection          |
+| Created by          | Responsible administrator/instructor |
+| Published at        | Publication timestamp                |
+
+The `quizzes` table from Part 06 already provides most of this structure.
+
+I recommend adding a few optional configuration fields through a migration:
+
+```
+time_limit_seconds
+randomize_questions
+randomize_options
+show_explanations
+allow_guest_attempts
+```
+
+Use conservative defaults:
+
+| Setting             | Initial default                              |
+| ------------------- | -------------------------------------------- |
+| Time limit          | No limit                                     |
+| Randomize questions | No                                           |
+| Randomize options   | No                                           |
+| Show explanations   | Yes, after submission                        |
+| Guest attempts      | Yes                                          |
+| Attempt limit       | 3 for formal quizzes; unlimited for practice |
+
+These should be configurable per quiz rather than hardcoded globally.
+
+## **4. Quiz interface**
+
+Keep the interface clean and focused.
+
+[Quizora – AI Quiz & Exam SaaS Platform with Payments and Certificates by ATNTechnologies](https://images.openai.com/static-rsc-4/1UJNTxG7fMQums5XWx5XLdEx409U7BeZQ_EoiaWVPYkPMKooLBifDKzV-e8o8hTkWudL-vmrdO0C9Bo6Y_U6-sXhBr6Wlq43nTagFcA_73uOJAsTWK90TVQ9uv-hnzMsBKPnUnEaVvhT7fZzTQFkQLq_8n7eu6lNtM4fY81ztBc?purpose=inline)
+
+[codecanyon.net](https://codecanyon.net/item/quizora-ai-quiz-exam-saas-platform-with-payments-and-certificates/63989606?utm_source=chatgpt.com)
+
+### **Example quiz screen**
+
+Linux Fundamentals
+
+Question 2 of 5
+
+**Which command changes the current working directory?**
+
+pwd
+
+cd
+
+ls
+
+mkdir
+
+Demo question
+
+Clear answer
+
+Illustrative quiz component. This is not connected to the assessment database.
+
+### **Required interface features**
+
+1. Quiz title and description.
+2. Question counter.
+3. Progress indicator.
+4. Answer selection.
+5. Previous and next navigation.
+6. Submit button.
+7. Confirmation before submission.
+8. Result screen.
+
+For multiple-select questions, use checkboxes rather than radio buttons.
+
+### **Question navigation**
+
+Students should be able to move between questions without losing their answers.
+
+Keep answers in client-side state while the attempt is active.
+
+For the initial version, avoid complex automatic background saving. If a student refreshes or loses the page, the application should clearly explain whether their attempt can be resumed or must be restarted.
+
+## **5. Database architecture**
+
+Part 06 already defined the required assessment tables.
+
+The relationships are:
+
+**quizzes**
+
+**quiz_questions**
+
+**quiz_options**
+
+**quiz_answer_keys**
+
+**quiz_attempts**
+
+**quiz_attempt_answers**
+
+Simplified relationship overview. Questions belong to quizzes; attempts belong to users and quizzes.
+
+### **Table responsibilities**
+
+| Table                  | Stores                                     |
+| ---------------------- | ------------------------------------------ |
+| `quizzes`              | Quiz configuration                         |
+| `quiz_questions`       | Question text, type, points and order      |
+| `quiz_options`         | Available answers                          |
+| `quiz_answer_keys`     | Correct answers and explanations           |
+| `quiz_attempts`        | Student attempt and final score            |
+| `quiz_attempt_answers` | Answers submitted for individual questions |
+
+### **Important design improvement: quiz versioning**
+
+There is one issue worth addressing before implementation.
+
+Suppose a student completes a quiz today. Next month, an instructor changes two questions and modifies the correct answers.
+
+Should the student's historical result be evaluated against the old quiz or the new quiz?
+
+It should preserve the version the student actually attempted.
+
+I recommend introducing:
+
+- `version` on the quiz.
+- A quiz version snapshot or immutable published question set.
+- `quiz_version` on `quiz_attempts`.
+
+When a published quiz changes, create a new version rather than silently modifying the version associated with historical attempts.
+
+This is especially important if the Academy eventually issues certificates based on assessment performance.
+
+For the first release, the simplest implementation is to lock published quiz versions and create a new version whenever questions change.
+
+## **6. Quiz attempt workflow**
+
+An attempt begins when a student starts a quiz.
+
+```
+Student opens quiz
+       |
+       v
+Check quiz publication status
+       |
+       v
+Check attempt restrictions
+       |
+       v
+Create attempt
+       |
+       v
+Load questions and options
+       |
+       v
+Student answers questions
+       |
+       v
+Student submits
+       |
+       v
+Server validates answers
+       |
+       v
+Server calculates score
+       |
+       v
+Store results
+       |
+       v
+Display result and explanations
+```
+
+### **Attempt states**
+
+The existing `quiz_attempts` table should be extended with an explicit status:
+
+| Status        | Meaning                   |
+| ------------- | ------------------------- |
+| `in_progress` | Student has started       |
+| `submitted`   | Student submitted answers |
+| `expired`     | Time limit expired        |
+| `abandoned`   | Attempt was abandoned     |
+
+Do not treat an unfinished attempt as a completed quiz result.
+
+### **Attempt restrictions**
+
+Before creating an attempt, verify:
+
+1. The quiz is published.
+2. The user is allowed to access it.
+3. The attempt limit has not been reached.
+4. The quiz is still accepting attempts.
+5. The current quiz version is valid.
+
+For guest attempts, keep the score in the temporary response rather than persisting identifiable student records. If you later need guest analytics, design a separate privacy-conscious anonymous attempt mechanism.
+
+## **7. Server-side scoring**
+
+This is the most security-sensitive part of the assessment system.
+
+**Never send the correct answer keys to the browser before the student submits the quiz.**
+
+Imagine giving students an examination paper with the answer sheet printed on the back. That is what exposing answer keys through the API would do.
+
+### **Scoring example**
+
+Suppose a quiz contains:
+
+| Question | Points | Student result |
+| -------- | ------ | -------------- |
+| Q1       | 2      | Correct        |
+| Q2       | 2      | Incorrect      |
+| Q3       | 3      | Correct        |
+| Q4       | 3      | Correct        |
+| Q5       | 2      | Incorrect      |
+
+Total possible points:
+
+\\[ 2+2+3+3+2=12 \\]
+
+Earned points:
+
+\\[ 2+0+3+3+0=8 \\]
+
+Final percentage:
+
+\\[ \frac{8}{12}\times100=66.67\\% \\]
+
+If the passing threshold is 70%, the student does not pass.
+
+### **Scoring rules**
+
+For single-choice and true/false:
+
+- Correct answer: full points.
+- Incorrect answer: zero points.
+
+For multiple-select, I recommend exact-set matching initially:
+
+- All correct options selected.
+- No incorrect options selected.
+- Full points awarded.
+- Otherwise, zero points.
+
+Partial credit can be added later, but it introduces more complex scoring and explanation requirements.
+
+### **Server-side implementation concept**
+
+```
+type QuestionResult = {
+  questionId: string;
+  selectedOptionIds: string[];
+  correctOptionIds: string[];
+  points: number;
+};
+
+function isCorrect(result: QuestionResult): boolean {
+  const selected = [...result.selectedOptionIds].sort();
+  const correct = [...result.correctOptionIds].sort();
+
+  return (
+    selected.length === correct.length &&
+    selected.every((id, index) => id === correct[index])
+  );
+}
+```
+
+This is only the comparison logic. In production:
+
+- Retrieve answer keys on the server.
+- Verify every selected option belongs to its question.
+- Reject duplicate option IDs.
+- Reject answers for questions outside the attempt's quiz version.
+- Calculate the score server-side.
+- Persist the attempt and answers atomically.
+- Prevent the same attempt from being submitted twice.
+
+A database transaction or trusted database function should handle the final submission so a partial write cannot leave an inconsistent result.
+
+## **8. Quiz results page**
+
+After submission, display a useful learning summary.
+
+Not passed
+
+# **67%**
+
+Example quiz result
+
+**3**
+
+Correct
+
+**2**
+
+Incorrect
+
+**70%**
+
+Pass mark
+
+**Question review**
+
+**Q1. What does&#x20;**`pwd`**&#x20;do?**
+
+Correct
+
+Displays the current working directory.
+
+**Q2. What does&#x20;**`chmod`**&#x20;modify?**
+
+Incorrect
+
+Correct answer: file permissions.
+
+Illustrative results page.
+
+### **Results should include**
+
+- Total score.
+- Percentage.
+- Pass/fail status.
+- Correct and incorrect answer counts.
+- Explanations.
+- Attempt number.
+- Submission date.
+- Retry availability.
+
+The explanation is more valuable than the score alone. A student should understand why an answer was incorrect.
+
+## **9. Guest versus registered assessments**
+
+I recommend supporting both.
+
+| Feature                | Guest | Registered student |
+| ---------------------- | ----- | ------------------ |
+| View published quiz    | Yes   | Yes                |
+| Attempt quiz           | Yes   | Yes                |
+| Receive score          | Yes   | Yes                |
+| View explanations      | Yes   | Yes                |
+| Save attempt history   | No    | Yes                |
+| View previous attempts | No    | Yes                |
+| Dashboard integration  | No    | Yes                |
+
+### **Why allow guest attempts?**
+
+A visitor should be able to evaluate the quality of the Academy without first creating an account.
+
+For example, someone might discover a Linux tutorial through Google and want to test their understanding immediately.
+
+Do not force registration before allowing a basic knowledge check.
+
+After a guest finishes, you can offer account registration to save future progress, but do not imply that their anonymous result will automatically transfer unless that functionality is implemented.
+
+## **10. Admin quiz management**
+
+The Academy needs an internal quiz-management interface.
+
+[Coursera Dashboard Design by MindInventory UI/UX for MindInventory on Dribbble](https://images.openai.com/static-rsc-4/sJbhhKYFXgcwwlL07n3AMaqJb1ENbv7duNf4L4ad6ShUbEtbBDGJPTBsNMny-8UV1ZPd9vx6e5Zc3hV1pP7y68i_OAnC0783zsDAP0gEYoDZVH0vn3nINDEsySEgnqIhAmgay0MxpDQLmp6F0d0u-Na_ckH86WDsDKpUzubXqqY?purpose=inline)
+
+[dribbble.com](https://dribbble.com/shots/22632028-Coursera-Dashboard-Design?utm_source=chatgpt.com)
+
+### **Admin capabilities**
+
+| Feature                 | Priority |
+| ----------------------- | -------- |
+| Create quiz             | P0       |
+| Edit draft quiz         | P0       |
+| Add questions           | P0       |
+| Add answer options      | P0       |
+| Set correct answers     | P0       |
+| Add explanations        | P0       |
+| Set passing percentage  | P0       |
+| Publish quiz            | P0       |
+| Archive quiz            | P0       |
+| View attempt statistics | P1       |
+| Duplicate quiz          | P1       |
+| Export results          | P2       |
+
+### **Quiz creation workflow**
+
+```
+Create quiz
+    |
+    v
+Add title and description
+    |
+    v
+Configure quiz settings
+    |
+    v
+Add questions
+    |
+    v
+Configure answer options
+    |
+    v
+Set correct answers
+    |
+    v
+Add explanations
+    |
+    v
+Validate quiz
+    |
+    v
+Preview quiz
+    |
+    v
+Publish
+```
+
+### **Publishing validation**
+
+A quiz cannot be published unless:
+
+- It has at least one question.
+- Every question has valid answer options.
+- Every question has at least one valid correct answer.
+- Single-choice questions have exactly one correct answer.
+- True/false questions have the expected two choices.
+- Points are positive.
+- Passing score is valid.
+- All question positions are unique.
+
+Once published, the question set should be immutable for that version.
+
+## **11. Security and authorization**
+
+The quiz system must follow the security architecture from Parts 06 and 07.
+
+| Resource                 | Student access                 |
+| ------------------------ | ------------------------------ |
+| Published quizzes        | Read                           |
+| Draft quizzes            | No access                      |
+| Published questions      | Read without answer keys       |
+| Answer keys              | No direct access               |
+| Own attempts             | Read                           |
+| Other students' attempts | No access                      |
+| Own submitted answers    | Read, subject to result policy |
+| Quiz scoring operation   | Server-controlled              |
+
+### **Important security controls**
+
+1. Enable RLS on all assessment tables.
+2. Do not expose `quiz_answer_keys` through client-accessible queries.
+3. Do not accept client-calculated scores.
+4. Do not allow direct student writes to final score fields.
+5. Derive the user ID from the verified session.
+6. Validate question and option IDs server-side.
+7. Apply rate limits to quiz creation and submission operations.
+8. Prevent duplicate submissions.
+9. Keep administrative answer-key operations server-only.
+10. Write administrative publication and modification events to `admin_audit_logs`.
+
+### **Additional issue: question randomization**
+
+If you enable question randomization, store the question ordering for each attempt. Otherwise, a student may refresh and receive a different question sequence.
+
+The same applies to randomized answer options.
+
+For the first release, keep randomization disabled.
+
+## **12. Suggested project structure**
+
+Add the following module:
+
+```
+src/
+└── modules/
+    └── assessments/
+        ├── schemas/
+        │   ├── quiz.schema.ts
+        │   ├── question.schema.ts
+        │   └── submission.schema.ts
+        │
+        ├── services/
+        │   ├── quiz.service.ts
+        │   ├── attempt.service.ts
+        │   └── scoring.service.ts
+        │
+        ├── repositories/
+        │   ├── quiz.repository.ts
+        │   ├── question.repository.ts
+        │   └── attempt.repository.ts
+        │
+        ├── actions/
+        │   ├── start-attempt.action.ts
+        │   ├── submit-attempt.action.ts
+        │   └── create-quiz.action.ts
+        │
+        ├── components/
+        │   ├── quiz-card.tsx
+        │   ├── question-renderer.tsx
+        │   ├── quiz-navigation.tsx
+        │   ├── quiz-progress.tsx
+        │   └── result-summary.tsx
+        │
+        └── types/
+            ├── quiz.types.ts
+            └── attempt.types.ts
+```
+
+Keep scoring logic separate from the UI. This makes it possible to test scoring without rendering a React component.
+
+## **13. Testing requirements**
+
+Before publishing quizzes, test these scenarios:
+
+**Assessment security and functionality checklist**
+
+0 / 16 tested
+
+0%
+
+Guest can attempt a published quiz.
+
+Guest cannot access draft quizzes.
+
+Registered student can start an attempt.
+
+Attempt limits are enforced server-side.
+
+Single-choice scoring is correct.
+
+True/false scoring is correct.
+
+Multiple-select exact-set scoring is correct.
+
+Invalid option IDs are rejected.
+
+Answer keys are not exposed to the browser.
+
+Student cannot modify their own score.
+
+Student cannot access another student's attempts.
+
+A submitted attempt cannot be submitted again.
+
+A failed database transaction does not create partial results.
+
+Historical attempts retain their original quiz version.
+
+Explanations are displayed only after the appropriate submission state.
+
+Quiz publication validation blocks invalid questions.
+
+Reset checklist
+
+## **14. Implementation priorities**
+
+Do not attempt to build a sophisticated examination engine initially.
+
+| Phase | Feature                        | Priority |
+| ----- | ------------------------------ | -------- |
+| 1     | Quiz database and validation   | P0       |
+| 2     | Admin quiz creation            | P0       |
+| 3     | Question and option management | P0       |
+| 4     | Quiz-taking interface          | P0       |
+| 5     | Server-side scoring            | P0       |
+| 6     | Results and explanations       | P0       |
+| 7     | Student attempt history        | P1       |
+| 8     | Guest attempts                 | P1       |
+| 9     | Quiz analytics                 | P2       |
+| 10    | Advanced question types        | P2       |
+
+### **Features to postpone**
+
+- AI-generated questions.
+- Adaptive examinations.
+- Proctoring.
+- Webcam monitoring.
+- Anti-cheat surveillance.
+- Automated code execution.
+- Competitive leaderboards.
+- Complex examination scheduling.
+
+For a free educational Academy, these features are unnecessary and would create privacy, security and maintenance burdens.
+
+## **Part 09 — Final architectural decisions**
+
+| Area                    | Decision                                   |
+| ----------------------- | ------------------------------------------ |
+| Assessment architecture | Internal Next.js module                    |
+| Question types          | Single choice, multiple select, true/false |
+| Question storage        | PostgreSQL                                 |
+| Answer-key storage      | Restricted PostgreSQL table                |
+| Scoring                 | Server-side                                |
+| Multiple-select scoring | Exact-set matching                         |
+| Guest attempts          | Supported                                  |
+| Student attempt history | Persisted                                  |
+| Attempt limits          | Configurable                               |
+| Quiz versions           | Immutable published versions               |
+| Explanations            | Display after submission                   |
+| Randomization           | Disabled initially                         |
+| Advanced assessments    | Future development                         |
+
+**My recommendation:** Make quizzes short and directly related to lessons. A five-question knowledge check with good explanations is more useful for beginners than a 50-question examination with no meaningful feedback.
+
+**Next: Part 10 — Practical Assignments & Hands-on Learning System.**
+
+This will design how students perform real Linux, networking and cybersecurity exercises on their own computers and authorized systems, without hosting labs, VMs or practice infrastructure for them.

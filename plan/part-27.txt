@@ -1,0 +1,560 @@
+# **Part 27 — User Roles, Permissions & Permanent Admin Authorization**
+
+**Objective:** Implement a secure authorization system for FORGESEC ACADEMY with permanent environment-based administrators, Google OAuth identity verification, student and instructor roles, resource-level permissions and PostgreSQL Row Level Security (RLS).
+
+This part establishes the final authority model. We will not keep redesigning administrator authorization in later parts.
+
+## **1. Final authorization architecture**
+
+We will use a hybrid authorization model:
+
+- **Admin:** Identified permanently through `ADMIN_EMAILS` in server environment variables.
+- **Student:** Default role assigned through the trusted first-login process.
+- **Instructor:** Role assigned by an administrator and stored in PostgreSQL.
+- **Guest:** Unauthenticated visitor with public-content access.
+
+**Google OAuth + Supabase Auth**
+
+Establishes the authenticated identity.
+
+**Admin allowlist**
+
+Environment
+
+ADMIN_EMAILS
+
+**Other roles**
+
+Database
+
+user_roles
+
+**Server-side authorization**
+
+Identity + role + permission + ownership checks
+
+**Supabase PostgreSQL + RLS**
+
+Database-level access enforcement
+
+**Important:** The admin allowlist and database authorization must agree. Next.js environment variables are not automatically accessible to PostgreSQL. We will implement a secure server-to-database authorization mechanism instead of assuming RLS can read `ADMIN_EMAILS`.
+
+## **2. Permanent admin configuration**
+
+The admin email list will remain in the deployment environment configuration.
+
+### `.env.local`
+
+```
+# Permanent platform administrators
+ADMIN_EMAILS=owner@example.com,second-admin@example.com
+```
+
+### `.env.example`
+
+```
+ADMIN_EMAILS=
+```
+
+For Vercel, configure the same variable in the project's server environment settings.
+
+Security requirements:
+
+- Never prefix it with `NEXT_PUBLIC_`.
+- Never expose it through an API response.
+- Never include it in browser bundles.
+- Never log its value.
+- Restrict deployment environment-variable access.
+- Use MFA on Google, GitHub and hosting accounts.
+
+Only verified Google account identities may match this allowlist.
+
+## **3. How admin identification works**
+
+The authorization service must:
+
+1. Obtain the authenticated user through Supabase `getUser()`.
+2. Reject missing or invalid sessions.
+3. Require a verified email claim from the authenticated identity.
+4. Normalize the email.
+5. Compare it against the server-side allowlist.
+6. Grant admin authorization only on an exact match.
+
+Example:
+
+```
+import "server-only";
+
+import { createClient } from "@/lib/supabase/server";
+
+function getAdminEmails(): Set<string> {
+  return new Set(
+    (process.env.ADMIN_EMAILS ?? "")
+      .split(",")
+      .map(email => email.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+export async function isAdmin(): Promise<boolean> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user?.email || user.email_confirmed_at == null) {
+    return false;
+  }
+
+  return getAdminEmails().has(user.email.toLowerCase());
+}
+```
+
+This is the identity-checking foundation, not the complete database authorization implementation.
+
+Do not use `user.user_metadata` to establish admin status. User metadata can be modified by the account holder.
+
+Also, test the actual Google OAuth provider's verified-email behavior before production. If the provider does not supply a trustworthy verified-email claim, fail closed rather than silently trusting the address.
+
+## **4. User role definitions**
+
+| Role       | Authority                                    |
+| ---------- | -------------------------------------------- |
+| Guest      | Read published public content                |
+| Student    | Personal learning and account features       |
+| Instructor | Explicitly authorized teaching functionality |
+| Admin      | Full platform administration                 |
+
+The `user_roles` table remains responsible for student and instructor roles.
+
+**Admin is an environment-based exception.** It does not depend on a manually editable `user_roles` record.
+
+A user may have a student or instructor record in PostgreSQL while also qualifying as an administrator through the environment allowlist. Admin authorization takes precedence.
+
+## **5. Permission matrix**
+
+Legend: Full = unrestricted within platform authority; Own = own records; Assigned = explicitly assigned scope; No = prohibited.
+
+### **Public and learning permissions**
+
+| Permission             | Guest | Student | Instructor | Admin |
+| ---------------------- | ----- | ------- | ---------- | ----- |
+| View published lessons | Full  | Full    | Full       | Full  |
+| Search public content  | Full  | Full    | Full       | Full  |
+| View learning paths    | Full  | Full    | Full       | Full  |
+| Complete lessons       | No    | Own     | Own        | Full  |
+| View learning progress | No    | Own     | Own        | Full  |
+| Bookmark content       | No    | Own     | Own        | Full  |
+| View own quiz results  | No    | Own     | Own        | Full  |
+| Complete assignments   | No    | Own     | Own        | Full  |
+
+### **Educational management**
+
+| Permission                      | Guest | Student | Instructor   | Admin |
+| ------------------------------- | ----- | ------- | ------------ | ----- |
+| Create quiz drafts              | No    | No      | Granted      | Full  |
+| Edit own draft quizzes          | No    | No      | Granted      | Full  |
+| Edit other instructors' quizzes | No    | No      | No           | Full  |
+| Publish quizzes                 | No    | No      | No initially | Full  |
+| Create assignment drafts        | No    | No      | Granted      | Full  |
+| Edit own draft assignments      | No    | No      | Granted      | Full  |
+| Review assigned submissions     | No    | No      | Assigned     | Full  |
+| Manage users                    | No    | No      | No           | Full  |
+| Manage roles                    | No    | No      | No           | Full  |
+| View audit logs                 | No    | No      | No           | Full  |
+| Manage platform settings        | No    | No      | No           | Full  |
+
+Instructor permissions must be granted explicitly. Having an instructor role alone does not authorize every teaching operation.
+
+## **6. Database schema**
+
+We already designed `user_roles` in Part 21. Keep it.
+
+```
+user_roles
+├── user_id
+├── role
+├── assigned_by
+└── created_at
+```
+
+For instructor capabilities, add a permission table only if those capabilities are enabled:
+
+```
+user_permissions
+├── id
+├── user_id
+├── permission
+├── granted_by
+└── created_at
+```
+
+Suggested permission identifiers:
+
+```
+export type Permission =
+  | "quiz.create"
+  | "quiz.edit_own"
+  | "assignment.create"
+  | "assignment.edit_own"
+  | "submission.review_assigned";
+```
+
+For future instructor-to-student assignment:
+
+```
+instructor_assignments
+├── id
+├── instructor_id
+├── student_id
+├── assignment_id
+├── assigned_by
+└── created_at
+```
+
+Do not build instructor assignment management in the first release unless actual instructor review is being launched.
+
+## **7. The important database security decision**
+
+This is where we need to be particularly careful.
+
+PostgreSQL cannot directly read `ADMIN_EMAILS` from the Next.js environment. We should **not** create an RLS policy that pretends this variable is available inside Supabase.
+
+For this project, use two database access paths.
+
+### **Path A — Ordinary user operations**
+
+Use the authenticated Supabase client and RLS.
+
+Examples:
+
+- Student updates their own profile.
+- Student marks a lesson complete.
+- Student creates a bookmark.
+- Student views their quiz results.
+- Instructor accesses an explicitly assigned resource.
+
+These operations remain protected by PostgreSQL ownership and role policies.
+
+### **Path B — Administrator operations**
+
+Use a server-only Supabase service-role client, but only after `requireAdmin()` successfully verifies the authenticated Google identity against `ADMIN_EMAILS`.
+
+**Admin operation**
+
+Authenticated Google identity
+
+`requireAdmin()` checks environment allowlist
+
+Server-only privileged database operation
+
+Audit log + result
+
+This is a deliberate, restricted use of the service-role key. It bypasses RLS, so:
+
+- It must never enter browser code.
+- It must never be exposed through client-accessible APIs.
+- Every privileged operation must call `requireAdmin()` independently.
+- Use fixed, narrowly scoped repository functions, not a generic database query endpoint.
+- Validate every input with Zod.
+- Record sensitive administrative actions.
+- Keep ordinary student operations on user-scoped clients.
+
+**Why this design?** It avoids duplicating the environment allowlist inside PostgreSQL or creating a second admin identity system that can drift out of sync.
+
+## **8. Authorization implementation structure**
+
+Create:
+
+```
+src/lib/auth/
+├── get-current-user.ts
+├── admin.ts
+├── permissions.ts
+├── require-user.ts
+├── require-admin.ts
+├── require-instructor.ts
+└── authorization.ts
+
+src/lib/supabase/
+├── client.ts
+├── server.ts
+└── admin.ts
+
+src/modules/auth/
+├── schemas/
+├── services/
+├── guards/
+└── types/
+```
+
+Responsibilities:
+
+| File                    | Responsibility                                |
+| ----------------------- | --------------------------------------------- |
+| `get-current-user.ts`   | Resolve authenticated identity                |
+| `admin.ts`              | Read and normalize admin allowlist            |
+| `require-user.ts`       | Require authenticated account                 |
+| `require-admin.ts`      | Require permanent environment-based admin     |
+| `require-instructor.ts` | Require instructor role                       |
+| `permissions.ts`        | Define permission identifiers                 |
+| `authorization.ts`      | Check role, permission and ownership          |
+| `supabase/admin.ts`     | Create privileged server-only database client |
+
+### **Admin guard**
+
+```
+import "server-only";
+import { redirect } from "next/navigation";
+import { isAdmin } from "./admin";
+
+export async function requireAdmin() {
+  const authorized = await isAdmin();
+
+  if (!authorized) {
+    redirect("/dashboard");
+  }
+}
+```
+
+For Server Actions and Route Handlers, return an appropriate authorization error instead of relying only on page redirects.
+
+### **Instructor guard**
+
+```
+import { createClient } from "@/lib/supabase/server";
+
+export async function isInstructor(userId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "instructor")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error("Unable to verify instructor role");
+  }
+
+  return Boolean(data);
+}
+```
+
+The `userId` must come from the verified server-side user, not from a browser request.
+
+### **Supabase privileged client**
+
+```
+import "server-only";
+
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+export function createAdminDatabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceRoleKey) {
+    throw new Error("Missing server database configuration");
+  }
+
+  return createSupabaseClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+```
+
+The service-role key is a separate server secret:
+
+```
+SUPABASE_SERVICE_ROLE_KEY=your_server_only_service_role_key
+```
+
+Do not add it to `.env.example` with a real value. Use an empty placeholder.
+
+## **9. First-login role assignment**
+
+The first successful Google login should create:
+
+1. A profile.
+2. A default student role.
+
+It should not create an admin role based on a browser-submitted email.
+
+The environment allowlist independently determines whether that authenticated account is an administrator.
+
+This means an administrator can also use ordinary student features, such as completing lessons and maintaining bookmarks, provided their account has the normal student role.
+
+The admin allowlist remains the permanent source of admin authority.
+
+## **10. Role management rules**
+
+| Operation                     | Authorized actor               |
+| ----------------------------- | ------------------------------ |
+| Create default student role   | Trusted first-login process    |
+| Promote student to instructor | Admin                          |
+| Remove instructor role        | Admin                          |
+| Grant instructor permission   | Admin                          |
+| Revoke instructor permission  | Admin                          |
+| Promote student to admin      | Not through role management    |
+| Remove admin from allowlist   | Authorized deployment operator |
+| Change own instructor role    | Not permitted                  |
+
+Admin membership is changed by editing `ADMIN_EMAILS` in the deployment environment and redeploying.
+
+There is no admin promotion button in the application.
+
+For the initial release, this is simpler and reduces the risk of accidental privilege escalation.
+
+## **11. RLS policy requirements**
+
+RLS remains mandatory on all exposed tables.
+
+| Table                 | Guest                            | Student              | Instructor             | Admin             |
+| --------------------- | -------------------------------- | -------------------- | ---------------------- | ----------------- |
+| `profiles`            | No private access                | Own                  | Own                    | Privileged server |
+| `user_roles`          | No                               | Own roles, read-only | Own roles, read-only   | Privileged server |
+| `lesson_progress`     | No                               | Own                  | Own                    | Privileged server |
+| `bookmarks`           | No                               | Own                  | Own                    | Privileged server |
+| `content_activity`    | No                               | Own                  | Own                    | Privileged server |
+| `quiz_attempts`       | Public attempts only, if enabled | Own                  | Own                    | Privileged server |
+| `quiz_answer_keys`    | No                               | No                   | Authorized server only | Privileged server |
+| `assignment_progress` | No                               | Own                  | Own                    | Privileged server |
+| `admin_audit_logs`    | No                               | No                   | No                     | Privileged server |
+
+For instructor-owned quizzes and assignments, add resource-level ownership checks rather than granting access to all instructor-created records.
+
+The admin service-role client bypasses these RLS policies. Therefore, the application must enforce admin authorization before every privileged database operation.
+
+## **12. Admin audit logging**
+
+Every sensitive administrative operation should create an audit event.
+
+Examples:
+
+```
+admin.user.role_changed
+admin.user.suspended
+admin.quiz.published
+admin.quiz.archived
+admin.assignment.published
+admin.settings.updated
+```
+
+Suggested audit record:
+
+```
+{
+  "actor_id": "authenticated-user-uuid",
+  "action": "admin.user.role_changed",
+  "entity_type": "user",
+  "entity_id": "target-user-uuid",
+  "metadata": {
+    "previous_role": "student",
+    "new_role": "instructor"
+  }
+}
+```
+
+Do not store:
+
+- OAuth tokens.
+- Passwords.
+- Service-role keys.
+- Session cookies.
+- Unnecessary personal information.
+
+Audit records should be append-only for normal application users.
+
+## **13. Security testing**
+
+| Test                                          | Expected result                              |
+| --------------------------------------------- | -------------------------------------------- |
+| Guest opens `/admin`                          | Denied                                       |
+| Student opens `/admin`                        | Denied                                       |
+| Instructor opens user management              | Denied                                       |
+| Unlisted Google account opens `/admin`        | Denied                                       |
+| Listed verified Google account opens `/admin` | Allowed                                      |
+| User changes browser email                    | No privilege gained                          |
+| User edits role through API                   | Denied                                       |
+| Student reads another student's progress      | Denied                                       |
+| Student reads quiz answer keys                | Denied                                       |
+| Instructor edits another instructor's draft   | Denied                                       |
+| Service-role key appears in browser bundle    | Build/security test fails                    |
+| Admin changes a role                          | Audit event recorded                         |
+| Admin allowlist is empty                      | No administrator access                      |
+| Admin email is removed from environment       | Access revoked after deployment takes effect |
+
+Test with at least two separate student accounts, one instructor account and one administrator account.
+
+## **14. Implementation checklist**
+
+**Part 27 implementation tracker**
+
+0/16
+
+Add ADMIN_EMAILS to local and production environment
+
+Add server-only admin identity verification
+
+Implement requireAdmin()
+
+Implement requireUser()
+
+Implement instructor role verification
+
+Implement permission constants
+
+Create privileged Supabase server client
+
+Protect every admin Server Action and Route Handler
+
+Implement default student role creation
+
+Implement instructor role management
+
+Configure RLS policies
+
+Restrict service-role database operations
+
+Implement admin audit logging
+
+Test unauthorized access
+
+Test admin access with Google OAuth
+
+Verify service-role key is absent from browser bundle
+
+## **15. Final architecture decisions**
+
+| Component                    | Final decision                                      |
+| ---------------------------- | --------------------------------------------------- |
+| Admin identity               | Permanent `ADMIN_EMAILS` environment allowlist      |
+| Authentication               | Supabase Google OAuth                               |
+| Admin verification           | Verified authenticated email                        |
+| Student role                 | PostgreSQL                                          |
+| Instructor role              | PostgreSQL                                          |
+| Admin role                   | Not stored as an authoritative database role        |
+| Instructor permissions       | Explicit database permissions                       |
+| Server authorization         | Mandatory                                           |
+| Ordinary database operations | User-scoped Supabase client                         |
+| Privileged admin operations  | Server-only service-role client after authorization |
+| Database protection          | RLS                                                 |
+| Audit                        | PostgreSQL audit log                                |
+| Admin promotion              | Deployment environment change                       |
+| Admin management UI          | No admin promotion interface                        |
+
+**Part 27 is complete as the authorization specification.**
+
+The next two parts will cover the other major administrative areas:
+
+- **Part 28 — Admin Panel Implementation:** Actual admin interface and management functionality.
+- **Part 29 — Platform Metrics & Analytics:** User growth, student activity, learning progress, popular lessons, quiz performance and platform statistics.
+
+After Part 35, the planning phase ends. We will move to implementation rather than continuing to expand the specification.

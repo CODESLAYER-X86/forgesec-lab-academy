@@ -1,0 +1,912 @@
+# **Part 21 — Database Implementation: SQL Migrations, Tables, Constraints, Indexes, RLS Policies & Initial Admin Provisioning**
+
+**Objective:** Convert the database architecture from Part 06 into an implementable PostgreSQL schema for FORGESEC ACADEMY.
+
+We will use Supabase PostgreSQL. The database will store student information, learning progress, bookmarks, quizzes, assignments and administrative records.
+
+Educational content remains in Git-managed MDX/YAML. We will not duplicate tutorial bodies or learning path definitions in PostgreSQL.
+
+**Important implementation principle:** Database security must be enforced by PostgreSQL RLS and server-side authorization, not merely by hiding buttons in the frontend.
+
+## **1. Database architecture**
+
+Our database has six primary functional areas.
+
+**Supabase Auth**
+
+Google OAuth identities and sessions
+
+**User management**
+
+profiles, user_roles
+
+**Learning**
+
+lesson_progress, bookmarks, content_activity
+
+**Assessments**
+
+quizzes, questions, options, attempts
+
+**Assignments**
+
+assignments, assignment_progress
+
+**Administration**
+
+admin_audit_logs
+
+**Future extensions**
+
+announcements, discussions
+
+The database will be relational, with foreign keys and constraints wherever possible.
+
+## **2. Database migration structure**
+
+Create the migration directory:
+
+```
+mkdir -p supabase/migrations
+```
+
+Use ordered SQL migration files:
+
+```
+supabase/
+├── migrations/
+│   ├── 001_extensions_and_enums.sql
+│   ├── 002_profiles_and_roles.sql
+│   ├── 003_learning_tables.sql
+│   ├── 004_assessment_tables.sql
+│   ├── 005_assignment_tables.sql
+│   ├── 006_admin_audit.sql
+│   ├── 007_functions_and_triggers.sql
+│   ├── 008_rls_policies.sql
+│   ├── 009_indexes.sql
+│   └── 010_security_hardening.sql
+└── seed/
+    └── development.sql
+```
+
+Each migration should have one clear responsibility.
+
+Do not create the entire production database by manually running unrelated SQL snippets in the Supabase dashboard.
+
+## **3. Migration 001 — Extensions and enums**
+
+We need enums to prevent inconsistent status and role values.
+
+```
+CREATE TYPE public.app_role AS ENUM (
+  'student',
+  'instructor',
+  'admin'
+);
+
+CREATE TYPE public.content_type AS ENUM (
+  'tutorial',
+  'article',
+  'writeup',
+  'guide',
+  'reference',
+  'glossary',
+  'learning_path'
+);
+
+CREATE TYPE public.quiz_status AS ENUM (
+  'draft',
+  'published',
+  'archived'
+);
+
+CREATE TYPE public.question_type AS ENUM (
+  'single_choice',
+  'multiple_select',
+  'true_false'
+);
+
+CREATE TYPE public.assignment_status AS ENUM (
+  'draft',
+  'published',
+  'archived'
+);
+
+CREATE TYPE public.assignment_progress_status AS ENUM (
+  'started',
+  'completed'
+);
+```
+
+These types make database values predictable.
+
+For example, a quiz cannot accidentally have the status `publshed` because it is not an accepted enum value.
+
+## **4. Migration 002 — Profiles and roles**
+
+Supabase Auth manages authentication identities.
+
+Our `profiles` table stores application-specific profile information.
+
+```
+CREATE TABLE public.profiles (
+  id UUID PRIMARY KEY
+    REFERENCES auth.users(id)
+    ON DELETE CASCADE,
+
+  display_name TEXT,
+  avatar_url TEXT,
+  bio TEXT,
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+Roles are stored separately.
+
+```
+CREATE TABLE public.user_roles (
+  user_id UUID NOT NULL
+    REFERENCES auth.users(id)
+    ON DELETE CASCADE,
+
+  role public.app_role NOT NULL DEFAULT 'student',
+
+  assigned_by UUID
+    REFERENCES auth.users(id)
+    ON DELETE SET NULL,
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  PRIMARY KEY (user_id, role)
+);
+```
+
+### **Why separate profiles and roles?**
+
+A student's display name and avatar are profile information.
+
+Their administrative permissions are security information.
+
+These should not be mixed.
+
+A profile update must never give a student the ability to promote themselves to administrator.
+
+### **First-login provisioning**
+
+A trusted database trigger can create a profile and student role after a successful first authentication.
+
+Example:
+
+```
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  INSERT INTO public.profiles (
+    id,
+    display_name,
+    avatar_url
+  )
+  VALUES (
+    NEW.id,
+    NEW.raw_user_meta_data ->> 'full_name',
+    NEW.raw_user_meta_data ->> 'avatar_url'
+  );
+
+  INSERT INTO public.user_roles (
+    user_id,
+    role
+  )
+  VALUES (
+    NEW.id,
+    'student'
+  );
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_new_user();
+```
+
+Treat OAuth metadata as untrusted input for profile display. It must never determine a privileged role.
+
+The trigger should be tested against the actual Supabase migration environment before production deployment.
+
+## **5. Migration 003 — Learning tables**
+
+### **Lesson progress**
+
+```
+CREATE TABLE public.lesson_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  user_id UUID NOT NULL
+    REFERENCES auth.users(id)
+    ON DELETE CASCADE,
+
+  lesson_id TEXT NOT NULL,
+
+  completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  UNIQUE (user_id, lesson_id)
+);
+```
+
+This supports one completion record per student per lesson.
+
+Path progress is calculated from the lessons listed in the Git-managed learning path.
+
+We do not need a separate percentage column.
+
+### **Bookmarks**
+
+```
+CREATE TABLE public.bookmarks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  user_id UUID NOT NULL
+    REFERENCES auth.users(id)
+    ON DELETE CASCADE,
+
+  content_id TEXT NOT NULL,
+  content_type public.content_type NOT NULL,
+  slug TEXT NOT NULL,
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  UNIQUE (user_id, content_type, content_id)
+);
+```
+
+The content ID and slug must be validated against the Git content registry before insertion.
+
+### **Content activity**
+
+```
+CREATE TABLE public.content_activity (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  user_id UUID NOT NULL
+    REFERENCES auth.users(id)
+    ON DELETE CASCADE,
+
+  content_id TEXT NOT NULL,
+  content_type public.content_type NOT NULL,
+  last_viewed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  view_count INTEGER NOT NULL DEFAULT 1
+    CHECK (view_count > 0),
+
+  UNIQUE (user_id, content_type, content_id)
+);
+```
+
+Use upserts to update this record rather than inserting a new record for every page view.
+
+For version 1.0, this activity tracking can be implemented as a P1 improvement if it delays the core learning workflow.
+
+## **6. Migration 004 — Assessment tables**
+
+This is the largest database module.
+
+### **Quizzes**
+
+```
+CREATE TABLE public.quizzes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  slug TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  description TEXT,
+
+  status public.quiz_status NOT NULL DEFAULT 'draft',
+
+  passing_score NUMERIC(5,2) NOT NULL DEFAULT 70
+    CHECK (passing_score BETWEEN 0 AND 100),
+
+  attempt_limit INTEGER
+    CHECK (attempt_limit IS NULL OR attempt_limit > 0),
+
+  created_by UUID
+    REFERENCES auth.users(id)
+    ON DELETE SET NULL,
+
+  published_at TIMESTAMPTZ,
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+### **Questions**
+
+```
+CREATE TABLE public.quiz_questions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  quiz_id UUID NOT NULL
+    REFERENCES public.quizzes(id)
+    ON DELETE RESTRICT,
+
+  question_text TEXT NOT NULL,
+  question_type public.question_type NOT NULL,
+
+  points INTEGER NOT NULL DEFAULT 1
+    CHECK (points > 0),
+
+  position INTEGER NOT NULL
+    CHECK (position > 0),
+
+  UNIQUE (quiz_id, position)
+);
+```
+
+### **Options**
+
+```
+CREATE TABLE public.quiz_options (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  question_id UUID NOT NULL
+    REFERENCES public.quiz_questions(id)
+    ON DELETE RESTRICT,
+
+  option_text TEXT NOT NULL,
+  position INTEGER NOT NULL
+    CHECK (position > 0),
+
+  UNIQUE (question_id, position),
+  UNIQUE (id, question_id)
+);
+```
+
+### **Answer keys**
+
+```
+CREATE TABLE public.quiz_answer_keys (
+  question_id UUID PRIMARY KEY
+    REFERENCES public.quiz_questions(id)
+    ON DELETE RESTRICT,
+
+  correct_option_ids UUID[] NOT NULL,
+  explanation TEXT
+);
+```
+
+There is an important integrity limitation here: PostgreSQL cannot automatically enforce that every UUID inside this array references an option belonging to the same question.
+
+We must validate this through trusted server-side logic or a database function.
+
+For stronger relational integrity, a normalized answer table can be introduced instead. For this initial design, keep the array only if the scoring implementation validates every option ID carefully.
+
+### **Quiz attempts**
+
+We should use versioned quizzes to protect historical results.
+
+A quiz version should preserve the question set used for an attempt. Editing a published quiz should create a new immutable version rather than changing old questions.
+
+The following is a simplified attempt table:
+
+```
+CREATE TABLE public.quiz_attempts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  quiz_id UUID NOT NULL
+    REFERENCES public.quizzes(id)
+    ON DELETE RESTRICT,
+
+  quiz_version INTEGER NOT NULL DEFAULT 1
+    CHECK (quiz_version > 0),
+
+  user_id UUID NOT NULL
+    REFERENCES auth.users(id)
+    ON DELETE CASCADE,
+
+  attempt_number INTEGER NOT NULL
+    CHECK (attempt_number > 0),
+
+  status TEXT NOT NULL DEFAULT 'in_progress'
+    CHECK (
+      status IN (
+        'in_progress',
+        'submitted',
+        'expired',
+        'abandoned'
+      )
+    ),
+
+  score NUMERIC(8,2),
+  max_score NUMERIC(8,2),
+  percentage NUMERIC(5,2),
+  passed BOOLEAN,
+
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  submitted_at TIMESTAMPTZ,
+
+  UNIQUE (quiz_id, quiz_version, user_id, attempt_number)
+);
+```
+
+For production, the quiz version must be represented by a proper immutable version record or snapshot of the question set. The integer above alone does not preserve the old questions.
+
+### **Attempt answers**
+
+```
+CREATE TABLE public.quiz_attempt_answers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  attempt_id UUID NOT NULL
+    REFERENCES public.quiz_attempts(id)
+    ON DELETE CASCADE,
+
+  question_id UUID NOT NULL
+    REFERENCES public.quiz_questions(id)
+    ON DELETE RESTRICT,
+
+  selected_option_ids UUID[] NOT NULL DEFAULT '{}',
+
+  awarded_points NUMERIC(8,2) NOT NULL DEFAULT 0
+    CHECK (awarded_points >= 0),
+
+  is_correct BOOLEAN NOT NULL DEFAULT FALSE,
+
+  UNIQUE (attempt_id, question_id)
+);
+```
+
+The scoring operation must verify that:
+
+- The attempt belongs to the authenticated student.
+- The attempt is still in progress.
+- The question belongs to the correct quiz version.
+- Selected options belong to that question.
+- Duplicate option IDs are rejected.
+- The score is calculated by trusted server-side logic.
+- Submission cannot be repeated to manipulate results.
+
+**Do not expose&#x20;**`quiz_answer_keys`**&#x20;to students.**
+
+For production scoring, use a trusted database transaction or carefully designed server-side operation. A sequence of separate client requests is not sufficient to guarantee atomic scoring.
+
+## **7. Migration 005 — Assignments**
+
+```
+CREATE TABLE public.assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  slug TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  description TEXT,
+  instructions TEXT NOT NULL,
+
+  category TEXT,
+  difficulty TEXT NOT NULL DEFAULT 'beginner',
+
+  prerequisites TEXT[] NOT NULL DEFAULT '{}',
+  expected_outcome TEXT,
+  verification_instructions TEXT,
+  safety_notes TEXT,
+
+  related_lesson_id TEXT,
+  estimated_minutes INTEGER,
+
+  status public.assignment_status NOT NULL DEFAULT 'draft',
+
+  created_by UUID
+    REFERENCES auth.users(id)
+    ON DELETE SET NULL,
+
+  published_at TIMESTAMPTZ,
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
+  CHECK (estimated_minutes IS NULL OR estimated_minutes > 0)
+);
+```
+
+### **Assignment progress**
+
+```
+CREATE TABLE public.assignment_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  user_id UUID NOT NULL
+    REFERENCES auth.users(id)
+    ON DELETE CASCADE,
+
+  assignment_id UUID NOT NULL
+    REFERENCES public.assignments(id)
+    ON DELETE RESTRICT,
+
+  status public.assignment_progress_status NOT NULL DEFAULT 'started',
+
+  completed_at TIMESTAMPTZ,
+
+  UNIQUE (user_id, assignment_id),
+
+  CHECK (
+    (status = 'started' AND completed_at IS NULL)
+    OR
+    (status = 'completed' AND completed_at IS NOT NULL)
+  )
+);
+```
+
+Remember: this is self-reported completion. It does not prove that the student actually performed the task.
+
+## **8. Migration 006 — Administrative audit logs**
+
+```
+CREATE TABLE public.admin_audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  actor_id UUID
+    REFERENCES auth.users(id)
+    ON DELETE SET NULL,
+
+  action TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT,
+
+  metadata JSONB NOT NULL DEFAULT '{}',
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+Examples:
+
+- `USER_ROLE_CHANGED`
+- `QUIZ_PUBLISHED`
+- `QUIZ_ARCHIVED`
+- `ASSIGNMENT_PUBLISHED`
+- `ACCOUNT_SUSPENDED`
+
+Do not store session tokens, secrets or unnecessary personal information in the metadata.
+
+Ordinary users must not be able to modify or delete audit records.
+
+## **9. Migration 007 — Functions and triggers**
+
+We need a few reusable database functions.
+
+### **Updated timestamp**
+
+```
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+```
+
+Attach it to tables that have `updated_at`:
+
+```
+CREATE TRIGGER profiles_updated_at
+BEFORE UPDATE ON public.profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.set_updated_at();
+```
+
+Create corresponding triggers for quizzes and assignments.
+
+### **Role-checking function**
+
+```
+CREATE OR REPLACE FUNCTION public.has_role(
+  _user_id UUID,
+  _role public.app_role
+)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles
+    WHERE user_id = _user_id
+      AND role = _role
+  );
+$$;
+```
+
+This function is security-sensitive.
+
+- Own it through a trusted database owner.
+- Restrict its execution permissions appropriately.
+- Avoid granting untrusted users direct access to role-management operations.
+- Test its behavior with real authenticated users.
+
+Do not use a client-supplied user ID as proof of identity.
+
+## **10. Migration 008 — Row Level Security**
+
+Enable RLS on every exposed application table.
+
+```
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.lesson_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.content_activity ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.quizzes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_options ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_answer_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_attempt_answers ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assignment_progress ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.admin_audit_logs ENABLE ROW LEVEL SECURITY;
+```
+
+Enabling RLS alone does not create permissions. We must define explicit policies.
+
+### **Profile policies**
+
+```
+CREATE POLICY "Users can read own profile"
+ON public.profiles
+FOR SELECT
+TO authenticated
+USING (id = (SELECT auth.uid()));
+
+CREATE POLICY "Users can update own profile"
+ON public.profiles
+FOR UPDATE
+TO authenticated
+USING (id = (SELECT auth.uid()))
+WITH CHECK (id = (SELECT auth.uid()));
+```
+
+This policy alone does not prevent a user from changing every column in their own row.
+
+Use server-side field allowlisting and appropriate column-level privileges so students cannot modify protected profile fields.
+
+### **Progress policies**
+
+```
+CREATE POLICY "Users can read own progress"
+ON public.lesson_progress
+FOR SELECT
+TO authenticated
+USING (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "Users can insert own progress"
+ON public.lesson_progress
+FOR INSERT
+TO authenticated
+WITH CHECK (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "Users can delete own progress"
+ON public.lesson_progress
+FOR DELETE
+TO authenticated
+USING (user_id = (SELECT auth.uid()));
+```
+
+### **Bookmark policies**
+
+```
+CREATE POLICY "Users manage own bookmarks"
+ON public.bookmarks
+FOR ALL
+TO authenticated
+USING (user_id = (SELECT auth.uid()))
+WITH CHECK (user_id = (SELECT auth.uid()));
+```
+
+### **Quiz answer protection**
+
+Do not create a student SELECT policy on:
+
+```
+public.quiz_answer_keys
+```
+
+Students should never retrieve correct answers before submission.
+
+Likewise, published quiz access must be explicitly restricted to published records. Draft quizzes must not be visible to students.
+
+### **Audit log protection**
+
+No student or instructor should receive direct audit-log write or delete privileges.
+
+Administrative audit operations should happen through trusted server-side operations with verified administrator authorization.
+
+**Important:** RLS policies are only one security layer. PostgreSQL table grants, server-side authorization and safe function execution permissions must also be configured.
+
+## **11. Migration 009 — Indexes**
+
+Add indexes for frequently queried fields.
+
+```
+CREATE INDEX idx_user_roles_user_id
+ON public.user_roles(user_id);
+
+CREATE INDEX idx_lesson_progress_user_completed
+ON public.lesson_progress(user_id, completed_at DESC);
+
+CREATE INDEX idx_bookmarks_user_created
+ON public.bookmarks(user_id, created_at DESC);
+
+CREATE INDEX idx_content_activity_user_viewed
+ON public.content_activity(user_id, last_viewed_at DESC);
+
+CREATE INDEX idx_quiz_attempts_user_submitted
+ON public.quiz_attempts(user_id, submitted_at DESC);
+
+CREATE INDEX idx_quiz_questions_order
+ON public.quiz_questions(quiz_id, position);
+
+CREATE INDEX idx_quiz_options_order
+ON public.quiz_options(question_id, position);
+
+CREATE INDEX idx_assignment_progress_user
+ON public.assignment_progress(user_id, status);
+
+CREATE INDEX idx_admin_audit_created
+ON public.admin_audit_logs(created_at DESC);
+```
+
+Review indexes against actual queries. Primary keys and unique constraints already create indexes, so don't duplicate them.
+
+## **12. Initial administrator provisioning**
+
+This is one of the most important setup procedures.
+
+We must never allow a public user to choose their own administrator role.
+
+Recommended procedure:
+
+1. Sign in with Google through the normal OAuth flow.
+2. Confirm that the profile and default student role were created.
+3. Obtain the authenticated user's UUID through a trusted administrative process.
+4. Verify the identity and UUID independently.
+5. Assign the administrator role through a trusted database migration or controlled administrative operation.
+6. Verify access to the admin area.
+7. Test that ordinary students cannot modify roles.
+
+Example SQL for a one-time, controlled setup:
+
+```
+INSERT INTO public.user_roles (
+  user_id,
+  role,
+  assigned_by
+)
+VALUES (
+  'VERIFIED_USER_UUID',
+  'admin',
+  'VERIFIED_USER_UUID'
+)
+ON CONFLICT (user_id, role) DO NOTHING;
+```
+
+Replace the placeholder only after verifying the correct UUID.
+
+Do not commit this SQL containing a real administrator UUID to a public repository.
+
+Enable and verify stronger administrator authentication protections before exposing administrative functionality.
+
+## **13. Migration execution**
+
+Install and initialize the Supabase CLI.
+
+Use the official Supabase CLI installation instructions for your operating system.
+
+Then:
+
+```
+npx supabase init
+npx supabase start
+```
+
+Create and apply migrations locally:
+
+```
+npx supabase migration new initial_schema
+npx supabase db reset
+```
+
+Inspect migration status and generated schema before applying anything to production.
+
+Use an isolated development project for integration tests if local Supabase is not available.
+
+Never test destructive migrations against production.
+
+## **14. Database testing requirements**
+
+Before using this database with real students, test the following:
+
+| Test                                             | Expected outcome                                     |
+| ------------------------------------------------ | ---------------------------------------------------- |
+| New Google user                                  | Profile and student role created                     |
+| Existing user login                              | No duplicate profile or role                         |
+| Student reads own progress                       | Allowed                                              |
+| Student reads another user's progress            | Denied                                               |
+| Student changes own role                         | Denied                                               |
+| Student reads answer keys                        | Denied                                               |
+| Student edits published quiz                     | Denied                                               |
+| Student submits quiz                             | Server-calculated result                             |
+| Student edits another user's assignment progress | Denied                                               |
+| Student deletes audit records                    | Denied                                               |
+| Deleted account                                  | User-owned records handled by defined deletion rules |
+
+Also verify that database functions cannot be abused through direct RPC calls.
+
+## **15. Important production corrections before implementation**
+
+The SQL above is a starting implementation blueprint, not a complete production-ready migration bundle.
+
+Three decisions require special attention before finalizing the migrations:
+
+1. **Quiz versioning:** Implement immutable quiz versions and version-specific questions/options so historical attempts remain reproducible.
+2. **Scoring integrity:** Use an atomic trusted scoring operation and prevent direct student modification of attempt scores and answer keys.
+3. **Privileges:** Audit PostgreSQL grants, RLS policies, security-definer ownership and function execution rights together. RLS alone is not sufficient.
+
+These are mandatory security and data-integrity requirements, not optional enhancements.
+
+## **16. Part 21 implementation checklist**
+
+**Database implementation tracker**
+
+0/15
+
+Initialize Supabase locally
+
+Create migration 001: enums
+
+Create migration 002: profiles and roles
+
+Create migration 003: learning tables
+
+Create migration 004: versioned quiz schema
+
+Create migration 005: assignments
+
+Create migration 006: audit logs
+
+Create timestamp and role functions
+
+Configure RLS policies
+
+Configure PostgreSQL grants and function permissions
+
+Create query indexes
+
+Implement initial administrator provisioning
+
+Test two-user data isolation
+
+Test quiz answer and score protection
+
+Run all migrations in a clean local database
+
+**Recap:** We have translated the database design into a migration plan covering profiles, roles, learning progress, bookmarks, quizzes, assignments, audit logs, indexes and RLS. The most sensitive areas—administrator provisioning, quiz versioning and server-side scoring—have explicit security requirements.
+
+**Next: Part 22 — Google OAuth Implementation: Supabase Configuration, Next.js SSR, Login, Callback, Logout & Session Protection.**
+
+This will turn the authentication design into a concrete working implementation, including the exact request flow and files needed for Google-only login.

@@ -1,0 +1,350 @@
+# **Part 11 — Admin Panel, Content Management & Publishing Workflow**
+
+**Objective:** Design the administrative side of FORGESEC ACADEMY without building an expensive or complicated CMS.
+
+Based on our decision in the previous part, the admin panel will manage application data, while educational content will be managed through code and GitHub.
+
+## **1. The fundamental architecture**
+
+We will divide administration into two separate systems.
+
+**A. Code-based content management**
+
+No CMS required
+
+Tutorials, write-ups, learning paths, references and glossary.
+
+**MDX / YAML files**
+
+**GitHub repository**
+
+**Validation and build**
+
+**Vercel deployment**
+
+**Published educational pages**
+
+**B. Application administration**
+
+Admin panel required
+
+Users, roles, quizzes, assignments, settings and audit logs.
+
+**Admin dashboard**
+
+**Server-side operations**
+
+**Supabase PostgreSQL**
+
+**Updated application data**
+
+This separation prevents two problems:
+
+1. Storing large amounts of educational material in the database unnecessarily.
+2. Building a complex editor for technical content that is easier to maintain as code.
+
+## **2. Admin panel structure**
+
+The initial admin panel should have only the sections that are genuinely necessary.
+
+Proposed routes:
+
+```
+/admin
+├── /users
+├── /quizzes
+│   ├── /new
+│   └── /[id]
+├── /assignments
+│   ├── /new
+│   └── /[id]
+├── /audit-logs
+└── /settings
+```
+
+The dashboard itself should provide an overview.
+
+**FORGESEC ADMIN**
+
+Illustrative UI
+
+# **—**
+
+Registered users
+
+# **—**
+
+Published tutorials
+
+# **—**
+
+Quiz attempts
+
+# **—**
+
+Completed assignments
+
+**Quick actions**
+
+Manage users and permissions
+
+Create or manage quizzes
+
+Create or manage assignments
+
+Open educational content repository
+
+Conceptual dashboard layout. Numbers are intentionally placeholders.
+
+Don't build a sophisticated analytics dashboard initially. A few useful operational statistics are enough.
+
+## **3. User management**
+
+The admin should be able to:
+
+- View registered users.
+- Search by display name or email.
+- Filter users by role.
+- View account creation date.
+- View account status.
+- Assign or revoke instructor privileges.
+- Assign or revoke administrator privileges, subject to safeguards.
+
+Suggested table:
+
+| User information | Example              |
+| ---------------- | -------------------- |
+| Display name     | Student A            |
+| Email            | student\@example.com |
+| Role             | Student              |
+| Joined           | Registration date    |
+| Status           | Active               |
+
+**Important security requirements:**
+
+- Users cannot assign themselves roles.
+- Role changes must happen through authorized server-side operations.
+- Record every role change in the audit log.
+- Prevent an administrator from accidentally removing the last active administrator.
+- Don't expose unnecessary personal information in the dashboard.
+
+Initially, only administrators should have access to administrative operations. Instructor-specific permissions can be introduced when instructors actually need them.
+
+## **4. Quiz management**
+
+Quiz management belongs in the admin panel because quiz data is stored in PostgreSQL.
+
+The workflow:
+
+1. **Create quiz**
+
+   Enter title, description, related lesson and difficulty.
+2. **Add questions**
+
+   Add single-choice, multiple-select or true/false questions.
+3. **Configure answers**
+
+   Define correct answers, explanations and points.
+4. **Preview**
+
+   Test the student-facing quiz before publishing.
+5. **Publish**
+
+   Make the quiz available to students.
+6. **Archive**
+
+   Remove it from active availability without destroying historical results.
+
+Quiz status:
+
+| Status    | Meaning                                      |
+| --------- | -------------------------------------------- |
+| Draft     | Only authorized administrators can access it |
+| Published | Students can attempt it                      |
+| Archived  | No new attempts; historical results remain   |
+
+One important rule from our assessment architecture: published quiz versions should be immutable. If you change questions or correct answers, publish a new version rather than silently changing the quiz that previous students attempted.
+
+## **5. Assignment management**
+
+Assignments also belong in the admin panel.
+
+An administrator should be able to:
+
+- Create an assignment.
+- Set its title and description.
+- Select category and difficulty.
+- Add prerequisites.
+- Link it to a tutorial.
+- Define expected outcomes.
+- Add verification instructions.
+- Add safety warnings.
+- Preview and publish it.
+- Archive it when outdated.
+
+For example:
+
+**Assignment: Linux File Permissions**
+
+Beginner
+
+Linux Fundamentals
+
+15 minutes
+
+**Instructions**
+
+Create a directory and file, inspect their permissions, and modify the file permissions using `chmod`.
+
+**Expected outcome**
+
+Student understands how Linux permission bits affect file access.
+
+**Verification**
+
+Compare terminal output against the provided expected results.
+
+**Safety note**
+
+Perform the exercise in your own environment.
+
+Keep assignment management simple. There is no reason to build a submission-review system until you actually need instructors to assess student evidence.
+
+## **6. Educational content publishing**
+
+This is where we deliberately avoid building a CMS.
+
+The admin panel should contain a simple **Educational Content** section with links to the source repository and publishing instructions.
+
+For now:
+
+| Task                   | How it is performed                    |
+| ---------------------- | -------------------------------------- |
+| Create Linux tutorial  | Add an MDX file                        |
+| Edit commands          | Edit the MDX source                    |
+| Add code formatting    | Use reusable React components          |
+| Add images             | Add optimized assets to the repository |
+| Create a learning path | Update its YAML definition             |
+| Validate content       | Run validation scripts                 |
+| Publish content        | Merge and deploy through GitHub/Vercel |
+| Roll back              | Revert the Git commit                  |
+
+The admin panel does not need to duplicate any of these functions.
+
+**Why?** Think of a software development team: developers don't need a second application to edit the source code of their main application. Their existing development workflow already does that job.
+
+## **7. Audit logs**
+
+An administrative system should record important actions.
+
+Examples:
+
+| Event               | Recorded information             |
+| ------------------- | -------------------------------- |
+| Role changed        | Actor, target user, old/new role |
+| Quiz published      | Admin, quiz ID, timestamp        |
+| Assignment archived | Admin, assignment ID, timestamp  |
+| Settings changed    | Actor, setting changed           |
+| Account suspended   | Actor, target user, timestamp    |
+
+Use the existing `admin_audit_logs` table from Part 06.
+
+Never store passwords, authentication tokens, secret keys or other sensitive information in audit metadata.
+
+The audit log should be append-only for normal administrative operations. Administrators should not have a normal UI option to rewrite or erase historical events.
+
+## **8. Settings management**
+
+Keep settings minimal.
+
+Initial settings may include:
+
+- Site name and description.
+- Registration enabled/disabled.
+- Maintenance mode.
+- Selected feature toggles.
+
+Do not build an interface for managing API keys or deployment secrets. Keep those in environment variables and your hosting provider's secret management.
+
+## **9. Security architecture**
+
+The admin panel is a high-value target. Hiding its URL is not security.
+
+Every administrative operation must:
+
+1. Verify the user's authenticated identity.
+2. Verify the user's admin role.
+3. Validate input with Zod.
+4. Check whether the requested operation is permitted.
+5. Execute the database operation.
+6. Record important changes in the audit log.
+
+Use server-side authorization and PostgreSQL RLS together.
+
+Never rely on frontend checks alone, and never expose the Supabase service-role key to the browser.
+
+## **10. Implementation structure**
+
+```
+src/
+├── app/
+│   └── admin/
+│       ├── page.tsx
+│       ├── users/
+│       ├── quizzes/
+│       ├── assignments/
+│       ├── audit-logs/
+│       └── settings/
+│
+├── modules/
+│   └── admin/
+│       ├── schemas/
+│       ├── services/
+│       ├── repositories/
+│       ├── actions/
+│       ├── components/
+│       └── types/
+│
+└── components/
+    └── admin/
+        ├── AdminSidebar.tsx
+        ├── AdminHeader.tsx
+        ├── AdminTable.tsx
+        ├── AdminStats.tsx
+        └── ConfirmDialog.tsx
+```
+
+Keep administrative business logic in the module rather than putting everything into page components.
+
+## **11. Development priority**
+
+| Priority | Feature                                | Decision    |
+| -------- | -------------------------------------- | ----------- |
+| P0       | Admin authentication and authorization | Build       |
+| P0       | Admin dashboard                        | Build       |
+| P0       | User and role management               | Build       |
+| P0       | Quiz management                        | Build       |
+| P0       | Assignment management                  | Build       |
+| P0       | GitHub content workflow links          | Build       |
+| P1       | Audit log interface                    | Build       |
+| P1       | Basic usage statistics                 | Build       |
+| P2       | Advanced analytics                     | Later       |
+| P2       | Instructor-specific administration     | Later       |
+| P3       | Browser-based content editor           | Not planned |
+
+## **12. Final architectural decisions**
+
+These decisions should be carried into the implementation plan:
+
+- No CMS in the initial release.
+- No browser-based MDX editor.
+- No educational content stored in PostgreSQL.
+- GitHub is the source of truth for educational content.
+- Vercel handles deployment after content changes.
+- Admin panel manages users, roles, quizzes, assignments and settings.
+- Audit logging records sensitive administrative actions.
+- Instructors receive scoped permissions only when required.
+
+**The important principle:** Build the tools needed to operate the Academy, not tools that duplicate capabilities you already have through Git and your development environment.
+
+**Next: Part 12 — Search, Discovery, SEO, Performance & Accessibility.** This will define how students find lessons and how the platform remains fast, discoverable and usable as the content library grows.

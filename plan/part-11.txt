@@ -1,0 +1,168 @@
+I agree with your decision not to build a CMS right now. In fact, for FORGESEC ACADEMY, I would recommend avoiding a database-driven content editor even in the initial production version.
+
+Your content is not ordinary text. It contains terminal commands, code snippets, syntax highlighting, copy buttons, warnings, callouts, diagrams, and structured instructions. A conventional CMS would add another layer of complexity without providing much value at this stage.
+
+I recommend a code-managed, Git-based content system.
+1. Recommended approach: Content as code
+Recommended for initial launch
+Keep educational content directly in your project's source repository.
+
+For example:
+forgesec-academy/
+├── content/
+│   └── tutorials/
+│       └── linux-fundamentals/
+│           ├── 01-introduction.mdx
+│           ├── 02-filesystem.mdx
+│           ├── 03-file-management.mdx
+│           ├── 04-permissions.mdx
+│           └── 05-users-and-groups.mdx
+│
+├── src/
+│   ├── app/
+│   │   └── learn/
+│   │       └── linux/
+│   │           ├── page.tsx
+│   │           └── [slug]/
+│   │               └── page.tsx
+│   ├── components/
+│   │   └── content/
+│   │       ├── CodeBlock.tsx
+│   │       ├── Callout.tsx
+│   │       ├── CopyButton.tsx
+│   │       ├── TableOfContents.tsx
+│   │       └── LessonLayout.tsx
+│   └── lib/
+│       └── content/
+│           ├── loader.ts
+│           └── schema.ts
+│
+└── scripts/
+    └── validate-content.ts
+
+
+The important distinction:
+- MDX files contain the educational material.
+- React components determine how that material looks and behaves.
+- Next.js renders the final pages.
+- Git tracks changes and keeps the content versioned.
+Think of MDX as the manuscript and React components as the publishing equipment. You write the material once; the platform handles its presentation.
+2. How will code blocks and commands work?
+You don't need to manually implement copy buttons, colors, or formatting inside every tutorial.
+
+Create reusable components once.
+
+For example, an MDX lesson could contain:
+# Navigating the Linux Filesystem
+
+The `pwd` command displays your current directory.
+
+<CodeBlock language="bash" title="Terminal">
+pwd
+</CodeBlock>
+
+Use `ls` to list files and directories.
+
+<CodeBlock language="bash" title="Terminal">
+ls -la
+</CodeBlock>
+
+<Callout type="warning">
+Be careful when executing commands that modify or delete files.
+</Callout>
+
+
+Your React components handle:
+Component	Responsibility
+CodeBlock	Syntax highlighting and code presentation
+CopyButton	Copy commands or code
+Callout	Information, warning and danger boxes
+TableOfContents	Automatically generated lesson navigation
+LessonLayout	Consistent lesson layout
+InlineCode	Highlight commands inside paragraphs
+
+This means you don't have to build these features repeatedly.
+Example of the intended lesson presentation
+Display your current directory
+
+The pwd command prints the location of your current working directory.
+BASH · TERMINAL
+Copy
+
+
+$ pwd
+/home/student
+
+Expected result
+
+The terminal displays the absolute path of your current directory.
+
+
+This is a presentation example, not a live copy control.
+The advantage is that every tutorial uses the same design and behavior. If you later improve the code block design, all tutorials benefit automatically.
+3. Will this consume database storage?
+No educational content needs to be stored in PostgreSQL.
+Data	Storage
+Linux tutorials	Git repository (MDX)
+Networking tutorials	Git repository (MDX)
+Web security tutorials	Git repository (MDX)
+Write-ups	Git repository (MDX)
+Glossary	Git repository (MDX)
+Learning path definitions	Git repository (YAML/MDX)
+Student accounts	Supabase Auth
+Student progress	PostgreSQL
+Bookmarks	PostgreSQL
+Quiz attempts	PostgreSQL
+Assignments and their progress	PostgreSQL
+
+The database only stores application data. The actual educational material stays in the repository.
+
+This also means public tutorial pages can be statically generated, rather than querying PostgreSQL whenever someone opens a lesson.
+4. How will you manage content without a CMS?
+Use your development environment and GitHub.
+1. Create a tutorial
+   
+   Add an MDX file to the appropriate content directory.
+2. Write the lesson
+   
+   Write explanations, commands, code examples, warnings and exercises using the predefined components.
+3. Validate the content
+   
+   Run a script to check metadata, duplicate IDs, missing references and invalid content.
+4. Commit and push
+   
+   Push the changes to GitHub.
+5. Deploy automatically
+   
+   Vercel builds the project and publishes the updated tutorial pages.
+If you are the only content author initially, you don't even need a complicated editorial workflow.
+
+Later, if multiple instructors contribute, introduce GitHub pull requests and review before merging.
+5. What should we build now?
+I would reduce the initial content-management scope considerably.
+Feature	Initial decision
+Full CMS	Not building
+Browser-based MDX editor	Not building
+Database content storage	Not needed
+Git-based content	Use
+Reusable content components	Build
+Content validation script	Build
+Automatic deployment	Use
+Admin content editor	Not building
+
+One important point: Don't create a separate React page for every tutorial. Create one reusable lesson renderer and feed it different MDX files. Otherwise, you'll end up maintaining many nearly identical pages.
+
+6. My recommendation for the project architecture
+Let's make this an explicit architectural decision for FORGESEC ACADEMY:
+- Tutorials and educational content are source-controlled files.
+- MDX is used for rich educational content.
+- React components provide all formatting and interactive features.
+- PostgreSQL is reserved for dynamic application data.
+- No CMS is included in the initial release.
+- The first published learning section is Linux Fundamentals.
+- Networking, web technologies, security write-ups and other sections can be added later without changing the architecture.
+One caution: MDX can execute imported components during compilation/rendering. Keep it restricted to trusted contributors and never allow students to upload arbitrary MDX.
+
+This is simpler, cheaper, easier to maintain and better suited to technical tutorials than building a CMS prematurely.
+
+The next logical step is to define the MDX content format and reusable lesson components before implementing the Linux tutorial pages.

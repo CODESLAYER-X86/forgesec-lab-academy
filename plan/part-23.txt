@@ -1,0 +1,443 @@
+# **Part 23 — Student Profile & Account Management**
+
+**Objective:** Build the student account experience for FORGESEC ACADEMY, allowing students to view and update basic profile information, manage account preferences, and understand how their data is handled.
+
+We will keep this module deliberately small. Since Google OAuth already manages identity, we do not need to build a separate account-management system.
+
+## **1. Profile architecture**
+
+The profile system has four responsibilities:
+
+1. Display student information.
+2. Allow students to edit permitted profile fields.
+3. Display account information obtained from Supabase Auth.
+4. Provide basic privacy and account-management information.
+
+**Supabase Auth**
+
+Google identity, email, account ID
+
+**PostgreSQL — profiles**
+
+Display name, avatar URL, bio, timestamps
+
+**Next.js profile module**
+
+Profile page, editing form, validation
+
+The distinction is important:
+
+- Supabase Auth owns the user's identity and email.
+- `profiles` owns editable application profile information.
+- `user_roles` owns permissions.
+
+We should not duplicate identity or authorization data unnecessarily.
+
+## **2. Profile fields**
+
+Our existing `profiles` table from Part 21 is sufficient for the initial version.
+
+| Field          | Source           | Editable by student? |
+| -------------- | ---------------- | -------------------- |
+| `id`           | Supabase Auth    | No                   |
+| `display_name` | Google initially | Yes                  |
+| `avatar_url`   | Google initially | No, initially        |
+| `bio`          | Student          | Yes                  |
+| `created_at`   | Database         | No                   |
+| `updated_at`   | Database         | No                   |
+
+### **Why no custom avatar uploads initially?**
+
+We have already decided not to introduce Supabase Storage in the first version.
+
+Therefore:
+
+- Use the Google profile image when available.
+- Display a generated initials avatar when no image exists.
+- Do not build image upload functionality yet.
+- Do not allow arbitrary avatar URLs to be submitted through the profile form.
+
+This avoids introducing file validation, storage permissions, image processing and additional storage consumption.
+
+## **3. Student profile page**
+
+Create:
+
+```
+src/app/dashboard/profile/page.tsx
+```
+
+The profile page should contain:
+
+# **FS**
+
+**Student Name**
+
+student\@example.com
+
+Student
+
+**Profile information**
+
+Display name
+
+Student Name
+
+About me
+
+Interested in Linux, networking and cybersecurity.
+
+Illustrative layout
+
+Below the profile information, show:
+
+- Account creation date.
+- Google authentication provider.
+- Link to account settings.
+- Link to privacy policy.
+
+Do not display internal UUIDs in the normal student interface.
+
+## **4. Profile data retrieval**
+
+Create:
+
+```
+src/modules/users/services/profile.service.ts
+```
+
+```
+import { createClient } from "@/lib/supabase/server";
+
+export async function getMyProfile() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Authentication required.");
+  }
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("display_name, avatar_url, bio, created_at")
+    .eq("id", user.id)
+    .single();
+
+  if (error) {
+    throw new Error("Could not retrieve profile.");
+  }
+
+  return {
+    profile,
+    email: user.email ?? null,
+    provider: user.app_metadata?.provider ?? "unknown",
+  };
+}
+```
+
+The profile query is scoped to the authenticated user.
+
+The browser must never be able to request another student's private profile simply by changing a URL parameter.
+
+## **5. Profile validation**
+
+Install nothing new. We already have Zod.
+
+Create:
+
+```
+src/modules/users/schemas/profile.schema.ts
+```
+
+```
+import { z } from "zod";
+
+export const updateProfileSchema = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .min(2, "Name must contain at least 2 characters.")
+    .max(60, "Name is too long."),
+
+  bio: z
+    .string()
+    .trim()
+    .max(300, "Bio cannot exceed 300 characters.")
+    .nullable()
+    .transform((value) => value || null),
+});
+
+export type UpdateProfileInput = z.infer<
+  typeof updateProfileSchema
+>;
+```
+
+Why validate on the server?
+
+A browser form can be modified using developer tools or a custom HTTP request. Client-side validation improves usability, but server-side validation enforces the actual rules.
+
+## **6. Profile update action**
+
+Create:
+
+```
+src/modules/users/actions/update-profile.ts
+```
+
+```
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/modules/auth/guards/require-user";
+import { updateProfileSchema } from "@/modules/users/schemas/profile.schema";
+
+export async function updateProfile(formData: FormData) {
+  const user = await requireUser();
+
+  const result = updateProfileSchema.safeParse({
+    displayName: formData.get("displayName"),
+    bio: formData.get("bio"),
+  });
+
+  if (!result.success) {
+    return {
+      success: false,
+      message: "Please check your profile information.",
+      errors: result.error.flatten().fieldErrors,
+    };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      display_name: result.data.displayName,
+      bio: result.data.bio,
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    return {
+      success: false,
+      message: "Could not update your profile.",
+    };
+  }
+
+  return {
+    success: true,
+    message: "Profile updated successfully.",
+  };
+}
+```
+
+Notice what the action does not accept:
+
+- `user_id`
+- `role`
+- `avatar_url`
+- `created_at`
+- `updated_at`
+
+Those fields are not part of the student's editable profile input.
+
+The database must also enforce appropriate column-level privileges so authenticated students cannot update protected columns by bypassing this action.
+
+## **7. Profile editing interface**
+
+Create:
+
+```
+src/app/dashboard/profile/edit/page.tsx
+```
+
+The interface should have:
+
+- Display name input.
+- Short biography textarea.
+- Save changes button.
+- Validation messages.
+- Success/error feedback.
+- Cancel button.
+
+Keep the form simple. Avoid introducing a complex form-management library.
+
+A practical initial implementation can use a Server Action and a small Client Component for form feedback.
+
+Example form:
+
+```
+<form action={updateProfile}>
+  <label htmlFor="displayName">Display name</label>
+  <input
+    id="displayName"
+    name="displayName"
+    type="text"
+    maxLength={60}
+    required
+  />
+
+  <label htmlFor="bio">About me</label>
+  <textarea
+    id="bio"
+    name="bio"
+    maxLength={300}
+    rows={4}
+  />
+
+  <button type="submit">
+    Save changes
+  </button>
+</form>
+```
+
+The example shows the core form structure. Connect it to the existing profile data and add accessible feedback states before release.
+
+## **8. Account settings**
+
+Create:
+
+```
+src/app/dashboard/settings/page.tsx
+```
+
+For version 1.0, settings should contain only useful options.
+
+| Setting                    | Version 1.0                         |
+| -------------------------- | ----------------------------------- |
+| Google account information | Read-only                           |
+| Display name               | Profile page                        |
+| Biography                  | Profile page                        |
+| Password change            | Not applicable                      |
+| Email change               | Managed through Google              |
+| Notification preferences   | Deferred                            |
+| Theme preference           | Browser/system preference initially |
+| Account deletion           | Documented request process          |
+| Privacy policy             | Available                           |
+
+Do not build a large settings dashboard with options that do not yet exist.
+
+## **9. Account deletion and data privacy**
+
+Account deletion needs careful treatment because it affects multiple database tables.
+
+Our foreign-key relationships already define several deletion behaviors:
+
+| Data                | Expected behavior                                                |
+| ------------------- | ---------------------------------------------------------------- |
+| Profile             | Delete                                                           |
+| User roles          | Delete                                                           |
+| Lesson progress     | Delete                                                           |
+| Bookmarks           | Delete                                                           |
+| Content activity    | Delete                                                           |
+| Quiz attempts       | Delete or retain only under a documented lawful retention policy |
+| Assignment progress | Delete                                                           |
+| Audit logs          | Retain the event but set `actor_id` to NULL                      |
+
+There is an important distinction between deleting an account and retaining anonymized operational records.
+
+For the first release:
+
+- Publish a clear privacy policy.
+- Provide a documented account-deletion request process.
+- Do not expose a direct database deletion operation to the student.
+- Handle Auth user deletion through a trusted server-side administrative process.
+- Ensure deletion behavior is tested against every foreign-key relationship.
+
+Supabase Auth administrative user deletion requires privileged server-side access. Never place its admin API key in a browser component.
+
+## **10. Profile security requirements**
+
+| Threat                          | Protection                     |
+| ------------------------------- | ------------------------------ |
+| Student changes another profile | RLS ownership checks           |
+| Student changes their role      | Protected role table           |
+| Student changes internal ID     | ID excluded from update schema |
+| Student changes avatar URL      | No avatar editing endpoint     |
+| Oversized biography             | Zod maximum length             |
+| Malicious HTML in bio           | Render as text, not raw HTML   |
+| Unauthenticated profile update  | Server authentication guard    |
+| Direct database request         | RLS and column privileges      |
+
+**One important design decision:** Do not make student profiles publicly searchable or visible by default. There is no requirement for a public member directory in the MVP.
+
+## **11. Profile module structure**
+
+```
+src/
+├── app/
+│   └── dashboard/
+│       ├── profile/
+│       │   ├── page.tsx
+│       │   └── edit/
+│       │       └── page.tsx
+│       └── settings/
+│           └── page.tsx
+│
+└── modules/
+    └── users/
+        ├── actions/
+        │   └── update-profile.ts
+        ├── services/
+        │   └── profile.service.ts
+        ├── schemas/
+        │   └── profile.schema.ts
+        ├── components/
+        │   ├── profile-card.tsx
+        │   └── profile-form.tsx
+        └── types/
+```
+
+## **12. Testing requirements**
+
+| Test                                  | Expected result                      |
+| ------------------------------------- | ------------------------------------ |
+| Student opens profile                 | Own profile displayed                |
+| Student edits display name            | Update succeeds                      |
+| Student edits biography               | Update succeeds                      |
+| Biography exceeds 300 characters      | Rejected                             |
+| Student changes `user_id`             | Not accepted                         |
+| Student changes `role`                | Denied                               |
+| Student submits malicious HTML        | Rendered as text                     |
+| Student tries to edit another profile | Denied                               |
+| Guest opens profile                   | Redirected to login                  |
+| Missing Google avatar                 | Initials fallback displayed          |
+| Student logs out                      | Private profile becomes inaccessible |
+
+## **13. Part 23 implementation checklist**
+
+**Implementation tracker**
+
+0/12
+
+Create profile service
+
+Create Zod profile schema
+
+Implement profile update Server Action
+
+Build profile display page
+
+Build profile editing form
+
+Display Google email as read-only information
+
+Implement initials avatar fallback
+
+Build minimal account settings page
+
+Configure protected profile database columns
+
+Verify RLS ownership restrictions
+
+Document account deletion process
+
+Test profile editing and privacy boundaries
+
+**Recap:** The student profile system uses the existing database, Google identity and server-side authorization. No additional authentication provider, storage service, or form library is needed.
+
+**Next: Part 24 — Student Dashboard Implementation: Learning Overview, Continue Learning, Progress Statistics, Recent Activity, Bookmarks and Quiz Results.**

@@ -1,0 +1,1218 @@
+# **FORGESEC ACADEMY**
+
+## **Part 05 — System Architecture & Technical Architecture**
+
+Planning document 05/14
+
+System engineering
+
+TypeScript / Node.js
+
+## **1. Purpose**
+
+Parts 01–04 defined what ForgeSec Academy should do, how students will use it, and how educational content will be managed.
+
+Part 05 defines how the application will actually work internally.
+
+The objective is to build a maintainable, secure and lightweight application using:
+
+- **TypeScript** as the primary programming language.
+- **Node.js** as the server runtime.
+- **Next.js** as the full-stack application framework.
+- **React** for the user interface.
+- **Supabase** for authentication and PostgreSQL.
+- **Vercel** for initial deployment.
+- **GitHub** for source code and educational content.
+
+The architecture must support future expansion without requiring us to rewrite the entire application.
+
+## **2. Architecture principles**
+
+I recommend six principles.
+
+1. **One application initially:** Avoid unnecessary microservices.
+2. **Clear separation of responsibilities:** UI, business logic, data access and content loading should not be mixed together.
+3. **Server-first execution:** Keep sensitive operations on the server.
+4. **Static-first public content:** Do not involve the database when serving ordinary tutorials.
+5. **Security by design:** Enforce authorization on the server and through database policies.
+6. **Modular monolith:** Keep the system in one deployable application, but organize it into independent modules.
+
+### **Why a modular monolith?**
+
+Imagine a university with separate departments but one campus.
+
+The departments have their own responsibilities, but they share infrastructure and administration.
+
+A modular monolith follows the same idea: authentication, learning, quizzes and content are separate modules, but they run within one application.
+
+This is more practical than deploying several independent services when the team and budget are small.
+
+# **3. High-level system architecture**
+
+\#chatgpt-mermaid-\_r_3pg\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3pg\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3pg\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3pg\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3pg\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pg\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3pg\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3pg\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3pg\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3pg\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3pg\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3pg\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pg\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pg\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3pg\_ p{margin:0;}#chatgpt-mermaid-\_r_3pg\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pg\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pg\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pg\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3pg\_ .label text,#chatgpt-mermaid-\_r_3pg\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pg\_ .node rect,#chatgpt-mermaid-\_r_3pg\_ .node circle,#chatgpt-mermaid-\_r_3pg\_ .node ellipse,#chatgpt-mermaid-\_r_3pg\_ .node polygon,#chatgpt-mermaid-\_r_3pg\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3pg\_ .rough-node .label text,#chatgpt-mermaid-\_r_3pg\_ .node .label text,#chatgpt-mermaid-\_r_3pg\_ .image-shape .label,#chatgpt-mermaid-\_r_3pg\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3pg\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3pg\_ .rough-node .label,#chatgpt-mermaid-\_r_3pg\_ .node .label,#chatgpt-mermaid-\_r_3pg\_ .image-shape .label,#chatgpt-mermaid-\_r_3pg\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3pg\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3pg\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pg\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pg\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3pg\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3pg\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3pg\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3pg\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3pg\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3pg\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3pg\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pg\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pg\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3pg\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pg\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3pg\_ .icon-shape,#chatgpt-mermaid-\_r_3pg\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3pg\_ .icon-shape p,#chatgpt-mermaid-\_r_3pg\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3pg\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3pg\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3pg\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3pg\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3pg\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3pg\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3pg\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3pg\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3pg\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pg\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3pg\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pg\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3pg\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3pg\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3pg\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3pg\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3pg\_ .node rect,#chatgpt-mermaid-\_r_3pg\_ .node circle,#chatgpt-mermaid-\_r_3pg\_ .node ellipse,#chatgpt-mermaid-\_r_3pg\_ .node polygon,#chatgpt-mermaid-\_r_3pg\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3pg\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3pg\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3pg\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3pg\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pg\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}DeploymentExternal ServicesNode.js Server LayerNext.js ApplicationVercelSupabase AuthSupabase PostgreSQLGitHub Content RepositoryRoute HandlersServer ActionsBusiness LogicData Access LayerContent LoaderReact UIServer ComponentsClient ComponentsStudents / Instructors /Admins
+
+This is a logical architecture diagram, not a deployment diagram showing separate machines.
+
+Most of these components will live inside the same Next.js project.
+
+## **3.1 Responsibility of each layer**
+
+| Layer             | Responsibility                         |
+| ----------------- | -------------------------------------- |
+| UI                | Display pages and interactive controls |
+| Server Components | Render server-side content             |
+| Client Components | Handle browser interactions            |
+| Route Handlers    | Expose HTTP endpoints                  |
+| Server Actions    | Handle application mutations           |
+| Business Logic    | Apply application rules                |
+| Data Access Layer | Read and write application data        |
+| Content Loader    | Load and validate Git-based content    |
+| Supabase Auth     | Manage user authentication             |
+| PostgreSQL        | Store application records              |
+
+The most important boundary is between business logic and data access.
+
+For example, the logic deciding whether a student can mark a lesson complete should not be buried inside a React component or scattered across multiple database queries.
+
+# **4. Application architecture: Next.js + React + Node.js**
+
+## **4.1 Why Next.js?**
+
+Next.js provides the capabilities we need in one framework:
+
+- React-based user interface.
+- Server-side rendering.
+- Static site generation.
+- Server Components.
+- Server Actions.
+- Route Handlers.
+- Dynamic routes.
+- Metadata and SEO.
+- Built-in integration with Vercel.
+
+We do not need to build a separate Express.js backend immediately.
+
+That would introduce another deployment, another service boundary and additional maintenance.
+
+**Recommendation:** Use Next.js as the full-stack framework and Node.js as its server runtime.
+
+## **4.2 What about Express.js?**
+
+Express is a valid Node.js backend framework, but I would not introduce it in the initial architecture.
+
+| Consideration        | Next.js backend | Separate Express backend      |
+| -------------------- | --------------- | ----------------------------- |
+| Initial complexity   | Lower           | Higher                        |
+| Deployment           | One application | Separate service              |
+| Frontend integration | Native          | Requires API integration      |
+| API control          | Good            | More explicit                 |
+| Independent scaling  | Limited         | More flexible                 |
+| Initial budget       | Better fit      | Additional operational burden |
+
+Express can become useful if ForgeSec Academy later needs an independent API serving multiple clients, such as a mobile application or external integrations.
+
+For now, it is unnecessary.
+
+# **5. Rendering architecture**
+
+Not every page should be rendered in the same way.
+
+This decision directly affects performance, hosting usage and database traffic.
+
+I recommend three rendering strategies.
+
+## **5.1 Static generation**
+
+Use static generation for public content that does not change based on the visitor.
+
+Examples:
+
+- Homepage.
+- Tutorials.
+- Articles.
+- Write-ups.
+- Glossary entries.
+- Learning path descriptions.
+- Public resource pages.
+
+These pages can be generated during deployment.
+
+Preferred for public educational content
+
+A student visiting a Linux tutorial should receive a generated page without requiring a database query for the tutorial body.
+
+## **5.2 Server rendering**
+
+Use server-side rendering when the page depends on the current user's identity or private data.
+
+Examples:
+
+- Student dashboard.
+- Profile.
+- Bookmarks.
+- Learning progress.
+- Quiz attempt history.
+- Admin dashboard.
+
+These pages need authenticated user context and current application data.
+
+## **5.3 Client-side rendering**
+
+Use client components for browser interactions.
+
+Examples:
+
+- Search input.
+- Dropdown menus.
+- Mobile navigation.
+- Quiz answer selection.
+- Bookmark buttons.
+- Progress controls.
+- Interactive filters.
+
+Client-side rendering should not be used as a substitute for server-side authorization.
+
+## **5.4 Rendering decision table**
+
+| Page             | Recommended rendering                |
+| ---------------- | ------------------------------------ |
+| Homepage         | Static                               |
+| Tutorial         | Static                               |
+| Learning path    | Static                               |
+| Write-up         | Static                               |
+| Glossary         | Static                               |
+| Search interface | Client interaction + static index    |
+| Login            | Server/client as appropriate         |
+| Dashboard        | Authenticated server rendering       |
+| Bookmarks        | Authenticated server rendering       |
+| Quiz attempt     | Server-backed, interactive client UI |
+| Admin panel      | Authenticated server rendering       |
+
+**Important:** A page being statically generated does not mean every part of the application must be static. We can combine static public content with authenticated features.
+
+# **6. Backend architecture**
+
+The backend should be organized into modules.
+
+We should avoid putting all application logic inside route handlers or Server Actions.
+
+## **6.1 Proposed backend modules**
+
+| Module        | Responsibility                  |
+| ------------- | ------------------------------- |
+| Auth          | Authentication and identity     |
+| Users         | Profiles and roles              |
+| Content       | Content lookup and metadata     |
+| Learning      | Paths, lessons and progress     |
+| Bookmarks     | Saved content                   |
+| Quizzes       | Questions, attempts and scoring |
+| Assignments   | Practical tasks and completion  |
+| Admin         | Administrative operations       |
+| Notifications | Basic user notifications        |
+
+Some modules initially read Git content rather than PostgreSQL.
+
+For example, the Content module loads published MDX files from the content repository. It does not need a content table in Supabase.
+
+## **6.2 Business logic separation**
+
+Consider a student completing a lesson.
+
+The flow should be:
+
+1. Student presses **Mark as Complete**.
+2. The client calls a Server Action.
+3. The server authenticates the student.
+4. The business logic validates the lesson identifier.
+5. The data access layer writes the completion record.
+6. The server returns the result.
+7. The UI updates.
+
+The client should never be allowed to decide which user ID gets written into the completion record.
+
+The authenticated identity must come from the verified server session.
+
+## **6.3 Recommended request flow**
+
+SupabaseBusiness LogicServer ActionReact UIStudentSupabaseBusiness LogicServer ActionReact UIStudent#chatgpt-mermaid-\_r_3pn\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3pn\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3pn\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3pn\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3pn\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3pn\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3pn\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3pn\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3pn\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3pn\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3pn\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3pn\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pn\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pn\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3pn\_ p{margin:0;}#chatgpt-mermaid-\_r_3pn\_ .actor{stroke:rgb(58, 132, 63);fill:rgb(17, 40, 19);stroke-width:1;}#chatgpt-mermaid-\_r_3pn\_ rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pn\_ rect.note[data-look="neo"]{stroke:rgb(172, 79, 35);fill:rgb(48, 48, 48);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pn\_ text.actor>tspan{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3pn\_ .actor-line{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pn\_ .innerArc{stroke-width:1.5;stroke-dasharray:none;}#chatgpt-mermaid-\_r_3pn\_ .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pn\_ .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pn\_ [id$="-arrowhead"] path{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pn\_ .sequenceNumber{fill:#505050;}#chatgpt-mermaid-\_r_3pn\_ [id$="-sequencenumber"]{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pn\_ [id$="-crosshead"] path{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3pn\_ .messageText{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3pn\_ .labelBox{stroke:rgba(255, 255, 255, 0.15);fill:rgb(0, 0, 0);filter:none;}#chatgpt-mermaid-\_r_3pn\_ .labelText,#chatgpt-mermaid-\_r_3pn\_ .labelText>tspan{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3pn\_ .loopText,#chatgpt-mermaid-\_r_3pn\_ .loopText>tspan{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3pn\_ .sectionTitle,#chatgpt-mermaid-\_r_3pn\_ .sectionTitle>tspan{fill:rgb(237, 237, 237);stroke:none;}#chatgpt-mermaid-\_r_3pn\_ .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:rgba(255, 255, 255, 0.15);fill:rgba(255, 255, 255, 0.15);}#chatgpt-mermaid-\_r_3pn\_ .note{stroke:rgb(172, 79, 35);fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3pn\_ .noteText,#chatgpt-mermaid-\_r_3pn\_ .noteText>tspan{fill:rgb(237, 237, 237);stroke:none;font-weight:normal;}#chatgpt-mermaid-\_r_3pn\_ .activation0{fill:rgb(48, 48, 48);stroke:hsl(0, 0%, 8.8235294118%);}#chatgpt-mermaid-\_r_3pn\_ .activation1{fill:rgb(48, 48, 48);stroke:hsl(0, 0%, 8.8235294118%);}#chatgpt-mermaid-\_r_3pn\_ .activation2{fill:rgb(48, 48, 48);stroke:hsl(0, 0%, 8.8235294118%);}#chatgpt-mermaid-\_r_3pn\_ .actorPopupMenu{position:absolute;}#chatgpt-mermaid-\_r_3pn\_ .actorPopupMenuPanel{position:absolute;fill:rgb(17, 40, 19);box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#chatgpt-mermaid-\_r_3pn\_ .actor-man circle,#chatgpt-mermaid-\_r_3pn\_ line{fill:rgb(17, 40, 19);stroke-width:2px;}#chatgpt-mermaid-\_r_3pn\_ g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3pn\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3pn\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3pn\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3pn\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3pn\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pn\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3pn\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3pn\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Mark lesson completeSubmit lesson IDValidate requestVerify/write progressResultCompletion resultSuccess or errorUpdate progress
+
+This gives us a predictable and testable request lifecycle.
+
+# **7. TypeScript project structure**
+
+The architecture should make it obvious where developers should put new functionality.
+
+I recommend the following structure.
+
+```
+
+forgesec-academy/
+│
+├── src/
+│   │
+│   ├── app/
+│   │   ├── (public)/
+│   │   ├── (auth)/
+│   │   ├── dashboard/
+│   │   ├── admin/
+│   │   ├── api/
+│   │   ├── layout.tsx
+│   │   └── globals.css
+│   │
+│   ├── components/
+│   │   ├── ui/
+│   │   ├── layout/
+│   │   ├── learning/
+│   │   ├── quizzes/
+│   │   └── admin/
+│   │
+│   ├── modules/
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── learning/
+│   │   ├── bookmarks/
+│   │   ├── quizzes/
+│   │   ├── assignments/
+│   │   └── admin/
+│   │
+│   ├── lib/
+│   │   ├── supabase/
+│   │   ├── content/
+│   │   ├── validation/
+│   │   ├── permissions/
+│   │   └── utils/
+│   │
+│   ├── types/
+│   ├── config/
+│   └── proxy.ts
+│
+├── content/
+│   ├── tutorials/
+│   ├── articles/
+│   ├── writeups/
+│   ├── guides/
+│   ├── references/
+│   ├── glossary/
+│   └── paths/
+│
+├── public/
+│
+├── scripts/
+│
+├── tests/
+│
+├── supabase/
+│   ├── migrations/
+│   └── seed/
+│
+├── package.json
+├── tsconfig.json
+└── next.config.ts
+
+```
+
+This is a proposed structure, not a requirement to create every directory on day one.
+
+### **7.1 Module structure**
+
+A module should own its related business logic, validation and data access.
+
+For example:
+
+```
+modules/learning/
+├── learning.schema.ts
+├── learning.service.ts
+├── learning.repository.ts
+├── learning.actions.ts
+├── learning.types.ts
+└── index.ts
+```
+
+Responsibilities:
+
+- `schema`: Validate incoming data.
+- `service`: Implement business rules.
+- `repository`: Communicate with the database.
+- `actions`: Expose approved mutations to the UI.
+- `types`: Define module-specific types.
+- `index`: Export the public module interface.
+
+We should not create empty files for every possible feature immediately. Build this structure as modules are implemented.
+
+# **8. Frontend and backend separation**
+
+Although Next.js supports both frontend and backend code in one project, we must maintain clear boundaries.
+
+## **8.1 Server Components**
+
+Use Server Components by default.
+
+Suitable for:
+
+- Rendering tutorial content.
+- Loading learning path details.
+- Displaying dashboard information.
+- Reading authenticated user data.
+- Rendering admin data.
+
+They reduce the amount of JavaScript sent to the browser.
+
+## **8.2 Client Components**
+
+Use Client Components when browser interactivity is needed.
+
+Example:
+
+```
+"use client";
+
+import { useState } from "react";
+
+export function SearchInput() {
+  const [query, setQuery] = useState("");
+
+  return (
+    <input
+      value={query}
+      onChange={(event) =>
+        setQuery(event.target.value)
+      }
+      placeholder="Search tutorials..."
+    />
+  );
+}
+```
+
+This component handles local UI state. It does not need direct database access.
+
+## **8.3 Server Actions**
+
+Server Actions are suitable for application mutations initiated by the UI.
+
+Examples:
+
+- Save bookmark.
+- Mark lesson complete.
+- Update profile.
+- Submit quiz attempt.
+- Update assignment status.
+
+Every Server Action must validate its input and authenticate and authorize the caller.
+
+A Server Action is an exposed server endpoint in practical security terms. It must not be treated as private merely because it is called from a React component.
+
+## **8.4 Route Handlers**
+
+Use Route Handlers when we need explicit HTTP endpoints.
+
+Examples:
+
+```
+/api/health
+/api/webhooks/supabase
+/api/webhooks/github
+/api/public/content
+```
+
+Not every Server Action needs a matching Route Handler.
+
+Avoid creating an API endpoint for every button.
+
+# **9. Supabase architecture**
+
+Supabase will handle the application data that needs persistence.
+
+It should not become the storage location for every piece of information.
+
+## **9.1 Responsibilities**
+
+**Supabase Auth**
+
+- Registration and login.
+- Email verification.
+- Password reset.
+- Session management.
+
+  **Supabase PostgreSQL**
+- User profiles.
+- Roles and permissions data.
+- Learning progress.
+- Bookmarks.
+- Quiz attempts.
+- Assignment completion.
+- Application settings.
+
+## **9.2 Data flow**
+
+For a public tutorial:
+
+```
+Browser
+  ↓
+Vercel / Next.js
+  ↓
+Generated tutorial page
+```
+
+For student progress:
+
+```
+Browser
+  ↓
+Next.js Server Action
+  ↓
+Authentication check
+  ↓
+Business logic
+  ↓
+Supabase PostgreSQL
+```
+
+The two flows are deliberately different.
+
+## **9.3 Supabase client types**
+
+We should use separate clients for different execution environments.
+
+| Client         | Use                                                 |
+| -------------- | --------------------------------------------------- |
+| Browser client | Limited user-scoped browser operations, when needed |
+| Server client  | Authenticated server operations                     |
+| Admin client   | Privileged administrative tasks only                |
+
+For server-side authentication, use the supported Supabase SSR integration and cookie-based sessions.
+
+Do not manually invent a session-storage mechanism.
+
+The service-role key must never be exposed to the browser.
+
+## **9.4 Database access**
+
+The repository layer should be responsible for database queries.
+
+For example:
+
+```
+learning.service.ts
+    ↓
+learning.repository.ts
+    ↓
+Supabase PostgreSQL
+```
+
+This prevents database-specific logic from spreading throughout the application.
+
+It also makes future database changes easier.
+
+# **10. Authentication and authorization architecture**
+
+Authentication answers:
+
+**Who is the user?**
+
+Authorization answers:
+
+**What is the user allowed to do?**
+
+They are separate security responsibilities.
+
+## **10.1 Proposed roles**
+
+| Role       | Access                                           |
+| ---------- | ------------------------------------------------ |
+| Guest      | Public educational content                       |
+| Student    | Personal learning features                       |
+| Instructor | Assigned content and permitted teaching features |
+| Admin      | Administrative operations                        |
+
+We should not rely on hiding buttons in the frontend to enforce these roles.
+
+## **10.2 Authorization flow**
+
+\#chatgpt-mermaid-\_r_3qu\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3qu\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3qu\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3qu\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3qu\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3qu\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3qu\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3qu\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3qu\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3qu\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3qu\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3qu\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3qu\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3qu\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3qu\_ p{margin:0;}#chatgpt-mermaid-\_r_3qu\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3qu\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3qu\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3qu\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3qu\_ .label text,#chatgpt-mermaid-\_r_3qu\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3qu\_ .node rect,#chatgpt-mermaid-\_r_3qu\_ .node circle,#chatgpt-mermaid-\_r_3qu\_ .node ellipse,#chatgpt-mermaid-\_r_3qu\_ .node polygon,#chatgpt-mermaid-\_r_3qu\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3qu\_ .rough-node .label text,#chatgpt-mermaid-\_r_3qu\_ .node .label text,#chatgpt-mermaid-\_r_3qu\_ .image-shape .label,#chatgpt-mermaid-\_r_3qu\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3qu\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3qu\_ .rough-node .label,#chatgpt-mermaid-\_r_3qu\_ .node .label,#chatgpt-mermaid-\_r_3qu\_ .image-shape .label,#chatgpt-mermaid-\_r_3qu\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3qu\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3qu\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3qu\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3qu\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3qu\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3qu\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3qu\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3qu\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3qu\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3qu\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3qu\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3qu\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3qu\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3qu\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3qu\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3qu\_ .icon-shape,#chatgpt-mermaid-\_r_3qu\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3qu\_ .icon-shape p,#chatgpt-mermaid-\_r_3qu\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3qu\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3qu\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3qu\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3qu\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3qu\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3qu\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3qu\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3qu\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3qu\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3qu\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3qu\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3qu\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3qu\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3qu\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3qu\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3qu\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3qu\_ .node rect,#chatgpt-mermaid-\_r_3qu\_ .node circle,#chatgpt-mermaid-\_r_3qu\_ .node ellipse,#chatgpt-mermaid-\_r_3qu\_ .node polygon,#chatgpt-mermaid-\_r_3qu\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3qu\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3qu\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3qu\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3qu\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3qu\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Incoming RequestVerify SessionAuthenticated?Public Access or LoginLoad User and RoleAuthorized?Reject RequestExecute OperationApply Database PoliciesNoYesNoYes
+
+Authorization should be enforced at the server operation and database level where applicable.
+
+A route guard is useful for navigation, but it is not the security boundary.
+
+## **10.3 Supabase Row Level Security**
+
+RLS should protect student-owned data.
+
+Examples:
+
+- Students can read their own progress.
+- Students can create their own progress records.
+- Students can read their own bookmarks.
+- Students cannot modify another student's quiz attempts.
+- Instructors can only access records permitted by their assigned responsibilities.
+- Administrative operations require explicit authorization.
+
+Every relevant database table should have RLS enabled and appropriate policies.
+
+# **11. API and application interface design**
+
+We should define a consistent interface between the frontend and backend.
+
+Even though most application operations will use Server Actions, explicit API endpoints may be needed later.
+
+## **11.1 Proposed API endpoints**
+
+| Method | Endpoint                 | Purpose                                    |
+| ------ | ------------------------ | ------------------------------------------ |
+| GET    | `/api/health`            | Application health check                   |
+| GET    | `/api/content`           | Public content metadata, if required       |
+| GET    | `/api/paths`             | Public learning path metadata, if required |
+| POST   | `/api/webhooks/github`   | GitHub event integration, future           |
+| POST   | `/api/webhooks/supabase` | Relevant authentication events, if needed  |
+
+These are proposed endpoints, not all launch requirements.
+
+For internal UI operations, Server Actions are sufficient.
+
+## **11.2 Server Action conventions**
+
+Each action should:
+
+1. Validate incoming input.
+2. Verify the current user.
+3. Check permissions.
+4. Execute the business operation.
+5. Return a predictable result.
+6. Handle expected errors.
+
+Example:
+
+```
+
+"use server";
+
+import { z } from "zod";
+
+const CompleteLessonSchema = z.object({
+  lessonId: z.string().min(1),
+});
+
+export async function completeLesson(
+  input: unknown
+) {
+  const parsed =
+    CompleteLessonSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Invalid lesson information.",
+    };
+  }
+
+  // 1. Verify authenticated user.
+  // 2. Verify lesson exists and is published.
+  // 3. Save completion for that user.
+  // 4. Return a predictable result.
+
+  return {
+    success: true,
+  };
+}
+
+```
+
+This is a structural example, not a complete production implementation. The actual action must include authentication, authorization, database operations and error handling before it can be used.
+
+## **11.3 Response conventions**
+
+Use a consistent result structure:
+
+```
+type ActionResult<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: {
+        code: string;
+        message: string;
+      };
+    };
+```
+
+This makes UI error handling predictable.
+
+For example, the UI can distinguish between:
+
+- Authentication required.
+- Permission denied.
+- Invalid input.
+- Record not found.
+- Temporary service failure.
+
+Do not expose database stack traces or internal implementation details to students.
+
+# **12. Middleware, proxy and request protection**
+
+We need to protect private application routes.
+
+However, we should not place the entire authorization system inside middleware.
+
+## **12.1 Recommended responsibility split**
+
+| Layer                        | Responsibility                             |
+| ---------------------------- | ------------------------------------------ |
+| Proxy / request interception | Lightweight redirects and request handling |
+| Server page                  | Check session and access                   |
+| Server Action                | Verify identity and permissions            |
+| Business service             | Enforce application rules                  |
+| Database RLS                 | Enforce data access restrictions           |
+
+The exact request-interception filename and APIs should follow the selected Next.js version. Recent Next.js releases have changed some terminology, so we should verify the framework's version-specific convention during implementation.
+
+## **12.2 Example route protection**
+
+Private routes:
+
+```
+/dashboard
+/dashboard/learning
+/dashboard/bookmarks
+/dashboard/profile
+
+/admin
+/admin/users
+/admin/paths
+/admin/settings
+```
+
+Expected behavior:
+
+- Guests trying to access the dashboard are redirected to login.
+- Students attempting to access admin functions are rejected.
+- Instructors only access permitted instructor functionality.
+- Admins can access approved administrative functionality.
+
+A user should not gain access by manually entering a URL.
+
+# **13. Environment configuration and secrets**
+
+Configuration must be separated from application source code.
+
+Never hardcode credentials in TypeScript files.
+
+## **13.1 Environment variables**
+
+Proposed configuration:
+
+```
+# Public configuration
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+# Server-only configuration
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Application
+NEXT_PUBLIC_APP_URL=
+```
+
+The exact Supabase public-key variable name should follow the selected Supabase key format. The example uses the conventional anonymous-key naming.
+
+## **13.2 Public versus private values**
+
+| Variable                           | Browser accessible? |
+| ---------------------------------- | ------------------- |
+| Supabase project URL               | Yes                 |
+| Supabase publishable/anonymous key | Yes                 |
+| Supabase service-role key          | Never               |
+| Database password                  | Never               |
+| Private webhook secret             | Never               |
+| OAuth client secret                | Never               |
+
+A public Supabase key is not a substitute for authorization.
+
+RLS must protect the underlying data.
+
+## **13.3 Environment files**
+
+Recommended:
+
+```
+.env.example
+.env.local
+```
+
+Rules:
+
+- `.env.local` must be ignored by Git.
+- `.env.example` contains variable names, not real credentials.
+- Production secrets belong in the hosting provider's environment settings.
+- Rotate credentials if they are accidentally exposed.
+- Use separate development and production credentials where practical.
+
+# **14. Error handling, logging and observability**
+
+We need to know when the application fails.
+
+We also need to distinguish between expected user errors and genuine system failures.
+
+## **14.1 Error categories**
+
+| Category         | Example                  | Expected handling             |
+| ---------------- | ------------------------ | ----------------------------- |
+| Validation       | Invalid email            | Show field error              |
+| Authentication   | Expired session          | Request login                 |
+| Authorization    | Student opens admin page | Reject access                 |
+| Not found        | Invalid lesson slug      | Show 404                      |
+| Database         | Temporary query failure  | Log and show safe error       |
+| Application      | Unexpected exception     | Error boundary and server log |
+| External service | Supabase unavailable     | Graceful failure              |
+
+## **14.2 Logging principles**
+
+Log useful technical information:
+
+- Timestamp.
+- Request or correlation ID.
+- Operation name.
+- Error category.
+- Safe diagnostic context.
+
+Avoid logging:
+
+- Passwords.
+- Access tokens.
+- Session cookies.
+- Private keys.
+- Sensitive personal information.
+
+## **14.3 Initial monitoring**
+
+For the first release, use:
+
+- Vercel deployment and runtime logs.
+- Supabase logs and dashboard.
+- Application-level error boundaries.
+- A small health endpoint.
+
+A dedicated observability platform is not required immediately.
+
+# **15. Security architecture**
+
+Because this is a cybersecurity education platform, security cannot be treated as a later enhancement.
+
+The platform itself should demonstrate sound engineering practices.
+
+## **15.1 Security controls**
+
+| Area                      | Required control                        |
+| ------------------------- | --------------------------------------- |
+| Authentication            | Supabase Auth                           |
+| Authorization             | Server-side checks                      |
+| Database                  | Row Level Security                      |
+| Input validation          | Zod                                     |
+| Secrets                   | Environment variables                   |
+| Session handling          | Supported secure SSR cookie integration |
+| Content rendering         | Trusted MDX only                        |
+| API operations            | Authentication and validation           |
+| Dependencies              | Regular updates and auditing            |
+| Transport                 | HTTPS                                   |
+| Administrative operations | Least privilege                         |
+| Abuse prevention          | Rate limiting where appropriate         |
+
+## **15.2 Critical security boundaries**
+
+**1. Do not trust the client.**
+
+A student can modify browser requests. All important decisions must be checked on the server.
+
+**2. Do not trust user-submitted content.**
+
+Students should not be able to submit arbitrary MDX, JSX or executable content.
+
+**3. Do not trust role information supplied by the browser.**
+
+Read the authenticated identity and authoritative role information from trusted server-side sources.
+
+**4. Do not expose privileged database credentials.**
+
+The Supabase service-role key must remain server-only.
+
+**5. Do not execute student commands on the Academy server.**
+
+Practical exercises should be performed in the student's own environment or on explicitly authorized systems.
+
+This also avoids creating a dangerous and expensive hosted execution environment.
+
+## **15.3 Rate limiting**
+
+Potential rate-limited operations:
+
+- Login attempts.
+- Registration.
+- Password reset requests.
+- Quiz submissions.
+- Public API requests.
+- Contact form submissions.
+
+For the initial version, use provider-supported protections where appropriate and add application-level rate limiting for sensitive operations if necessary.
+
+Do not assume an in-memory rate limiter will work reliably across multiple serverless instances. It can be bypassed when requests reach different instances.
+
+# **16. Deployment architecture**
+
+The initial deployment should remain simple.
+
+\#chatgpt-mermaid-\_r_3rr\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3rr\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3rr\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3rr\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3rr\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3rr\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3rr\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3rr\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3rr\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3rr\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3rr\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3rr\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3rr\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3rr\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3rr\_ p{margin:0;}#chatgpt-mermaid-\_r_3rr\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3rr\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3rr\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3rr\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3rr\_ .label text,#chatgpt-mermaid-\_r_3rr\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3rr\_ .node rect,#chatgpt-mermaid-\_r_3rr\_ .node circle,#chatgpt-mermaid-\_r_3rr\_ .node ellipse,#chatgpt-mermaid-\_r_3rr\_ .node polygon,#chatgpt-mermaid-\_r_3rr\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3rr\_ .rough-node .label text,#chatgpt-mermaid-\_r_3rr\_ .node .label text,#chatgpt-mermaid-\_r_3rr\_ .image-shape .label,#chatgpt-mermaid-\_r_3rr\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3rr\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3rr\_ .rough-node .label,#chatgpt-mermaid-\_r_3rr\_ .node .label,#chatgpt-mermaid-\_r_3rr\_ .image-shape .label,#chatgpt-mermaid-\_r_3rr\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3rr\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3rr\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3rr\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3rr\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3rr\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3rr\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3rr\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3rr\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3rr\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3rr\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3rr\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3rr\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3rr\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3rr\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3rr\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3rr\_ .icon-shape,#chatgpt-mermaid-\_r_3rr\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3rr\_ .icon-shape p,#chatgpt-mermaid-\_r_3rr\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3rr\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3rr\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3rr\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3rr\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3rr\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3rr\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3rr\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3rr\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3rr\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3rr\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3rr\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3rr\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3rr\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3rr\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3rr\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3rr\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3rr\_ .node rect,#chatgpt-mermaid-\_r_3rr\_ .node circle,#chatgpt-mermaid-\_r_3rr\_ .node ellipse,#chatgpt-mermaid-\_r_3rr\_ .node polygon,#chatgpt-mermaid-\_r_3rr\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3rr\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3rr\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3rr\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3rr\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3rr\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}DeveloperGitHub RepositoryVercelSupabaseForgeSec AcademyVisitorsStudentsPush / Pull RequestBuild and DeployAuth and DatabaseStatic Public ContentAuthenticated Features
+
+## **16.1 Deployment responsibilities**
+
+| Service           | Responsibility                |
+| ----------------- | ----------------------------- |
+| GitHub            | Source control                |
+| Vercel            | Build and hosting             |
+| Supabase          | Authentication and database   |
+| Developer machine | Local development and testing |
+
+## **16.2 Environments**
+
+We should have three logical environments:
+
+1. **Local development:** Development on the developer's computer.
+2. **Preview:** Pull-request or branch deployments for testing.
+3. **Production:** The live Academy.
+
+The production database should not be used casually for testing.
+
+If the free-tier limits make a separate Supabase project impractical, we can initially use a carefully isolated development setup, but production data must remain protected.
+
+## **16.3 Database migrations**
+
+Database changes must be version-controlled.
+
+Use Supabase migrations:
+
+```
+supabase/
+├── migrations/
+│   ├── 001_initial_schema.sql
+│   ├── 002_learning_progress.sql
+│   ├── 003_bookmarks.sql
+│   └── 004_quiz_attempts.sql
+│
+└── seed/
+    └── development.sql
+```
+
+Never rely on undocumented manual database changes.
+
+A migration file records how the database structure changes over time.
+
+This is similar to Git commits, but for database structure.
+
+# **17. Node.js runtime strategy**
+
+The application will use Node.js for server-side execution.
+
+We should explicitly select the Node.js runtime for server functionality that depends on the full Node.js ecosystem.
+
+## **17.1 Runtime responsibilities**
+
+- MDX processing and content loading.
+- Server-side application logic.
+- Supabase server integration.
+- Database operations.
+- Content validation scripts.
+- Build-time indexing.
+- Administrative operations.
+
+## **17.2 Node.js versus Edge Runtime**
+
+| Consideration         | Node.js       | Edge              |
+| --------------------- | ------------- | ----------------- |
+| Node.js APIs          | Broad support | Limited           |
+| Package compatibility | Better        | More restricted   |
+| Server-side libraries | Broad         | Runtime-dependent |
+| Initial architecture  | Recommended   | Not necessary     |
+
+We should not move functionality to Edge simply because it sounds faster.
+
+For ForgeSec Academy, Node.js compatibility and maintainability matter more.
+
+Use Edge only if a measured requirement justifies it.
+
+## **17.3 TypeScript strictness**
+
+The project should enable strict TypeScript checking.
+
+Recommended compiler settings include:
+
+```
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true
+  }
+}
+```
+
+This reduces accidental type errors and makes the application more predictable.
+
+# **18. Caching and performance architecture**
+
+We should avoid unnecessary database requests and expensive server rendering.
+
+## **18.1 Public content caching**
+
+Public educational pages should be generated statically and served through the hosting platform's delivery infrastructure.
+
+The application should not fetch an MDX file from GitHub every time a student opens a lesson.
+
+The content should be available as part of the build.
+
+## **18.2 Authenticated data**
+
+Examples:
+
+- User progress.
+- Bookmarks.
+- Quiz history.
+- Profile information.
+
+These are user-specific and must not be accidentally shared through public caches.
+
+Authenticated responses should be configured so one student's data cannot appear in another student's session.
+
+## **18.3 Performance priorities**
+
+1. Minimize JavaScript shipped to the browser.
+2. Use Server Components by default.
+3. Optimize images.
+4. Avoid unnecessary database queries.
+5. Paginate large lists.
+6. Cache public data safely.
+7. Keep the search index compact.
+8. Avoid unnecessary third-party scripts.
+9. Load interactive features only when needed.
+
+**Target:** Aim for Lighthouse scores of 90+ on key public pages, while treating this as a performance objective rather than a guarantee.
+
+# **19. Testing architecture**
+
+We need testing at several levels.
+
+A platform can look correct in the browser and still have broken authorization or incorrect progress calculations.
+
+## **19.1 Testing layers**
+
+| Test type          | Purpose                | Example                                        |
+| ------------------ | ---------------------- | ---------------------------------------------- |
+| Unit               | Test isolated logic    | Calculate path progress                        |
+| Integration        | Test connected modules | Save lesson completion                         |
+| Database           | Test data policies     | Student cannot read another student's progress |
+| Component          | Test UI behavior       | Quiz selection                                 |
+| End-to-end         | Test complete journeys | Register and complete a lesson                 |
+| Content validation | Test MDX integrity     | Detect duplicate slugs                         |
+
+## **19.2 Recommended tools**
+
+- Vitest for unit and integration testing.
+- React Testing Library for component behavior.
+- Playwright for end-to-end browser testing.
+- Supabase local development tooling where practical.
+
+We do not need to install all testing tools at the beginning.
+
+Start with unit tests, database-policy tests and a few critical end-to-end flows.
+
+## **19.3 Essential test scenarios**
+
+- Guest can read a public tutorial.
+- Guest cannot access a private dashboard.
+- Student can save a bookmark.
+- Student cannot access another student's bookmarks.
+- Student can complete an available lesson.
+- Student cannot manipulate another student's progress.
+- Quiz scores are calculated correctly on the server.
+- Instructor cannot access unauthorized administration functions.
+- Admin can manage permitted application records.
+- Unpublished content does not appear publicly.
+
+# **20. Development and deployment pipeline**
+
+We should automate basic quality checks before merging changes into production.
+
+## **20.1 Proposed CI pipeline**
+
+\#chatgpt-mermaid-\_r_3sb\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_3sb\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3sb\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_3sb\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_3sb\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3sb\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_3sb\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_3sb\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_3sb\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_3sb\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_3sb\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_3sb\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3sb\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3sb\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_3sb\_ p{margin:0;}#chatgpt-mermaid-\_r_3sb\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3sb\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3sb\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3sb\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_3sb\_ .label text,#chatgpt-mermaid-\_r_3sb\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3sb\_ .node rect,#chatgpt-mermaid-\_r_3sb\_ .node circle,#chatgpt-mermaid-\_r_3sb\_ .node ellipse,#chatgpt-mermaid-\_r_3sb\_ .node polygon,#chatgpt-mermaid-\_r_3sb\_ .node path{fill:rgb(17, 40, 19);stroke:rgb(58, 132, 63);stroke-width:1px;}#chatgpt-mermaid-\_r_3sb\_ .rough-node .label text,#chatgpt-mermaid-\_r_3sb\_ .node .label text,#chatgpt-mermaid-\_r_3sb\_ .image-shape .label,#chatgpt-mermaid-\_r_3sb\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_3sb\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_3sb\_ .rough-node .label,#chatgpt-mermaid-\_r_3sb\_ .node .label,#chatgpt-mermaid-\_r_3sb\_ .image-shape .label,#chatgpt-mermaid-\_r_3sb\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_3sb\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_3sb\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3sb\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3sb\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_3sb\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_3sb\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3sb\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3sb\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3sb\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_3sb\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_3sb\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3sb\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3sb\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_3sb\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_3sb\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_3sb\_ .icon-shape,#chatgpt-mermaid-\_r_3sb\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_3sb\_ .icon-shape p,#chatgpt-mermaid-\_r_3sb\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_3sb\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_3sb\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_3sb\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_3sb\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_3sb\_ .node .neo-node{stroke:rgb(58, 132, 63);}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_3sb\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_3sb\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].node .neo-line path{stroke:rgb(58, 132, 63);filter:none;}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_3sb\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_3sb\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3sb\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_3sb\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_3sb\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3sb\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(140, 223, 173);}#chatgpt-mermaid-\_r_3sb\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_3sb\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_3sb\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-width:1px;}#chatgpt-mermaid-\_r_3sb\_ .node rect,#chatgpt-mermaid-\_r_3sb\_ .node circle,#chatgpt-mermaid-\_r_3sb\_ .node ellipse,#chatgpt-mermaid-\_r_3sb\_ .node polygon,#chatgpt-mermaid-\_r_3sb\_ .node path{fill:rgb(0, 55, 22);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_3sb\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_3sb\_ .mermaid-decision .label-container{fill:rgb(2, 28, 12);stroke:rgb(26, 75, 45);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_3sb\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_3sb\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_3sb\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Developer Pushes CodeInstall DependenciesTypeScript CheckESLintUnit TestsContent ValidationProduction BuildAll Checks Pass?Block MergePreview DeploymentReviewMergeProduction DeploymentNoYes
+
+## **20.2 Recommended scripts**
+
+Example `package.json` scripts:
+
+```
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "content:validate": "tsx scripts/validate-content.ts"
+  }
+}
+```
+
+The actual scripts will be adjusted when dependencies and framework versions are selected.
+
+## **20.3 Deployment rule**
+
+A production deployment should not proceed when critical checks fail.
+
+For example:
+
+- TypeScript errors.
+- Invalid published content.
+- Failed production build.
+- Critical test failures.
+
+This prevents avoidable defects from reaching the live platform.
+
+# **21. Future architecture expansion**
+
+We should plan for future features without implementing them prematurely.
+
+| Future capability         | Possible architectural extension             |
+| ------------------------- | -------------------------------------------- |
+| Instructor content editor | GitHub integration or headless CMS           |
+| Mobile application        | Separate public API                          |
+| Hosted practice labs      | Isolated execution infrastructure            |
+| Advanced analytics        | Dedicated analytics pipeline                 |
+| Discussion system         | Database-backed community module             |
+| Certificates              | Verification service and certificate records |
+| Advanced search           | Dedicated search infrastructure              |
+| External integrations     | API and webhook modules                      |
+
+## **21.1 Future hosted labs**
+
+This deserves a specific warning.
+
+If ForgeSec Academy eventually offers practical labs, we should not execute student commands directly inside the Next.js server or on the same machine that hosts the Academy.
+
+A future lab platform should have:
+
+- Isolated execution environments.
+- Resource limits.
+- Network restrictions.
+- Time limits.
+- Automatic cleanup.
+- Abuse monitoring.
+- Separate infrastructure and security boundaries.
+
+That is a different engineering project.
+
+It should not become a hidden dependency of the initial Academy.
+
+# **22. Final technical architecture specification**
+
+## **FORGESEC ACADEMY — Architecture baseline**
+
+Recommended architecture
+
+| Layer                | Technology                         |
+| -------------------- | ---------------------------------- |
+| Language             | TypeScript                         |
+| Runtime              | Node.js                            |
+| Full-stack framework | Next.js                            |
+| Frontend             | React                              |
+| Styling              | Tailwind CSS                       |
+| Public content       | MDX + Git                          |
+| Content validation   | Zod                                |
+| Authentication       | Supabase Auth                      |
+| Database             | Supabase PostgreSQL                |
+| Database security    | PostgreSQL RLS                     |
+| Data access          | Centralized repositories           |
+| Server mutations     | Server Actions                     |
+| HTTP endpoints       | Route Handlers                     |
+| Deployment           | Vercel                             |
+| Source control       | GitHub                             |
+| Testing              | Vitest + Playwright                |
+| CI                   | GitHub Actions / deployment checks |
+| Logging              | Vercel and Supabase logs           |
+
+## **22.1 Architectural decisions**
+
+| Decision                      | Status         |
+| ----------------------------- | -------------- |
+| Modular monolith              | Recommended    |
+| Separate Express backend      | Not initially  |
+| Node.js server runtime        | Yes            |
+| Server Components by default  | Yes            |
+| Static public content         | Yes            |
+| Server-side authorization     | Mandatory      |
+| Supabase RLS                  | Mandatory      |
+| Separate content and database | Yes            |
+| Microservices                 | Not initially  |
+| Hosted lab execution          | Future project |
+| TypeScript strict mode        | Yes            |
+
+# **23. Part 05 acceptance checklist**
+
+- Defined the high-level architecture.
+- Selected a modular monolith.
+- Established Next.js and Node.js responsibilities.
+- Defined static, server and client rendering.
+- Separated business logic from data access.
+- Designed backend modules.
+- Proposed TypeScript project organization.
+- Defined Server Action and Route Handler responsibilities.
+- Designed Supabase integration.
+- Established authentication and authorization boundaries.
+- Defined RLS responsibilities.
+- Defined environment and secret management.
+- Designed error handling and logging.
+- Established core security controls.
+- Designed deployment environments.
+- Defined database migration strategy.
+- Defined Node.js runtime strategy.
+- Established caching and performance principles.
+- Designed testing and CI workflows.
+- Identified future expansion boundaries.
+
+Part 05 completed
+
+# **Next: Part 06 — Database Architecture & Complete Data Model**
+
+This is the next major engineering document.
+
+We will define the actual PostgreSQL database structure, including:
+
+1. Entity Relationship Diagram (ERD).
+2. Users and profiles.
+3. Roles and permissions.
+4. Learning paths.
+5. Lessons and content references.
+6. Student learning progress.
+7. Bookmarks.
+8. Quiz and question structures.
+9. Quiz attempts and answers.
+10. Practical assignments.
+11. Notifications.
+12. Admin audit logs.
+13. Primary keys and foreign keys.
+14. Indexes and constraints.
+15. Row Level Security policies.
+16. Database migrations and seed data.
+17. Data integrity and deletion behavior.
+18. Supabase free-tier optimization.
+
+**One important design principle for Part 06:** We must distinguish between content metadata stored in Git and student activity stored in PostgreSQL. Duplicating the entire MDX content library in the database would create unnecessary complexity.
+
+The database should store the minimum information required to operate the learning platform reliably.

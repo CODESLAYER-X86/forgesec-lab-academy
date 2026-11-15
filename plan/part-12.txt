@@ -1,0 +1,496 @@
+# **Part 12 — Search, Discovery, SEO, Performance & Accessibility**
+
+**Objective:** Make FORGESEC ACADEMY easy to navigate, discoverable through search engines, fast on low-end devices and accessible to students with different devices and abilities.
+
+This part is particularly important because the Academy will initially have a relatively small content library. We should build a system that works well with 10 tutorials and can grow to hundreds without requiring expensive infrastructure.
+
+The guiding principle is **use static content and lightweight search before introducing external search services or complex infrastructure.**
+
+## **1. Search architecture**
+
+I recommend building an internal search system using a generated JSON search index.
+
+No Elasticsearch, Algolia, Meilisearch server or separate search database is needed initially.
+
+**Search indexing workflow**
+
+**MDX / YAML content**
+
+Tutorials, write-ups, guides, glossary
+
+**Build-time indexing script**
+
+Extract titles, descriptions, tags and searchable text
+
+**Static search index**
+
+Generated JSON file
+
+**Browser-side search**
+
+Search results without database queries
+
+### **What should be searchable?**
+
+- Tutorial titles and descriptions.
+- Lesson titles and descriptions.
+- Tags and categories.
+- Write-up titles.
+- Resource titles.
+- Glossary terms.
+- Relevant lesson text.
+
+For example, a student searches for `chmod`.
+
+Results might include:
+
+1. Linux File Permissions.
+2. Understanding chmod.
+3. Linux User and Group Management.
+4. Practical Assignment: File Permissions.
+
+### **Search implementation**
+
+Recommended tools:
+
+| Component        | Technology                                |
+| ---------------- | ----------------------------------------- |
+| Search index     | Generated JSON                            |
+| Search engine    | MiniSearch or a lightweight custom search |
+| Validation       | Zod                                       |
+| UI               | React                                     |
+| Content source   | MDX/YAML                                  |
+| Search execution | Browser                                   |
+
+I recommend starting with MiniSearch rather than writing a search algorithm from scratch. It supports indexing, tokenization, field boosting and fuzzy matching.
+
+One limitation: a browser-side search index is downloaded by the visitor. Keep it compact and don't include entire tutorial bodies unnecessarily. Start with metadata and selected searchable text, then measure whether full-text indexing is worthwhile.
+
+## **2. Search interface**
+
+Search should be available from the main navigation.
+
+**FORGESEC ACADEMY**
+
+Search tutorials, commands, topics...
+
+Ctrl K
+
+**Suggested topics**
+
+Linux
+
+Networking
+
+SSH
+
+Web Security
+
+**Example search results**
+
+**Linux File Permissions**
+
+Linux Fundamentals · Tutorial
+
+Learn file permissions, chmod, chown and permission bits.
+
+**Understanding chmod**
+
+Linux Fundamentals · Lesson
+
+Change file and directory permissions using the chmod command.
+
+Illustrative search interface, not a live search implementation.
+
+Search requirements:
+
+- Keyboard shortcut to open search.
+- Search as the user types, with a small debounce.
+- Highlight matching terms.
+- Display content type and category.
+- Show a useful empty state.
+- Support keyboard navigation.
+- Provide a clear button.
+- Link directly to the relevant lesson.
+
+Don't build advanced search filters before there is enough content to justify them.
+
+## **3. Content discovery**
+
+Search is useful when students know what they want. Discovery helps when they don't.
+
+The homepage should make the learning material easy to explore.
+
+Recommended sections:
+
+1. Featured learning paths.
+2. Start learning Linux.
+3. Latest tutorials.
+4. Latest write-ups.
+5. Popular resources.
+6. Browse by category.
+
+### **Learning path discovery**
+
+Each learning path should display:
+
+- Title.
+- Short description.
+- Difficulty.
+- Estimated duration.
+- Number of lessons.
+- Prerequisites.
+- Progress for logged-in students.
+
+For example:
+
+**Linux Fundamentals**
+
+Beginner
+
+[I Feel Like a Hacker Using These Cool Linux Terminal Tools](https://images.openai.com/static-rsc-4/Tp1UDygxh9GDlMfgd5JTVpQF1nOrYmHTOR4mqj8cxXV7lJwRPDjTuoh0pX5EHl-wwSHc-9T5TN3YUGwMRlX-vq4uI7l5CJXO1lM7KY-qjQDDktTPq1Rz0GNn1lQzQzTlEtaFYl1BUWsvpkiKi8Qih1BNRtVEgBWQl-HxFuK1wdY?purpose=inline)
+
+[itsfoss.com](https://itsfoss.com/hacker-like-linux-terminal-tools/?utm_source=chatgpt.com)
+
+Learn Linux command-line fundamentals, filesystem navigation, permissions, users, services and networking.
+
+10 lessons
+
+Self-paced
+
+Practical tasks
+
+Illustrative learning-path card. Actual lesson count will come from the content definition.
+
+Avoid ranking paths by popularity when there isn't enough usage data to make that ranking meaningful.
+
+## **4. SEO architecture**
+
+SEO matters because your tutorials should be discoverable outside the Academy.
+
+For example, someone searching Google for:
+
+- Linux commands for beginners.
+- How to use chmod.
+- Linux file permissions explained.
+- How to connect using SSH.
+
+Should have a chance of discovering the relevant FORGESEC tutorial.
+
+### **Required SEO features**
+
+| Feature             | Purpose                            |
+| ------------------- | ---------------------------------- |
+| Page title          | Search result title                |
+| Meta description    | Search result summary              |
+| Canonical URL       | Avoid duplicate indexing           |
+| Open Graph metadata | Social sharing previews            |
+| XML sitemap         | Help search engines discover pages |
+| robots.txt          | Control crawler access             |
+| Semantic headings   | Clear document structure           |
+| Internal links      | Connect related tutorials          |
+| Structured data     | Describe appropriate content types |
+
+Use Next.js Metadata API to generate metadata from the MDX frontmatter.
+
+Example:
+
+```
+---
+id: linux-file-permissions
+title: Linux File Permissions Explained
+description: Learn Linux permissions, chmod, chown and file access.
+slug: linux-file-permissions
+category: linux-fundamentals
+tags:
+  - linux
+  - permissions
+  - chmod
+status: published
+---
+```
+
+### **Important SEO rules**
+
+- Each lesson gets a unique title and description.
+- Don't generate duplicate pages for the same content.
+- Use readable URLs.
+- Add links between related tutorials.
+- Include a sitemap containing published public content.
+- Keep dashboard, login and admin pages out of search indexing.
+- Don't expose draft pages to search engines.
+
+For educational articles, appropriate structured data can help search engines understand the page. However, don't add FAQ or other schema markup unless the page actually contains the corresponding content.
+
+## **5. Performance architecture**
+
+Performance is a priority because students may access the Academy using budget smartphones, slower connections and older computers.
+
+I recommend the following:
+
+| Area              | Approach                                 |
+| ----------------- | ---------------------------------------- |
+| Public tutorials  | Static generation                        |
+| Homepage          | Static generation where possible         |
+| Search index      | Static JSON                              |
+| Student dashboard | Authenticated server rendering           |
+| Admin panel       | Authenticated server rendering           |
+| Images            | Optimized WebP/AVIF where appropriate    |
+| Fonts             | Minimal self-hosted font files           |
+| JavaScript        | Keep client components limited           |
+| Database          | Only query when dynamic data is required |
+
+### **Static generation**
+
+This is especially useful for FORGESEC.
+
+Suppose a tutorial contains 2,000 words, code examples and images.
+
+With static generation:
+
+1. Next.js builds the page during deployment.
+2. The generated HTML is served to visitors.
+3. The visitor doesn't need a database query to read the tutorial.
+
+Think of it like printing books before opening a library. Readers can access the finished pages without asking someone to recreate each page whenever they arrive.
+
+### **Performance targets**
+
+Use these Core Web Vitals targets:
+
+| Metric | Target        |
+| ------ | ------------- |
+| LCP    | ≤ 2.5 seconds |
+| INP    | ≤ 200 ms      |
+| CLS    | ≤ 0.1         |
+
+These are targets at the 75th percentile, not guarantees for every device or network.
+
+Also aim for:
+
+- Lighthouse performance score of 90+ on representative pages.
+- Minimal client-side JavaScript.
+- No unnecessary animation libraries.
+- Lazy-load non-critical images.
+- Avoid oversized hero images.
+- Avoid loading every lesson into the homepage.
+
+Don't chase Lighthouse scores at the expense of usability. Real-device performance matters more than a perfect synthetic score.
+
+## **6. Accessibility**
+
+Accessibility should be part of the design system, not something added after development.
+
+Follow **WCAG 2.2 Level AA** as the target.
+
+Important requirements:
+
+- Keyboard navigation throughout the website.
+- Visible focus indicators.
+- Sufficient text and interface contrast.
+- Proper labels for forms and search.
+- Semantic HTML headings.
+- Accessible dialogs and dropdowns.
+- Alternative text for meaningful images.
+- No information communicated through color alone.
+- Respect reduced-motion preferences.
+- Code blocks that remain usable on narrow screens.
+
+### **Special consideration: Technical tutorials**
+
+Technical content needs additional attention.
+
+For example:
+
+- Code blocks should support horizontal scrolling without breaking the entire page.
+- Copy buttons should have accessible labels.
+- Terminal output should be distinguishable from commands.
+- Warnings should have text labels, not just red backgrounds.
+- Syntax highlighting should retain readable contrast.
+
+A student should be able to understand a command even if they cannot distinguish the syntax-highlighting colors.
+
+## **7. Technical implementation**
+
+Suggested project structure:
+
+```
+src/
+├── app/
+│   ├── search/
+│   │   └── page.tsx
+│   ├── sitemap.ts
+│   ├── robots.ts
+│   └── ...
+│
+├── components/
+│   ├── search/
+│   │   ├── SearchDialog.tsx
+│   │   ├── SearchInput.tsx
+│   │   ├── SearchResults.tsx
+│   │   └── SearchResultCard.tsx
+│   │
+│   ├── discovery/
+│   │   ├── FeaturedPaths.tsx
+│   │   ├── LatestTutorials.tsx
+│   │   └── CategoryBrowser.tsx
+│   │
+│   └── seo/
+│       └── StructuredData.tsx
+│
+├── lib/
+│   ├── search/
+│   │   ├── indexer.ts
+│   │   ├── search.ts
+│   │   └── types.ts
+│   │
+│   └── seo/
+│       ├── metadata.ts
+│       └── sitemap.ts
+│
+└── content/
+    └── ...
+
+scripts/
+├── validate-content.ts
+└── generate-search-index.ts
+```
+
+### **Search generation process**
+
+During the production build:
+
+```
+MDX / YAML files
+       |
+       v
+Content validation
+       |
+       v
+Extract searchable metadata
+       |
+       v
+Generate search-index.json
+       |
+       v
+Next.js production build
+       |
+       v
+Deploy to Vercel
+```
+
+The search index should contain only what is needed:
+
+```
+[
+  {
+    "id": "linux-file-permissions",
+    "title": "Linux File Permissions",
+    "description": "Understand chmod and chown.",
+    "category": "Linux Fundamentals",
+    "tags": ["linux", "chmod", "permissions"],
+    "url": "/learn/linux/linux-file-permissions"
+  }
+]
+```
+
+This is an illustrative data structure. The actual implementation should derive these values from your validated content files, not maintain a separate manually edited index.
+
+## **8. Testing and verification**
+
+Use automated tests and manual checks.
+
+| Test                                         | Expected result                                 |
+| -------------------------------------------- | ----------------------------------------------- |
+| Search for `chmod`                           | Relevant lessons appear                         |
+| Search for nonexistent term                  | Useful empty state                              |
+| Open a search result                         | Correct page loads                              |
+| Open tutorial on mobile                      | No horizontal page overflow                     |
+| Navigate with keyboard                       | All controls accessible                         |
+| Open page without JavaScript where practical | Core content remains readable                   |
+| Open dashboard as guest                      | Redirect or authentication prompt               |
+| Open draft content publicly                  | Access denied                                   |
+| Inspect page metadata                        | Correct title and description                   |
+| Inspect sitemap                              | Published pages included                        |
+| Run Lighthouse                               | Performance and accessibility issues identified |
+
+Also test on a real budget Android phone and a slower internet connection. Desktop development tools cannot fully reproduce those conditions.
+
+## **9. Development priority**
+
+Not everything needs to be implemented immediately.
+
+| Priority | Feature                        | Initial decision |
+| -------- | ------------------------------ | ---------------- |
+| P0       | SEO metadata                   | Build            |
+| P0       | Static generation              | Build            |
+| P0       | Responsive design              | Build            |
+| P0       | Basic internal search          | Build            |
+| P0       | Accessible code blocks         | Build            |
+| P0       | Sitemap and robots.txt         | Build            |
+| P1       | Search filters                 | Later            |
+| P1       | Search keyboard shortcuts      | Later            |
+| P1       | Advanced content discovery     | Later            |
+| P2       | Search analytics               | Later            |
+| P2       | Personalized recommendations   | Later            |
+| P3       | External search infrastructure | Not planned      |
+
+## **10. What we should deliberately avoid**
+
+For the initial version, don't introduce:
+
+- Elasticsearch clusters.
+- Paid search APIs.
+- AI-powered semantic search.
+- Complex recommendation algorithms.
+- Separate analytics infrastructure.
+- Excessive animations.
+- Heavy client-side rendering.
+- Third-party tracking scripts without a clear purpose.
+
+A small, well-indexed content library does not need enterprise search infrastructure.
+
+If the Academy eventually has thousands of lessons and users report poor search relevance, we can evaluate a more advanced search solution using actual usage data.
+
+## **11. Final architectural decisions**
+
+The following decisions should become part of the FORGESEC ACADEMY baseline:
+
+1. Search index generated from Git-managed content.
+2. MiniSearch or an equivalent lightweight search engine.
+3. No separate search database.
+4. Static generation for public educational content.
+5. Server rendering for authenticated dashboards and administration.
+6. Next.js Metadata API for SEO.
+7. Automatic sitemap and robots.txt.
+8. WCAG 2.2 AA as the accessibility target.
+9. Core Web Vitals as performance targets.
+10. Mobile-first testing, including low-end devices.
+
+## **12. Implementation checklist**
+
+**Part 12 implementation tracker**
+
+0/9 completed
+
+Build metadata generation from MDX frontmatter
+
+Generate the static search index
+
+Implement basic search interface
+
+Add search result navigation
+
+Implement page metadata and canonical URLs
+
+Generate sitemap and robots.txt
+
+Add responsive code-block behavior
+
+Audit keyboard navigation and contrast
+
+Test performance on mobile devices
+
+**Recap:** FORGESEC ACADEMY should rely on static content, lightweight search, strong SEO and efficient rendering. This keeps the platform inexpensive while making the learning experience usable as the content library grows.
+
+**Next: Part 13 — Notifications, Community & Student Interaction.** We'll decide what interaction features are genuinely useful without creating the operational burden of running a social network.

@@ -1,0 +1,686 @@
+# **Part 32 — SEO, Performance & Accessibility**
+
+**Objective:** Make FORGESEC ACADEMY discoverable through search engines, fast on low-end devices and accessible to students using different devices and assistive technologies.
+
+This part focuses on three areas:
+
+1. Search Engine Optimization (SEO).
+2. Application performance.
+3. Accessibility.
+
+The central principle is simple: a technically excellent learning platform is not useful if people cannot find it, load it or comfortably read it.
+
+## **1. SEO architecture**
+
+SEO should be designed around the educational content rather than just the homepage.
+
+Our most valuable search-engine entry points will be:
+
+- Linux tutorials.
+- Networking guides.
+- Cybersecurity write-ups.
+- Web security explanations.
+- Learning paths.
+- Technical references.
+- Glossary entries.
+
+Each published content item should have its own indexable URL.
+
+### **URL structure**
+
+```
+/
+├── /learn/tutorials
+├── /learn/lessons/linux-filesystem
+├── /learn/paths/linux-fundamentals
+├── /writeups/understanding-xss
+├── /resources/linux-command-reference
+└── /glossary/cross-site-scripting
+```
+
+Use stable, descriptive, lowercase slugs.
+
+Avoid URLs such as:
+
+```
+/article?id=123
+/content/page1
+/tutorial/abc
+```
+
+A descriptive URL helps both search engines and humans understand the destination.
+
+## **2. Metadata system**
+
+Every public content page must have appropriate metadata.
+
+Example MDX frontmatter:
+
+```
+---
+id: linux-filesystem
+title: Linux Filesystem Navigation
+description: Learn Linux filesystem navigation using
+  essential terminal commands and practical examples.
+slug: linux-filesystem
+category: Linux
+tags:
+  - linux
+  - terminal
+  - filesystem
+difficulty: beginner
+published: true
+publishedAt: 2026-11-16
+updatedAt: 2026-11-16
+---
+```
+
+Generate metadata automatically from the validated content registry.
+
+Do not manually write metadata separately in multiple places.
+
+### **Required metadata**
+
+| Field                  | Purpose                |
+| ---------------------- | ---------------------- |
+| Title                  | Search result title    |
+| Description            | Search result summary  |
+| Canonical URL          | Preferred page address |
+| Open Graph title       | Social sharing         |
+| Open Graph description | Social sharing         |
+| Open Graph image       | Social preview         |
+| Publication date       | Content freshness      |
+| Updated date           | Revision information   |
+
+Descriptions should be useful summaries, not keyword lists.
+
+## **3. Technical SEO**
+
+Implement the following:
+
+### **A. Dynamic metadata**
+
+Use Next.js Metadata API.
+
+Example:
+
+```
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const content = await getPublishedContent(slug);
+
+  if (!content) {
+    return {};
+  }
+
+  return {
+    title: content.title,
+    description: content.description,
+    alternates: {
+      canonical: `/learn/lessons/${slug}`,
+    },
+    openGraph: {
+      title: content.title,
+      description: content.description,
+      type: "article",
+    },
+  };
+}
+```
+
+This is illustrative. Add proper TypeScript types and absolute canonical URLs using the configured production site URL.
+
+### **B. Sitemap**
+
+Generate:
+
+```
+/sitemap.xml
+```
+
+Include:
+
+- Homepage.
+- Published lessons.
+- Published learning paths.
+- Published write-ups.
+- Published resources.
+- Glossary entries.
+
+Exclude:
+
+- Draft content.
+- Archived content.
+- Admin pages.
+- Dashboard pages.
+- Login and authentication callbacks.
+- Internal API routes.
+
+Use the Next.js sitemap convention or a generated sitemap based on the content registry.
+
+### **C. Robots.txt**
+
+Generate:
+
+```
+/robots.txt
+```
+
+Example:
+
+```
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+Sitemap: https://academy.example.com/sitemap.xml
+```
+
+Replace the example domain with the actual production domain.
+
+Remember: `robots.txt` is not an access-control mechanism. Private pages must still require server-side authorization.
+
+### **D. Canonical URLs**
+
+Each public content page should have one canonical URL.
+
+This prevents duplicate indexing caused by multiple URLs displaying the same content.
+
+### **E. Error pages**
+
+Implement:
+
+- Custom 404 page.
+- Appropriate 404 HTTP response for missing content.
+- Useful error messages.
+- Recovery links to the learning catalog and homepage.
+
+Do not return a successful 200 status for pages that do not exist.
+
+## **4. Structured data**
+
+Structured data helps search engines interpret content.
+
+Use JSON-LD where appropriate.
+
+Recommended types:
+
+| Page          | Structured data                                |
+| ------------- | ---------------------------------------------- |
+| Homepage      | `Organization` and `WebSite`                   |
+| Tutorial      | `Article` or `TechArticle` where applicable    |
+| Write-up      | `Article`                                      |
+| Learning path | `BreadcrumbList` and appropriate page metadata |
+| Glossary      | `DefinedTerm` where suitable                   |
+
+Example:
+
+```
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  headline: "Linux Filesystem Navigation",
+  description: "Learn essential Linux navigation commands.",
+  author: {
+    "@type": "Organization",
+    name: "FORGESEC ACADEMY",
+  },
+};
+```
+
+Serialize structured data safely before inserting it into the page. Do not inject untrusted content into script elements.
+
+Do not promise Google rich results simply because structured data exists. Search engines decide whether to display them.
+
+## **5. Internal linking strategy**
+
+Internal links are particularly valuable for educational platforms.
+
+For example:
+
+```
+Linux Filesystem Navigation
+        |
+        ├── Linux Permissions
+        ├── File Management
+        ├── Linux Command Reference
+        └── Linux Fundamentals Path
+```
+
+Each lesson should link to relevant:
+
+- Previous lessons.
+- Next lessons.
+- Related lessons.
+- Glossary terms.
+- Reference materials.
+- Learning paths.
+
+This creates a connected learning experience.
+
+Use meaningful anchor text.
+
+Prefer:
+
+`Learn about Linux file permissions`
+
+Avoid:
+
+`Click here`
+
+Do not create automatic links to every occurrence of a technical word. Excessive linking makes lessons difficult to read.
+
+## **6. Content SEO standards**
+
+Search visibility depends heavily on content quality.
+
+Every published lesson should have:
+
+1. A descriptive title.
+2. A clear introduction.
+3. Learning objectives.
+4. Proper heading hierarchy.
+5. Original explanations.
+6. Practical examples.
+7. Correct code blocks.
+8. Relevant internal links.
+9. References where appropriate.
+10. A useful conclusion.
+
+Avoid publishing many thin articles just to increase page count.
+
+For cybersecurity content, technical accuracy and responsible disclosure are more important than keyword density.
+
+**Important:** Do not use AI-generated content volume as the primary measure of SEO success. Original, tested and well-explained material is more valuable.
+
+## **7. Performance architecture**
+
+The platform should remain responsive even when students have slower internet connections or modest hardware.
+
+Use the following strategy:
+
+**Student browser**
+
+Loads public learning pages
+
+**Static content**
+
+Cached HTML, CSS, JS and images
+
+**Dynamic services**
+
+Authentication and student data
+
+Public content and personalized data follow separate rendering and caching paths.
+
+### **A. Static generation**
+
+Generate public lessons and other stable content at build time whenever practical.
+
+Benefits:
+
+- Less database traffic.
+- Faster initial rendering.
+- Lower server workload.
+- Easier content caching.
+
+### **B. Server Components**
+
+Use React Server Components by default.
+
+Only use Client Components when interaction requires them, such as:
+
+- Search dialog.
+- Interactive filters.
+- Bookmark controls.
+- Lesson completion.
+- Theme switching.
+
+This reduces unnecessary JavaScript delivered to visitors.
+
+### **C. Database optimization**
+
+Use:
+
+- Indexed columns for frequently filtered fields.
+- Pagination for large tables.
+- Aggregate queries for analytics.
+- Narrow database selections.
+- Appropriate query limits.
+
+Never download an entire table to the browser just to display a few records.
+
+## **8. Image optimization**
+
+Use Next.js image optimization where supported by the deployment configuration.
+
+Guidelines:
+
+- Prefer WebP or AVIF when suitable.
+- Specify image dimensions.
+- Use responsive image sizes.
+- Lazy-load below-the-fold images.
+- Avoid unnecessarily large screenshots.
+- Compress diagrams and illustrations.
+- Use meaningful alternative text.
+
+Do not store large image collections in Git just because Git is already used for MDX content.
+
+The initial platform can use small, optimized educational images. Larger media storage can be evaluated later.
+
+## **9. JavaScript and dependency budget**
+
+Every package adds some maintenance and potentially some client-side weight.
+
+Use these rules:
+
+- Avoid unnecessary frontend dependencies.
+- Do not install multiple libraries for the same purpose.
+- Prefer browser-native APIs where appropriate.
+- Lazy-load large interactive components.
+- Avoid loading admin components on public pages.
+- Avoid shipping server-only packages to the browser.
+- Analyze production bundles before launch.
+
+For FORGESEC ACADEMY, static learning content should not need a large JavaScript bundle.
+
+## **10. Core Web Vitals**
+
+Measure these three important performance metrics.
+
+| Metric                          | Good target   |
+| ------------------------------- | ------------- |
+| LCP — Largest Contentful Paint  | ≤ 2.5 seconds |
+| INP — Interaction to Next Paint | ≤ 200 ms      |
+| CLS — Cumulative Layout Shift   | ≤ 0.1         |
+
+These are Google's recommended good thresholds, assessed at the 75th percentile of real-user measurements.
+
+### **What each metric means**
+
+**LCP:** How quickly the main content appears.
+
+Analogy: How long it takes for a textbook to arrive after opening a library page.
+
+**INP:** How quickly the interface responds to interactions.
+
+Analogy: How quickly a light switch turns on after you press it.
+
+**CLS:** How much the page unexpectedly moves while loading.
+
+Analogy: Trying to read a book while someone keeps moving the paragraphs around.
+
+Use Lighthouse and PageSpeed Insights during development. Real-user monitoring can be introduced later if traffic justifies it.
+
+## **11. Accessibility implementation**
+
+Accessibility is not an optional visual improvement. It makes the Academy usable by more students.
+
+Target **WCAG 2.2 Level AA** for the platform.
+
+### **A. Semantic HTML**
+
+Use appropriate elements:
+
+```
+<header>
+  <nav aria-label="Main navigation">
+    <!-- Navigation links -->
+  </nav>
+</header>
+
+<main>
+  <article>
+    <h1>Linux Fundamentals</h1>
+    <p>Introduction to Linux...</p>
+  </article>
+</main>
+
+<footer>
+  <!-- Footer content -->
+</footer>
+```
+
+Use headings in logical order.
+
+Do not choose an HTML element simply because its default appearance looks convenient.
+
+### **B. Keyboard navigation**
+
+Users should be able to:
+
+- Navigate links with Tab.
+- Activate controls with Enter or Space.
+- Close dialogs with Escape.
+- Navigate menus with appropriate keyboard controls.
+- Identify the currently focused element.
+
+### **C. Color contrast**
+
+Maintain sufficient contrast between:
+
+- Text and background.
+- Buttons and surrounding surfaces.
+- Form labels and controls.
+- Error and success messages.
+
+Do not communicate errors only through red color.
+
+### **D. Images**
+
+Every meaningful image needs appropriate alternative text.
+
+Decorative images should use empty alternative text.
+
+For example:
+
+```
+<img src="/images/network-topology.webp"
+     alt="Diagram showing a router connecting three local devices">
+```
+
+### **E. Code blocks**
+
+Code blocks must:
+
+- Be readable with screen readers.
+- Preserve meaningful line structure.
+- Avoid relying only on syntax colors.
+- Provide keyboard-accessible copy controls.
+- Allow horizontal scrolling where needed.
+
+### **F. Forms**
+
+Every input must have a programmatically associated label.
+
+Error messages should identify the field and explain how to fix the problem.
+
+## **12. Accessibility and SEO testing tools**
+
+Use a small testing toolkit.
+
+| Tool                  | Purpose                                   |
+| --------------------- | ----------------------------------------- |
+| Lighthouse            | Performance, accessibility and SEO audits |
+| PageSpeed Insights    | Field and lab performance information     |
+| axe-core              | Automated accessibility testing           |
+| Playwright            | Browser-based functional testing          |
+| Google Search Console | Search indexing and visibility            |
+| Rich Results Test     | Structured data validation                |
+| WAVE                  | Accessibility inspection                  |
+
+Automated accessibility testing cannot detect every usability problem. Include keyboard testing and manual review.
+
+## **13. Search engine indexing strategy**
+
+Once production deployment is ready:
+
+1. Configure the final custom domain.
+2. Verify domain ownership in Google Search Console.
+3. Submit the sitemap.
+4. Inspect important public URLs.
+5. Check indexing errors.
+6. Monitor search performance.
+7. Update broken links and incorrect metadata.
+
+Do not attempt to index staging or preview deployments.
+
+Use appropriate `noindex` metadata for private or non-production pages, in addition to authentication protection.
+
+Remember that `noindex` does not secure a page.
+
+## **14. Performance and security boundaries**
+
+SEO and performance must never weaken the security architecture.
+
+| Requirement         | Rule                               |
+| ------------------- | ---------------------------------- |
+| Student dashboard   | Personalized, private responses    |
+| Admin dashboard     | Administrator-only                 |
+| Public lessons      | Publicly cacheable                 |
+| User progress       | Never shared-cache                 |
+| Authenticated APIs  | Proper authorization               |
+| Search index        | Published content only             |
+| Draft content       | Excluded from public output        |
+| Environment secrets | Never included in metadata or HTML |
+
+The public search index must not expose unpublished content, internal editorial notes or sensitive information.
+
+## **15. Implementation structure**
+
+Suggested additions:
+
+```
+src/
+├── app/
+│   ├── robots.ts
+│   ├── sitemap.ts
+│   ├── not-found.tsx
+│   └── opengraph-image.tsx
+│
+├── lib/
+│   ├── seo/
+│   │   ├── metadata.ts
+│   │   ├── canonical.ts
+│   │   └── structured-data.ts
+│   │
+│   └── performance/
+│       └── image-config.ts
+│
+scripts/
+├── validate-content.ts
+├── generate-search-index.ts
+└── validate-seo.ts
+```
+
+Keep SEO generation connected to the existing content registry.
+
+Do not create a separate database for SEO metadata.
+
+## **16. Acceptance criteria**
+
+| Area             | Acceptance condition                                  |
+| ---------------- | ----------------------------------------------------- |
+| Metadata         | Every public content page has unique metadata         |
+| Canonical URLs   | Correct production URL                                |
+| Sitemap          | Contains published public pages                       |
+| Robots           | Correct crawl instructions                            |
+| Structured data  | Valid JSON-LD                                         |
+| Internal linking | Relevant educational links                            |
+| Static rendering | Public content statically generated where appropriate |
+| Caching          | No student-data leakage                               |
+| Images           | Optimized dimensions and formats                      |
+| JavaScript       | No unnecessary client bundles                         |
+| LCP              | Good target ≤ 2.5 s                                   |
+| INP              | Good target ≤ 200 ms                                  |
+| CLS              | Good target ≤ 0.1                                     |
+| Accessibility    | WCAG 2.2 AA target                                    |
+| Keyboard         | Core flows usable without a mouse                     |
+| Search Console   | Domain verified and sitemap submitted                 |
+
+## **17. Implementation checklist**
+
+**Part 32 implementation tracker**
+
+0/26
+
+Implement metadata generation
+
+Generate canonical URLs
+
+Implement sitemap.xml
+
+Implement robots.txt
+
+Create custom 404 page
+
+Add Open Graph metadata
+
+Implement structured data
+
+Validate JSON-LD output
+
+Add internal linking standards
+
+Validate MDX content SEO fields
+
+Configure static generation
+
+Audit Server and Client Components
+
+Optimize image delivery
+
+Optimize font loading
+
+Review database indexes
+
+Analyze production JavaScript bundles
+
+Measure LCP, INP and CLS
+
+Run Lighthouse audits
+
+Integrate axe-core tests
+
+Test keyboard navigation
+
+Review screen-reader semantics
+
+Verify contrast requirements
+
+Test public and private caching
+
+Configure Google Search Console
+
+Submit production sitemap
+
+Review indexing and crawl errors
+
+## **18. Final decisions**
+
+| Area               | Decision                              |
+| ------------------ | ------------------------------------- |
+| SEO                | Content-driven                        |
+| Metadata           | Generated from content registry       |
+| Sitemap            | Automatically generated               |
+| Robots             | Automatically generated               |
+| Structured data    | JSON-LD where appropriate             |
+| Public rendering   | Static generation where practical     |
+| Frontend           | Server Components by default          |
+| Images             | Optimized                             |
+| Performance        | Core Web Vitals targets               |
+| Accessibility      | WCAG 2.2 AA                           |
+| Testing            | Lighthouse, axe-core, Playwright      |
+| Search Console     | Configure after production deployment |
+| External analytics | Not required for SEO                  |
+
+**Part 32 complete.**
+
+FORGESEC ACADEMY now has a defined strategy for search visibility, fast delivery and accessibility.
+
+**Next: Part 33 — Privacy, Legal & Platform Policies.**
+
+Two planning parts remain after Part 33 before the final project closure in Part 35.

@@ -1,0 +1,647 @@
+# **Part 07 — Authentication, Authorization & Account Security**
+
+**Objective:** Design a secure account system for FORGESEC ACADEMY using Supabase Auth, PostgreSQL, Next.js and TypeScript.
+
+Authentication answers: *Who are you?*
+
+Authorization answers: *What are you allowed to do?*
+
+These are separate security responsibilities. A successful login must never automatically grant access to administrative functionality.
+
+## **1. Authentication architecture**
+
+Use Supabase Auth as the identity and credential management system. Do not build your own password authentication system.
+
+**User**
+
+Register · Login · Reset password
+
+**Next.js Authentication Layer**
+
+Session handling · Identity verification · Route guards
+
+**Supabase Auth**
+
+Passwords, identities, email verification, sessions and tokens
+
+**PostgreSQL**
+
+Profiles, roles, permissions and user-related data
+
+**Row Level Security (RLS)**
+
+Enforces which database records each user can access
+
+Think of it like a university:
+
+- Supabase Auth checks your identity card.
+- The role system determines whether you're a student, instructor or administrator.
+- RLS determines which records you can access.
+
+A valid identity card does not make someone a university administrator.
+
+## **2. Account roles and permissions**
+
+Use the three roles already defined in Part 06.
+
+| Role       | Primary permissions                                            |
+| ---------- | -------------------------------------------------------------- |
+| Student    | Manage own learning activity, bookmarks and profile            |
+| Instructor | Manage assigned educational content and respond to questions   |
+| Admin      | Manage users, roles, content publication and platform settings |
+
+### **Default role assignment**
+
+Every new registration receives:
+
+`student`
+
+There must be no role selector on the registration page.
+
+Never accept a role from:
+
+- Registration form fields.
+- User-controlled metadata.
+- URL parameters.
+- Client-side JavaScript.
+- User-submitted API requests.
+
+An attacker could otherwise submit `admin` instead of `student`.
+
+### **Role assignment policy**
+
+| Action                        | Who can perform it?            |
+| ----------------------------- | ------------------------------ |
+| Register as student           | Anyone                         |
+| Promote student to instructor | Admin                          |
+| Promote instructor to admin   | Trusted administrative process |
+| Remove instructor privileges  | Admin                          |
+| Change own role               | Nobody                         |
+
+The initial administrator must be provisioned through a trusted server-side setup process, not public registration.
+
+**Database source of truth:** `user_roles`.
+
+Do not duplicate roles in the `profiles` table.
+
+## **3. Registration workflow**
+
+Keep registration minimal. The purpose is to get learners into the educational content, not make them complete a lengthy application.
+
+**FORGESEC ACADEMY**
+
+# **Create your account**
+
+Start learning cybersecurity and technology.
+
+Display name
+
+Your name
+
+Email address
+
+you\@example.com
+
+Password
+
+••••••••••••
+
+Use a long, unique password. A password manager is recommended.
+
+**Create account**
+
+Already registered? Sign in
+
+Illustrative registration layout — not a working form.
+
+### **Registration process**
+
+1. User submits display name, email and password.
+2. Next.js validates the submitted fields using Zod.
+3. Supabase Auth creates the identity.
+4. Supabase sends an email verification link.
+5. The verification callback confirms the identity.
+6. A profile is created in `profiles`.
+7. The account receives the `student` role.
+8. The user can access the student dashboard.
+
+### **Profile creation**
+
+The `profiles` table should be associated with `auth.users` through the UUID.
+
+Recommended approach:
+
+- Create the profile using a trusted database trigger or a reliable server-side workflow.
+- Assign the student role through a trusted mechanism.
+- Ensure registration is resilient to partial failures.
+- Do not assume the account creation succeeded just because the profile creation request was sent.
+
+A database trigger is useful because it can create the profile automatically whenever a new Auth user is inserted.
+
+The trigger must not accept a user-supplied role as authoritative.
+
+## **4. Login and logout**
+
+### **Login**
+
+Required fields:
+
+- Email address.
+- Password.
+
+Workflow:
+
+```
+User submits credentials
+        |
+        v
+Next.js validates input
+        |
+        v
+Supabase Auth verifies credentials
+        |
+        v
+Server establishes session
+        |
+        v
+Verify user identity
+        |
+        v
+Check account status
+        |
+        v
+Redirect to dashboard
+```
+
+If authentication fails, show a generic message such as:
+
+`Invalid email or password.`
+
+Do not reveal whether an email address is registered. This prevents unnecessary account enumeration.
+
+### **Logout**
+
+Logout must invalidate the active authentication session through Supabase Auth and clear the relevant session cookies.
+
+After logout:
+
+- Protected dashboard pages should reject access.
+- Administrative pages should reject access.
+- The user should be redirected to a public page.
+- Cached private data must not remain accessible to another user on the same device.
+
+## **5. Email verification**
+
+Recommended for launch
+
+Email verification helps reduce fake registrations and protects account recovery.
+
+### **Workflow**
+
+```
+Registration
+     |
+     v
+Verification email
+     |
+     v
+User opens verification link
+     |
+     v
+Academy callback
+     |
+     v
+Supabase confirms identity
+     |
+     v
+Verified account
+```
+
+Important requirements:
+
+- Use your official Academy domain for redirects.
+- Configure allowed redirect URLs in Supabase.
+- Avoid open redirects through user-controlled callback parameters.
+- Provide a resend verification option.
+- Display a clear message when verification is pending.
+- Do not expose sensitive account details in verification URLs or application logs.
+
+For a public educational platform, email verification is a reasonable balance between usability and abuse prevention.
+
+## **6. Password recovery and password changes**
+
+Implement two separate workflows.
+
+### **A. Forgot password**
+
+```
+User enters email
+       |
+       v
+Supabase sends reset email
+       |
+       v
+User opens reset link
+       |
+       v
+Academy verifies recovery session
+       |
+       v
+User sets new password
+       |
+       v
+Password updated
+```
+
+The application should not reveal whether the submitted email exists.
+
+### **B. Change password**
+
+For an authenticated user:
+
+1. Verify the current authenticated session.
+2. Validate the new password.
+3. Submit the password update through Supabase Auth.
+4. Notify the user that the password was changed.
+
+Additional safeguards:
+
+- Do not store passwords in PostgreSQL.
+- Do not log passwords or reset tokens.
+- Restrict recovery redirects to approved domains.
+- Consider revoking other sessions after sensitive account recovery.
+
+Supabase Auth manages password storage and verification. The Academy should never implement its own password hashing or password database.
+
+## **7. Session management in Next.js**
+
+This is one of the most important implementation details.
+
+Use the official Supabase SSR integration with:
+
+- `@supabase/ssr`
+- `@supabase/supabase-js`
+
+The application needs separate Supabase clients for browser and server environments.
+
+| Client         | Responsibility                                                     |
+| -------------- | ------------------------------------------------------------------ |
+| Browser client | Client-side authentication interactions                            |
+| Server client  | Server Components, Server Actions and Route Handlers               |
+| Admin client   | Restricted administrative operations requiring elevated privileges |
+
+### **Session storage**
+
+Use secure cookies managed by the Supabase SSR integration.
+
+Configure appropriate cookie properties:
+
+- `HttpOnly` where applicable.
+- `Secure` in production.
+- Appropriate `SameSite` policy.
+- Restricted cookie scope.
+- Correct expiration and refresh behavior.
+
+Do not manually store authentication tokens in `localStorage`.
+
+### **Verify the user on the server**
+
+When a protected server operation needs an authenticated identity, use a server-verified identity rather than trusting user information supplied by the browser.
+
+For example, the conceptual flow is:
+
+```
+const supabase = await createClient();
+
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser();
+
+if (error || !user) {
+  throw new Error("Unauthorized");
+}
+```
+
+This is illustrative; the actual client factory should follow the current Supabase SSR integration.
+
+**Important:** Never trust a submitted `user_id` as proof of identity. Obtain the identity from the verified session.
+
+## **8. Route protection**
+
+The following routes require authentication.
+
+| Route                     | Access                     |
+| ------------------------- | -------------------------- |
+| `/dashboard`              | Student, instructor, admin |
+| `/dashboard/learning`     | Authenticated users        |
+| `/dashboard/bookmarks`    | Authenticated users        |
+| `/dashboard/history`      | Authenticated users        |
+| `/dashboard/quiz-results` | Authenticated users        |
+| `/dashboard/profile`      | Authenticated users        |
+| `/admin`                  | Admin only                 |
+| `/admin/users`            | Admin only                 |
+| `/admin/paths`            | Admin only                 |
+| `/admin/quizzes`          | Admin only                 |
+| `/admin/assignments`      | Admin only                 |
+
+Public routes such as `/learn/tutorials/[slug]` must remain accessible without an account.
+
+### **Important distinction: navigation versus security**
+
+A Next.js proxy or middleware layer can redirect users away from protected routes, but that is not sufficient security.
+
+Every sensitive operation must independently check:
+
+1. Is there an authenticated user?
+2. Does the user have the required role?
+3. Is the user authorized to access this particular resource?
+
+For example, hiding an admin button does not prevent someone from calling the underlying Server Action directly.
+
+## **9. Authorization inside Server Actions**
+
+All sensitive operations must validate authorization on the server.
+
+Consider an operation that promotes a student to instructor.
+
+The correct sequence is:
+
+```
+Admin submits promotion request
+          |
+          v
+Verify authenticated identity
+          |
+          v
+Check admin role
+          |
+          v
+Validate target user and requested role
+          |
+          v
+Perform authorized database operation
+          |
+          v
+Write audit log
+          |
+          v
+Return result
+```
+
+Never implement role assignment like this:
+
+```
+// INSECURE: user controls the requested role.
+await supabase
+  .from("user_roles")
+  .insert({
+    user_id: submittedUserId,
+    role: submittedRole,
+  });
+```
+
+Instead, the server must derive the acting user's identity from the verified session and verify administrator privileges before changing roles.
+
+The same principle applies to:
+
+- Publishing quizzes.
+- Editing assignments.
+- Changing user permissions.
+- Suspending accounts.
+- Accessing private student information.
+
+## **10. PostgreSQL Row Level Security**
+
+RLS is the database-level security boundary.
+
+Even if someone bypasses your frontend and attempts direct database access, RLS should prevent unauthorized operations.
+
+### **Recommended policy model**
+
+| Table                 | Student          | Instructor          | Admin                    |
+| --------------------- | ---------------- | ------------------- | ------------------------ |
+| `profiles`            | Own profile      | Own profile         | Authorized management    |
+| `user_roles`          | Read own roles   | Read own roles      | Manage roles             |
+| `lesson_progress`     | Own records      | Own records         | Authorized management    |
+| `bookmarks`           | Own records      | Own records         | Authorized management    |
+| `content_activity`    | Own records      | Own records         | Authorized management    |
+| `quiz_attempts`       | Own results      | Own results         | Authorized management    |
+| `quiz_answer_keys`    | No direct access | No direct access    | Restricted server access |
+| `assignments`         | Read published   | Assigned management | Full management          |
+| `assignment_progress` | Own records      | Authorized review   | Authorized management    |
+| `admin_audit_logs`    | No access        | No access           | Restricted access        |
+
+This is a starting permission model. Instructor access must eventually be restricted to explicitly assigned content and students, not automatically granted across the entire platform.
+
+### **Profile update restriction**
+
+A subtle but important issue: RLS controls which rows a user can update, but does not automatically make every column safe to update.
+
+Students may update:
+
+- `display_name`
+- `avatar_url`
+- `bio`
+
+They must not be able to update:
+
+- `id`
+- `created_at`
+- Administrative fields.
+- Role-related data.
+
+Use explicit server-side field allowlists and appropriate database permissions.
+
+### **Quiz answer protection**
+
+Students must never be able to read:
+
+`quiz_answer_keys`
+
+Otherwise, someone could inspect the database/API and retrieve the correct answers before submitting a quiz.
+
+The scoring process must happen on the server.
+
+## **11. Account security and abuse prevention**
+
+A cybersecurity learning platform should demonstrate good security practices from its first release.
+
+| Threat                       | Recommended protection                    |
+| ---------------------------- | ----------------------------------------- |
+| Account enumeration          | Generic login and recovery messages       |
+| Brute-force attempts         | Authentication rate limits                |
+| Fake registrations           | Email verification                        |
+| Privilege escalation         | Server-side role verification             |
+| Unauthorized database access | RLS                                       |
+| Session theft                | Secure cookie handling, HTTPS             |
+| CSRF                         | Appropriate cookie and origin protections |
+| Open redirect                | Approved redirect URL allowlist           |
+| Password exposure            | Supabase Auth; never log credentials      |
+| Unauthorized role changes    | Restricted role-management operation      |
+| API abuse                    | Rate limits on sensitive operations       |
+
+### **CAPTCHA?**
+
+Do not introduce CAPTCHA everywhere on day one.
+
+Start with Supabase's available abuse protections and rate limiting. Add CAPTCHA if actual registration or login abuse justifies the additional friction.
+
+### **Account suspension**
+
+For future administrative account management, introduce an account status field, for example:
+
+`active`, `suspended`, `deactivated`.
+
+This is an additional database migration beyond Part 06.
+
+Suspension must block protected application operations, not merely hide the user's dashboard. Where necessary, also revoke or ban the Auth identity through a trusted administrative operation.
+
+## **12. Account deletion**
+
+Students should eventually be able to request account deletion.
+
+The process should:
+
+1. Verify the authenticated user.
+2. Require confirmation.
+3. Delete or anonymize personal data according to the retention policy.
+4. Remove related profile, progress, bookmark and activity records as appropriate.
+5. Handle Auth identity deletion through a trusted server-side operation.
+6. Preserve only legally or operationally justified audit information.
+
+The existing foreign-key cascade design in Part 06 supports much of this.
+
+Do not expose the Supabase service-role key to the browser to perform deletion.
+
+## **13. Suggested project structure**
+
+Add the following module structure to the existing architecture:
+
+```
+src/
+├── modules/
+│   └── auth/
+│       ├── schemas/
+│       │   ├── login.schema.ts
+│       │   ├── register.schema.ts
+│       │   └── password.schema.ts
+│       ├── services/
+│       │   ├── auth.service.ts
+│       │   └── permission.service.ts
+│       ├── actions/
+│       │   ├── login.action.ts
+│       │   ├── register.action.ts
+│       │   ├── logout.action.ts
+│       │   └── password.action.ts
+│       ├── guards/
+│       │   ├── require-user.ts
+│       │   └── require-role.ts
+│       └── types/
+│           └── auth.types.ts
+│
+├── lib/
+│   └── supabase/
+│       ├── client.ts
+│       ├── server.ts
+│       └── admin.ts
+│
+└── app/
+    ├── (auth)/
+    │   ├── login/
+    │   ├── register/
+    │   ├── forgot-password/
+    │   └── reset-password/
+    └── auth/
+        └── callback/
+```
+
+Keep business rules in services and permission checks reusable. Server Actions should not become the place where all authentication and authorization logic is duplicated.
+
+## **14. Testing and acceptance criteria**
+
+Before allowing real students to register, test these scenarios.
+
+**Authentication security checklist**
+
+0 of 15 verified
+
+0%
+
+A student can register with valid details.
+
+New accounts receive only the student role.
+
+Email verification works.
+
+Unverified accounts cannot access restricted features if verification is required.
+
+Login and logout work correctly.
+
+Password recovery works.
+
+A logged-out user cannot access the dashboard.
+
+A student cannot access admin pages.
+
+A student cannot promote themselves to instructor or admin.
+
+A student cannot access another student's progress.
+
+A student cannot retrieve quiz answer keys.
+
+Direct Server Action calls enforce authorization.
+
+RLS prevents unauthorized database access.
+
+Service-role credentials never reach the browser.
+
+Account deletion follows the retention policy.
+
+Reset checklist
+
+These are test requirements, not claims that the implementation already passes them.
+
+## **15. Implementation sequence**
+
+Build authentication in this order:
+
+| Step | Implementation                       | Priority |
+| ---- | ------------------------------------ | -------- |
+| 1    | Configure Supabase project and Auth  | P0       |
+| 2    | Configure SSR browser/server clients | P0       |
+| 3    | Create profile and role provisioning | P0       |
+| 4    | Registration and email verification  | P0       |
+| 5    | Login and logout                     | P0       |
+| 6    | Password recovery                    | P0       |
+| 7    | Reusable authentication guards       | P0       |
+| 8    | Role-based authorization             | P0       |
+| 9    | RLS policies and security tests      | P0       |
+| 10   | Admin role-management interface      | P1       |
+| 11   | Account suspension and deletion      | P1       |
+
+Do not build the complete admin interface before the underlying permissions and database policies are tested.
+
+## **Part 07 — Final architectural decisions**
+
+| Component                    | Decision                                    |
+| ---------------------------- | ------------------------------------------- |
+| Identity provider            | Supabase Auth                               |
+| Database                     | Supabase PostgreSQL                         |
+| Roles                        | Student, Instructor, Admin                  |
+| Default role                 | Student                                     |
+| Verification                 | Email verification                          |
+| Session handling             | Supabase SSR cookies                        |
+| Server identity verification | Verified Supabase user                      |
+| Authorization                | Server-side RBAC                            |
+| Database authorization       | PostgreSQL RLS                              |
+| Password recovery            | Supabase Auth                               |
+| Elevated operations          | Server-only restricted client               |
+| Password storage             | Managed by Supabase Auth                    |
+| Account security             | Rate limits, validation and secure sessions |
+
+**Key principle:** Authentication establishes identity; authorization controls access; RLS enforces database boundaries. All three are necessary.
+
+**Next: Part 08 — Learning Management System: Student Dashboard, Learning Progress, Bookmarks & Learning History.**
+
+This will connect the Git-based educational content from Part 04 with the database structures from Part 06 and the authentication system designed here.

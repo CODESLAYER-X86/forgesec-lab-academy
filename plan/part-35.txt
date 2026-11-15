@@ -1,0 +1,449 @@
+# **Part 35 — Final Acceptance Criteria & Project Closure**
+
+Final planning part
+
+**Objective:** Establish the final definition of FORGESEC ACADEMY Version 1.0, define what counts as complete, freeze the initial scope and transition from planning to implementation.
+
+We have reached the end of the architecture-planning sequence. This part consolidates the decisions from Parts 01–34 into one acceptance standard.
+
+The central principle is simple: **Version 1.0 must be a secure, functional learning platform—not an unfinished platform containing dozens of partially implemented features.**
+
+## **1. Final product definition**
+
+FORGESEC ACADEMY is a free, self-paced cybersecurity and technical education platform.
+
+Its primary purpose is to:
+
+- Publish structured cybersecurity learning materials.
+- Provide practical tutorials and technical write-ups.
+- Organize lessons into learning paths.
+- Track student learning progress.
+- Provide quizzes and practical assignments.
+- Give administrators control over users and educational content.
+- Demonstrate the technical and educational capabilities of FORGESEC LABS.
+
+It is not initially intended to be a hosted cybersecurity laboratory or a complete replacement for platforms such as Hack The Box.
+
+## **2. Version 1.0 feature acceptance matrix**
+
+This is the final scope.
+
+| Module         | Version 1.0 requirement                     | Priority |
+| -------------- | ------------------------------------------- | -------- |
+| Homepage       | Functional public homepage                  | P0       |
+| Navigation     | Responsive global navigation                | P0       |
+| Tutorials      | MDX-based educational content               | P0       |
+| Write-ups      | Public technical write-ups                  | P0       |
+| Learning paths | Structured lessons and progression          | P0       |
+| Search         | Static content search                       | P0       |
+| Google OAuth   | Login and logout                            | P0       |
+| Profiles       | Basic student profiles                      | P0       |
+| Dashboard      | Student learning dashboard                  | P0       |
+| Progress       | Lesson completion tracking                  | P0       |
+| Bookmarks      | Save and revisit content                    | P0       |
+| Quizzes        | Basic question types and scoring            | P0       |
+| Assignments    | Self-reported practical completion          | P0       |
+| Admin          | User and supported educational management   | P0       |
+| Permissions    | Student, instructor and admin authorization | P0       |
+| Audit logs     | Sensitive administrative activity           | P0       |
+| Analytics      | Essential platform metrics                  | P0       |
+| SEO            | Metadata, sitemap and indexing              | P0       |
+| Accessibility  | WCAG 2.2 AA target                          | P0       |
+| Privacy        | Published policies and request workflow     | P0       |
+| Security       | RLS, validation and server authorization    | P0       |
+| Deployment     | Production-ready release                    | P0       |
+
+P0 means required for the intended Version 1.0 release. It does not mean every feature must be developed simultaneously.
+
+## **3. Final role and permission model**
+
+| Capability                             | Guest | Student | Instructor       | Admin |
+| -------------------------------------- | ----- | ------- | ---------------- | ----- |
+| Browse public content                  | Yes   | Yes     | Yes              | Yes   |
+| Search content                         | Yes   | Yes     | Yes              | Yes   |
+| Google login                           | Yes   | Yes     | Yes              | Yes   |
+| Student dashboard                      | No    | Yes     | If assigned      | Yes   |
+| Track personal progress                | No    | Yes     | If applicable    | Yes   |
+| Bookmark content                       | No    | Yes     | If applicable    | Yes   |
+| Take quizzes                           | No    | Yes     | Yes              | Yes   |
+| Complete assignments                   | No    | Yes     | Yes              | Yes   |
+| Create authorized educational material | No    | No      | Permission-based | Yes   |
+| Manage assigned reviews                | No    | No      | Permission-based | Yes   |
+| Manage users                           | No    | No      | No               | Yes   |
+| Manage permissions                     | No    | No      | No               | Yes   |
+| View administrative audit logs         | No    | No      | No               | Yes   |
+| Manage platform settings               | No    | No      | No               | Yes   |
+
+**Important:** Admin remains an environment-based allowlist, not an ordinary database role. Instructor capabilities remain permission-based.
+
+## **4. Learning system acceptance criteria**
+
+The learning system is the central product feature.
+
+A student must be able to:
+
+1. Browse available learning paths.
+2. View prerequisites and learning objectives.
+3. Open individual lessons.
+4. Read formatted technical content.
+5. Copy commands and code examples.
+6. Navigate between lessons.
+7. Mark lessons as completed.
+8. See saved progress.
+9. Bookmark useful lessons.
+10. Continue learning from the dashboard.
+
+### **Content quality requirements**
+
+Every published lesson should have:
+
+- A meaningful title.
+- A clear learning objective.
+- An appropriate difficulty level.
+- Accurate technical explanations.
+- Practical examples.
+- Correctly formatted code and commands.
+- Expected output where appropriate.
+- Safety and authorization guidance when relevant.
+- References where useful.
+- A conclusion or key takeaway.
+
+A lesson should not be published merely because its Markdown file compiles.
+
+**Analogy:** A working textbook platform is not necessarily a good textbook. The content itself must teach something correctly.
+
+## **5. Quiz and assignment acceptance criteria**
+
+### **Quizzes**
+
+Version 1.0 must support:
+
+- Single-choice questions.
+- Multiple-select questions.
+- True/false questions.
+- Configurable passing scores.
+- Attempt limits where configured.
+- Score calculation.
+- Result display.
+- Historical attempts.
+- Version-preserved published quizzes.
+
+Answer keys must never be exposed through public content or unauthorized API responses.
+
+### **Assignments**
+
+Version 1.0 must support:
+
+- Assignment descriptions.
+- Objectives.
+- Difficulty.
+- Prerequisites.
+- Estimated completion time.
+- Practical instructions.
+- Safety boundaries.
+- Student self-reported completion.
+
+No remote command execution, VM provisioning or hosted submission infrastructure is required.
+
+## **6. Admin acceptance criteria**
+
+The administrator must be able to:
+
+- View registered users.
+- Search and filter users.
+- Inspect relevant student learning information.
+- Manage supported database-backed roles and permissions.
+- Manage quizzes.
+- Manage assignments.
+- Review available analytics.
+- Inspect audit logs.
+- Access the administrative dashboard.
+
+The following remain deployment-controlled:
+
+- Permanent administrator email allowlist.
+- Production environment secrets.
+- Service-role credentials.
+- Provider configuration.
+- Domain and DNS settings.
+
+There must be no admin interface that exposes these secrets.
+
+## **7. Security acceptance criteria**
+
+Release blocking requirements
+
+These are non-negotiable.
+
+| Requirement         | Acceptance condition                                     |
+| ------------------- | -------------------------------------------------------- |
+| Authentication      | Google OAuth works securely                              |
+| Identity            | Server verifies authenticated users                      |
+| Admin authorization | Only verified allowlisted administrators gain access     |
+| RLS                 | Exposed tables have tested policies                      |
+| User isolation      | Students cannot access another student's private records |
+| Service role        | Never exposed to the browser                             |
+| Quiz answers        | Protected from unauthorized access                       |
+| Input validation    | All mutations validate input                             |
+| Authorization       | Every privileged operation checks permissions            |
+| Audit logs          | Sensitive admin actions are recorded                     |
+| Secrets             | No secrets committed to Git                              |
+| Sessions            | Secure session handling                                  |
+| XSS                 | User-provided content cannot inject executable code      |
+| Redirects           | OAuth callback rejects unsafe redirects                  |
+| Rate limiting       | Sensitive endpoints have suitable abuse protection       |
+| Errors              | No internal secrets or database details leaked           |
+
+An attractive interface does not compensate for broken authorization.
+
+## **8. Privacy, legal and operational acceptance**
+
+Before public launch:
+
+- Privacy Policy is published.
+- Terms of Use are published.
+- Acceptable Use Policy is published.
+- Cybersecurity Learning Disclaimer is published.
+- Cookie/Session Notice is published.
+- Copyright Policy is published.
+- Responsible Disclosure Policy is published.
+- Account deletion/request process is documented.
+- Third-party providers are disclosed accurately.
+- Data retention rules are documented.
+- Administrative responsibilities are assigned.
+- Legal documents receive appropriate Bangladesh-qualified legal review.
+
+Do not make claims about privacy, data residency, retention or security guarantees that the actual infrastructure cannot support.
+
+## **9. SEO, performance and accessibility acceptance**
+
+### **SEO**
+
+- Public pages have meaningful metadata.
+- Canonical URLs are correct.
+- Sitemap contains published content only.
+- Drafts and private pages are excluded.
+- Open Graph metadata is present.
+- Structured data is valid where applicable.
+- Internal links work.
+
+### **Performance**
+
+Use these Core Web Vitals targets:
+
+| Metric | Good target   |
+| ------ | ------------- |
+| LCP    | ≤ 2.5 seconds |
+| INP    | ≤ 200 ms      |
+| CLS    | ≤ 0.1         |
+
+Measure actual production performance rather than assuming a successful local build proves it.
+
+### **Accessibility**
+
+Target WCAG 2.2 AA:
+
+- Keyboard navigation.
+- Visible focus.
+- Correct contrast.
+- Semantic HTML.
+- Accessible forms.
+- Appropriate image descriptions.
+- Screen-reader-friendly interactive components.
+- Reduced-motion support.
+
+## **10. Features explicitly excluded from Version 1.0**
+
+This is an important scope freeze.
+
+**Not part of Version 1.0**
+
+**Hosted cybersecurity labs**
+
+No remote lab servers or provisioning.
+
+**Virtual machines and browser terminals**
+
+No VM or terminal infrastructure.
+
+**Full browser-based CMS**
+
+Content remains Git-managed MDX/YAML.
+
+**AI-powered learning assistant**
+
+No AI API expenses or AI dependency.
+
+**Certificates and credential integration**
+
+Deferred until the core platform is established.
+
+**Community discussions and chat**
+
+No forum or messaging infrastructure.
+
+**Advanced notifications**
+
+No notification infrastructure initially.
+
+**Hosted CTF and Attack & Defense infrastructure**
+
+Separate future project, not an Academy dependency.
+
+These are not rejected ideas. They are deliberately deferred to protect the initial budget and development capacity.
+
+## **11. Release classification**
+
+Organize the remaining work into three groups.
+
+| Classification | Meaning                  | Examples                                                      |
+| -------------- | ------------------------ | ------------------------------------------------------------- |
+| P0             | Required for Version 1.0 | Authentication, lessons, progress, quizzes, security          |
+| P1             | Valuable improvements    | Evidence submissions, instructor review, richer announcements |
+| P2             | Long-term expansion      | Hosted labs, AI features, certificates, community             |
+
+Do not allow P1 or P2 work to delay P0 unnecessarily.
+
+## **12. Final go/no-go criteria**
+
+The application is ready for public release only when all mandatory checks pass.
+
+**Version 1.0 release checklist**
+
+0/23
+
+**Core application**
+
+Public homepage and navigation work
+
+Published lessons and learning paths render correctly
+
+Search returns correct published content
+
+Student dashboard and progress work
+
+**Identity and permissions**
+
+Google OAuth works in production
+
+Student data isolation is verified
+
+Instructor permissions are enforced
+
+Permanent admin allowlist works
+
+**Educational features**
+
+Quiz scoring and historical attempts work
+
+Assignments and completion tracking work
+
+Code blocks and copy buttons work
+
+**Administration**
+
+Admin operations are protected
+
+Audit logs record sensitive changes
+
+Analytics calculations are verified
+
+**Security and privacy**
+
+RLS and server authorization tests pass
+
+No service-role key reaches the browser
+
+Legal policies are published and reviewed
+
+Privacy request process is operational
+
+**Production**
+
+Production build succeeds
+
+Critical automated tests pass
+
+Domain, HTTPS and OAuth configuration work
+
+Database backup and recovery procedure is tested
+
+Production smoke tests pass
+
+A single unchecked release-blocking item means the platform is not ready for public launch.
+
+## **13. Implementation handoff**
+
+Planning is now complete. The next phase is actual software development.
+
+The implementation should follow dependency order rather than building whichever screen looks most interesting.
+
+Recommended initial implementation sequence:
+
+| Order | Implementation milestone                              |
+| ----- | ----------------------------------------------------- |
+| 1     | Repository initialization and development environment |
+| 2     | Next.js foundation, TypeScript and design system      |
+| 3     | Supabase local development and database migrations    |
+| 4     | Google OAuth and server-side authorization            |
+| 5     | Profiles, roles and permanent admin authorization     |
+| 6     | Git-managed content engine and MDX rendering          |
+| 7     | Learning paths, lessons and progress                  |
+| 8     | Student dashboard and bookmarks                       |
+| 9     | Quizzes and assignments                               |
+| 10    | Admin panel and audit logging                         |
+| 11    | Analytics, search and public interface integration    |
+| 12    | SEO, accessibility and security testing               |
+| 13    | Preview deployment and production release             |
+
+This is an implementation dependency sequence, not another planning roadmap. Work can overlap where dependencies allow.
+
+### **Development rules**
+
+1. Build one milestone at a time.
+2. Use scripts for repetitive work.
+3. Avoid unnecessary dependencies.
+4. Keep TypeScript strict.
+5. Test each module before integrating it.
+6. Never bypass security checks to make a feature work.
+7. Keep commits small and understandable.
+8. Update documentation when implementation decisions change.
+9. Put new ideas into a backlog instead of continuously expanding Version 1.0.
+
+## **14. Project closure**
+
+# **FORGESEC ACADEMY**
+
+# **Planning complete.**
+
+**Version 1.0 — Implementation phase**
+
+Architecture
+
+**Defined**
+
+Technology stack
+
+**Selected**
+
+Feature scope
+
+**Frozen**
+
+Security model
+
+**Specified**
+
+Deployment strategy
+
+**Defined**
+
+Acceptance criteria
+
+**Established**
+
+**Final decision:** No more architecture-planning parts are required. Implementation discoveries should be handled as engineering decisions or backlog items, not by extending this planning sequence.
+
+**The next practical action is to initialize the GitHub repository, create the Next.js TypeScript project, configure the development environment, and establish the first working build.**
+
+Part 35 complete.
