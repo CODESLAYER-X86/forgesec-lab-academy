@@ -1,0 +1,827 @@
+# FORGESEC ACADEMY
+
+# Linux Fundamentals: From Zero to Command-Line Confidence
+
+**Module 01: Introduction to Linux and the Terminal**
+
+| Module Information | Details |
+|---|---|
+| Level | Beginner / Essential |
+| Estimated Duration | 15–20 minutes |
+| Course | Linux Fundamentals |
+| Organization | FORGESEC LABS |
+| Prerequisites | None |
+
+---
+
+## Learning Objectives
+
+By the end of this module, you will be able to:
+
+- Understand what Linux is and why it matters in cybersecurity.
+- Recognize the difference between Linux, a distribution, and a kernel.
+- Understand the purpose of a terminal, shell, and Bash.
+- Execute eight essential Linux commands.
+- Read basic command syntax.
+- Find help and documentation using manual pages.
+- Identify basic information about your Linux machine.
+
+You do not need previous Linux experience. We will start with the basics and learn by doing.
+
+---
+
+# A. Welcome to Linux
+
+Welcome to FORGESEC Academy!
+
+Before exploring cybersecurity tools, analyzing systems, or investigating networks, you need to understand the environment in which many of these activities take place.
+
+That environment is often **Linux**.
+
+Linux is an operating system family widely used in servers, cloud infrastructure, networking, embedded devices, and cybersecurity.
+
+You will encounter Linux throughout your cybersecurity journey. Security professionals use it to investigate systems, analyze network activity, run security tools, and understand how computers work.
+
+In this module, we will take your first steps into Linux. You will learn what Linux is, meet the terminal, and execute your first commands.
+
+**Our goal is simple: get you comfortable enough to start using the Linux command line independently.**
+
+# B. Understanding Linux
+
+### What is Linux?
+
+Linux is an open-source operating system ecosystem built around the Linux kernel.
+
+An operating system (OS) is the software that manages a computer's hardware and provides an environment in which applications can run.
+
+For example, Windows and macOS are operating systems. Linux provides another widely used option.
+
+Linux is especially popular because it is:
+
+- **Open-source:** Its source code is available for people to inspect, modify, and distribute under its licenses.
+- **Flexible:** It can be customized for different devices and purposes.
+- **Powerful:** It provides extensive control over system resources and processes.
+- **Widely supported:** It is used across servers, cloud platforms, development environments, and security systems.
+
+### What is the Linux Kernel?
+
+The **kernel** is the central component of an operating system.
+
+It acts as a bridge between software and computer hardware.
+
+For example, when an application needs to use memory, communicate with a device, or access a file, the kernel helps manage that interaction.
+
+Think of it this way:
+
+- Operating system: The complete environment that allows you to use a computer.
+- Kernel: The central component responsible for managing hardware and essential system resources.
+
+Linux technically refers to the kernel, while a complete Linux-based operating system includes the kernel and other software.
+
+### What is a Linux Distribution?
+
+A Linux distribution, commonly called a *distro*, is a complete operating system built around the Linux kernel.
+
+It combines the kernel with system utilities, software, package management tools, and often a graphical desktop environment.
+
+You do not need to build a Linux operating system yourself. You can install a distribution that already provides everything you need.
+
+Here are three popular examples:
+
+**1. Ubuntu**
+
+A beginner-friendly Linux distribution commonly used for learning, software development, and servers.
+
+**2. Kali Linux**
+
+A Debian-based distribution designed for penetration testing, digital forensics, and security assessments. It includes many security-related tools.
+
+**3. Debian**
+
+A well-established Linux distribution known for stability and its extensive software ecosystem.
+
+These distributions share the Linux kernel foundation, but they differ in their software selections, configurations, and intended uses.
+
+### Why Does Linux Matter in Cybersecurity?
+
+Linux is an important part of the cybersecurity industry.
+
+Security professionals frequently use Linux because it provides:
+
+- Access to powerful command-line utilities.
+- Tools for network analysis and security testing.
+- Flexibility to configure and inspect systems.
+- A convenient environment for programming and automation.
+- Access to system information and logs.
+
+For example, a penetration tester might use Kali Linux to assess an authorized target system. A security analyst might use Linux to investigate suspicious system activity.
+
+You will explore these applications later in your cybersecurity journey.
+
+> **Remember:** You do not need to become a Linux expert immediately. Understanding the fundamentals is enough to begin.
+
+# C. Meet the Terminal
+
+Now that you understand what Linux is, let's meet one of the most important parts of working with it: the **terminal**.
+
+### What is a Terminal?
+
+A terminal is an application that allows you to interact with your computer using text-based commands.
+
+Instead of clicking buttons and navigating menus, you type instructions and receive text output.
+
+For example, you can ask Linux to display your username by entering a command.
+
+### What is a Shell?
+
+A shell is a program that reads the commands you enter and interprets them so they can be executed.
+
+It acts as an interface between you and the operating system.
+
+When you type a command into a terminal, the shell processes your input and handles its execution.
+
+### What is Bash?
+
+**Bash** stands for Bourne Again Shell.
+
+It is one of the most widely used shells on Linux systems.
+
+Bash allows users to:
+
+- Execute commands.
+- Work with command-line tools.
+- Manage their working environment.
+- Combine commands and automate tasks.
+
+For now, you only need to understand that Bash is a shell you can use to interact with Linux.
+
+Not every Linux system uses Bash as its default shell, but it is common in Linux environments.
+
+### Understanding the Difference
+
+| Term | Meaning |
+|---|---|
+| Terminal | The application where you enter commands |
+| Shell | The program that interprets your commands |
+| Bash | A specific type of shell |
+
+### A Simple Real-World Analogy
+
+Imagine ordering food at a restaurant.
+
+- **You:** The person requesting something.
+- **Terminal:** The counter where you place your order.
+- **Shell:** The staff member who understands your request and processes it.
+- **Operating system:** The larger restaurant operation that handles the work.
+
+This is a simplified analogy, but it helps explain how the components interact.
+
+### Why Do Cybersecurity Professionals Use the Terminal?
+
+The terminal provides direct access to many system utilities and security tools.
+
+For example, instead of navigating through several graphical menus, you can use a command to check your system information.
+
+It is also useful when:
+
+- Working with remote servers.
+- Investigating suspicious activity.
+- Running security tools.
+- Managing systems without a graphical interface.
+- Automating repetitive tasks.
+
+You will use the terminal frequently throughout this course.
+
+# D. Your First Linux Commands
+
+It's time to get practical.
+
+Linux commands are instructions that tell your system to perform specific tasks.
+
+We will start with eight simple commands. These commands will help you identify yourself, understand your system, and access documentation.
+
+**Important:** The terminal outputs below are illustrative examples. Your actual results will vary depending on your username, machine, distribution, kernel version, and current time.
+
+### 1. `whoami` — Identify Your Username
+
+The `whoami` command displays the username of the current effective user.
+
+It is useful when checking which account you are currently using, particularly when working with multiple accounts.
+
+**Syntax:**
+
+```bash
+whoami
+```
+
+**Example:**
+
+```bash
+student@linux:~$ whoami
+student
+```
+
+**Understanding the output:**
+
+The output is `student`, which means the current effective user is named `student`.
+
+Your output will display your own username.
+
+### 2. `pwd` — Find Your Current Directory
+
+The `pwd` command stands for *Print Working Directory*.
+
+It displays the full path of your current working directory (the location you are currently working in).
+
+**Syntax:**
+
+```bash
+pwd
+```
+
+**Example:**
+
+```bash
+student@linux:~$ pwd
+/home/student
+```
+
+**Understanding the output:**
+
+The output `/home/student` indicates that the current working directory is the `student` user's home directory.
+
+The directory is simply the Linux term for a folder.
+
+You will explore directories in more detail in a later module.
+
+### 3. `hostname` — Identify Your Machine
+
+The `hostname` command displays the hostname assigned to your computer.
+
+A hostname is the name used to identify a machine on a network.
+
+**Syntax:**
+
+```bash
+hostname
+```
+
+**Example:**
+
+```bash
+student@linux:~$ hostname
+linux
+```
+
+**Understanding the output:**
+
+The machine's hostname is `linux`.
+
+Your computer may have a different hostname, such as `ubuntu`, `kali`, or a custom name.
+
+### 4. `uname -r` — Check Your Kernel Version
+
+The `uname` command displays information about the system.
+
+When used with the `-r` option, it displays the Linux kernel release version.
+
+**Syntax:**
+
+```bash
+uname -r
+```
+
+**Example:**
+
+```bash
+student@linux:~$ uname -r
+6.8.0-52-generic
+```
+
+**Understanding the output:**
+
+The output identifies the kernel release version.
+
+In this example, the system is running a kernel from the `6.8.0` series with a distribution-specific release identifier.
+
+The exact version depends on your installed Linux system and updates.
+
+### 5. `date` — Display Date and Time
+
+The `date` command displays the system's current date and time.
+
+It is useful when checking timestamps or confirming the system clock.
+
+**Syntax:**
+
+```bash
+date
+```
+
+**Example:**
+
+```bash
+student@linux:~$ date
+Sun Nov 15 17:30:00 UTC 2026
+```
+
+**Understanding the output:**
+
+The output shows the day, month, date, time, timezone, and year.
+
+Your result will depend on your system clock and timezone settings.
+
+### 6. `clear` — Clear the Terminal
+
+As you execute commands, the terminal gradually fills with previous outputs.
+
+The `clear` command clears the visible terminal display, giving you a cleaner workspace.
+
+**Syntax:**
+
+```bash
+clear
+```
+
+**Example:**
+
+```bash
+student@linux:~$ clear
+```
+
+**Understanding the output:**
+
+The terminal display is cleared.
+
+You will usually see a fresh command prompt at the top of the terminal.
+
+> **Important:** `clear` does not delete your previous commands or erase your command history. It only clears the visible terminal display.
+
+### 7. `history` — View Previous Commands
+
+The `history` command displays previously executed commands recorded by your shell.
+
+It is useful when you want to review what you have entered or find a command you used earlier.
+
+**Syntax:**
+
+```bash
+history
+```
+
+**Example:**
+
+```bash
+student@linux:~$ history
+  1  whoami
+  2  pwd
+  3  hostname
+  4  uname -r
+  5  date
+  6  history
+```
+
+**Understanding the output:**
+
+Each entry contains a number and a previously recorded command.
+
+The numbers represent the command's position in the displayed history list.
+
+The exact output depends on your shell configuration and previous activity.
+
+### 8. `man` — Read Command Documentation
+
+The `man` command stands for *manual*.
+
+It opens a manual page containing documentation about a command, including its purpose, usage, and available options.
+
+Think of it as an instruction manual built into your Linux environment.
+
+**Syntax:**
+
+```bash
+man command_name
+```
+
+**Example:**
+
+```bash
+student@linux:~$ man whoami
+```
+
+A manual page opens with information about the `whoami` command.
+
+You can use the same format to inspect other commands.
+
+**Understanding the output:**
+
+The manual provides information about how a command works and how to use it.
+
+You do not need to memorize everything in a manual. Learn how to find the information you need.
+
+# E. Understanding Command Syntax
+
+Before using more Linux commands, it is important to understand how basic command syntax works.
+
+A command is not always just a single word. It can also include additional information.
+
+Let's look at an example we have already used:
+
+```bash
+uname -r
+```
+
+This command contains two parts.
+
+| Component | Example | Purpose |
+|---|---|---|
+| Command | `uname` | Specifies what program to execute |
+| Option | `-r` | Changes what information the command displays |
+
+### 1. Commands
+
+A command is the instruction or program you want to execute.
+
+For example:
+
+```bash
+whoami
+```
+
+Here, `whoami` is the command.
+
+### 2. Arguments
+
+An argument is additional information supplied to a command.
+
+For example:
+
+```bash
+man whoami
+```
+
+Here:
+
+- `man` is the command.
+- `whoami` is the argument telling `man` which manual page to open.
+
+### 3. Options or Flags
+
+An option (sometimes called a flag) changes how a command behaves or what information it displays.
+
+For example:
+
+```bash
+uname -r
+```
+
+The `-r` option tells `uname` to display the kernel release.
+
+Options commonly begin with a single hyphen (`-`) or two hyphens (`--`).
+
+### 4. Putting Everything Together
+
+Consider this command:
+
+```bash
+man uname
+```
+
+Its structure is:
+
+- Command: `man`
+- Argument: `uname`
+
+Now consider:
+
+```bash
+uname -r
+```
+
+Its structure is:
+
+- Command: `uname`
+- Option: `-r`
+
+> **Remember:** You do not need to memorize every command structure. For now, focus on recognizing the command, its arguments, and its options.
+
+# F. Getting Help
+
+One of the most useful skills in Linux is knowing how to find information independently.
+
+You will not remember every command, and that is completely normal.
+
+Linux provides built-in documentation that can help you understand unfamiliar commands.
+
+### 1. Using `man`
+
+Let's open the manual page for `whoami`.
+
+Enter:
+
+```bash
+man whoami
+```
+
+A documentation page will open inside the terminal.
+
+You may see sections such as:
+
+- NAME: The command's name and a brief description.
+- SYNOPSIS: How the command is written.
+- DESCRIPTION: What the command does.
+- OPTIONS: Available options and their purposes.
+
+The exact sections depend on the manual page.
+
+### 2. Navigating a Manual Page
+
+Manual pages are commonly displayed using a text viewer.
+
+You can navigate using your keyboard.
+
+| Key | Action |
+|---|---|
+| Space | Move down one screen |
+| b | Move up one screen |
+| Up Arrow | Move up one line |
+| Down Arrow | Move down one line |
+| /word | Search for a word |
+| n | Find the next search result |
+| q | Exit the manual page |
+
+For example, while viewing a manual page, you can press:
+
+```text
+q
+```
+
+This exits the manual and returns you to the terminal.
+
+**Tip:** You do not need to read an entire manual page every time. Look for the information relevant to your task.
+
+### 3. Using `--help`
+
+Some commands provide a shorter help message through the `--help` option.
+
+For example:
+
+```bash
+bash --help
+```
+
+This displays a usage summary and information about Bash options.
+
+Unlike a detailed manual page, the help output is usually shorter and intended as a quick reference.
+
+The availability and exact format of `--help` depend on the program. Not every command supports it.
+
+### Which Should You Use?
+
+| Method | Best Used For |
+|---|---|
+| `man command_name` | Detailed command documentation |
+| `command_name --help` | Quick usage information |
+
+**A useful habit:** When you encounter an unfamiliar command, look for its documentation before using it.
+
+# G. Hands-on Practice
+
+## Exercise: Meet Your Linux Machine
+
+<badge color="success">Practical Exercise</badge> <badge>Beginner</badge>
+
+Now it is your turn.
+
+In this exercise, you will explore your own Linux machine using the commands introduced in this module.
+
+You will identify your user account, check your system information, and explore the documentation available on your machine.
+
+**Estimated time:** 5–7 minutes.
+
+### Before You Begin
+
+Open a Linux terminal.
+
+You can use:
+
+- A computer running Ubuntu, Debian, Kali Linux, or another Linux distribution.
+- A Linux virtual machine.
+- A suitable Linux environment provided by your training platform.
+
+Make sure you are using a Linux environment rather than a Windows or macOS terminal.
+
+### Your Tasks
+
+**Task 01 — Identify Your Username**
+
+Execute the appropriate command to identify the current effective user.
+
+Record your result.
+
+**Task 02 — Find Your Current Directory**
+
+Find the full path of your current working directory.
+
+Record the displayed path.
+
+**Task 03 — Identify Your Machine**
+
+Check the hostname of your Linux machine.
+
+Record the result.
+
+**Task 04 — Check Your Kernel Version**
+
+Display the Linux kernel release version.
+
+Record the version shown by your system.
+
+**Task 05 — Display the Current Date and Time**
+
+Execute the appropriate command to display your system's current date and time.
+
+Record the output.
+
+**Task 06 — Explore Your Command History**
+
+Display your shell's command history.
+
+Find the commands you executed during this exercise.
+
+Notice how the terminal records previous activity.
+
+**Task 07 — Open a Command Manual**
+
+Open the manual page for `uname`.
+
+Inspect its documentation.
+
+Find the section describing the command's purpose, then exit the manual page using the appropriate key.
+
+### Exercise Completion Checklist
+
+- [ ] I identified my current username.
+- [ ] I found my current working directory.
+- [ ] I identified my machine hostname.
+- [ ] I checked my kernel version.
+- [ ] I displayed the current date and time.
+- [ ] I explored my command history.
+- [ ] I opened and inspected a command manual.
+
+### Reflection
+
+Before moving on, think about these questions:
+
+1. Which command was the easiest to understand?
+2. Which command's output was new or unfamiliar to you?
+3. Why might a cybersecurity professional need to know the current user and hostname of a system?
+
+You do not need to submit any sensitive system information. The purpose is to become comfortable using the terminal.
+
+# H. Knowledge Check
+
+Let's check what you have learned.
+
+Try answering these questions without looking back at the lesson.
+
+## Part 1: Multiple-Choice Questions
+
+**Question 01**
+
+What is the primary purpose of the Linux kernel?
+
+A. To provide a graphical desktop environment.
+
+B. To manage hardware and essential system resources.
+
+C. To browse websites.
+
+D. To store user passwords.
+
+**Question 02**
+
+Which of the following correctly describes Bash?
+
+A. A Linux distribution.
+
+B. A type of computer hardware.
+
+C. A shell used to interpret and execute commands.
+
+D. A Linux file manager.
+
+## Part 2: Command Identification
+
+**Question 03**
+
+Which command would you use to identify the current effective username?
+
+**Question 04**
+
+Which command would you use to display the Linux kernel release version?
+
+## Part 3: Practical Question
+
+**Question 05**
+
+You are working on a Linux machine during a cybersecurity assessment.
+
+You need to:
+
+- Identify the current working directory.
+- Check the machine's hostname.
+- Display the current date and time.
+
+Which three commands would you execute?
+
+Write them in the correct order.
+
+---
+
+# I. Module Completion
+
+<badge color="success">Module 01 Complete</badge>
+
+Congratulations! You have completed your first introduction to Linux.
+
+You have taken your first steps toward becoming comfortable with the Linux command line.
+
+### What You Have Learned
+
+In this module, you learned:
+
+- What Linux is and how the kernel differs from a complete operating system.
+- What Linux distributions are.
+- Why Linux is widely used in cybersecurity.
+- The differences between a terminal, shell, and Bash.
+- How to execute eight essential Linux commands.
+- How to understand basic command syntax.
+- How to access command documentation using manual pages and help options.
+- How to identify basic information about your Linux machine.
+
+You have also completed your first practical exercise by exploring your own Linux environment.
+
+### What Comes Next?
+
+**Module 02: Linux Filesystem and Navigation**
+
+Now that you are comfortable with the terminal, it is time to understand how Linux organizes information.
+
+In the next module, you will begin exploring the Linux filesystem and learn how to navigate between directories.
+
+You will build on the skills developed here and become more confident working with files and directories.
+
+**For now, remember one thing: you do not need to memorize every command. Learn how to use them, understand their purpose, and know where to find help.**
+
+---
+
+# Answer Key
+
+*Instructor note: Keep this section at the end of the lesson or reveal it separately after students complete the knowledge check.*
+
+### Multiple-Choice Answers
+
+**Question 01: B — To manage hardware and essential system resources.**
+
+The Linux kernel is responsible for managing system resources and providing essential communication between software and hardware.
+
+**Question 02: C — A shell used to interpret and execute commands.**
+
+Bash is a widely used command-line shell on Linux systems.
+
+### Command Identification Answers
+
+**Question 03**
+
+```bash
+whoami
+```
+
+**Question 04**
+
+```bash
+uname -r
+```
+
+### Practical Question Answer
+
+**Question 05**
+
+The three commands are:
+
+```bash
+pwd
+hostname
+date
+```
+
+- `pwd` displays the current working directory.
+- `hostname` displays the machine's hostname.
+- `date` displays the current date and time.
+
+### End of Module 01
+
+**FORGESEC ACADEMY | FORGESEC LABS**
+
+*Build your foundations. Understand your systems. Develop your security skills.*

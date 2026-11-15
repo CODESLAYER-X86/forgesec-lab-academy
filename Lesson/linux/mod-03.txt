@@ -1,0 +1,1213 @@
+# **FORGESEC ACADEMY**
+
+# **Linux Fundamentals: From Zero to Command-Line Confidence**
+
+Beginner / Essential
+
+Module 03
+
+15–20 minutes
+
+# **Module 03 — File and Directory Management**
+
+## **A. Welcome to File and Directory Management**
+
+In the previous module, you learned how to navigate the Linux filesystem and explore directories.
+
+Now it's time to learn how to manage files and directories directly from the terminal.
+
+Think about your computer as an office:
+
+- Directories are filing cabinets.
+- Files are documents stored inside those cabinets.
+- Copying creates another version of a document.
+- Moving places a document somewhere else.
+- Renaming changes its name.
+- Deleting removes documents you no longer need.
+
+Linux provides simple commands for performing these operations.
+
+File management is particularly important in cybersecurity because you will frequently work with:
+
+- Scripts and tools.
+- Configuration files.
+- System logs.
+- Downloaded files.
+- Security reports.
+- Challenge files during CTF competitions.
+
+By the end of this module, you will be able to create, organize, edit, copy, move, and remove files using the Linux terminal.
+
+Let's get started.
+
+## **B. Creating Files and Directories**
+
+Linux provides several commands for creating files and directories.
+
+Let's begin with three essential commands.
+
+### **1.&#x20;**`touch`**&#x20;— Create Files**
+
+The `touch` command creates an empty file if it doesn't already exist.
+
+**Syntax:**
+
+```
+touch filename
+```
+
+**Example:**
+
+```
+touch notes.txt
+```
+
+This creates an empty file named `notes.txt` in your current directory.
+
+You can check whether the file exists using:
+
+```
+ls
+```
+
+**Possible output:**
+
+```
+notes.txt
+```
+
+You can also create multiple files with one command:
+
+```
+touch notes.txt report.txt script.txt
+```
+
+This creates three empty files.
+
+**Important to remember**
+
+If a file already exists, `touch` does not erase its contents. It updates the file's timestamps instead.
+
+### **2.&#x20;**`mkdir`**&#x20;— Create Directories**
+
+The `mkdir` command creates a new directory.
+
+**Syntax:**
+
+```
+mkdir directory_name
+```
+
+**Example:**
+
+```
+mkdir projects
+```
+
+This creates a directory named `projects`.
+
+Check the result:
+
+```
+ls
+```
+
+**Possible output:**
+
+```
+notes.txt  projects  report.txt  script.txt
+```
+
+### **3.&#x20;**`mkdir -p`**&#x20;— Create Nested Directories**
+
+Sometimes you want to create multiple directory levels at once.
+
+For example, imagine you want this structure:
+
+```
+projects/
+└── cybersecurity/
+    └── linux/
+```
+
+You can create it with one command:
+
+```
+mkdir -p projects/cybersecurity/linux
+```
+
+The `-p` option creates missing parent directories automatically.
+
+It also avoids an error if the specified directories already exist.
+
+**What should you notice?**
+
+You don't need to create each directory separately.
+
+## **C. Copying Files and Directories**
+
+Linux uses the `cp` command to copy files and directories.
+
+Copying creates another version of the original. The original file remains in its location.
+
+### **1.&#x20;**`cp`**&#x20;— Copy Files**
+
+**Syntax:**
+
+```
+cp source destination
+```
+
+**Example:**
+
+Suppose you have a file named `notes.txt` and want to copy it into a directory named `projects`.
+
+Execute:
+
+```
+cp notes.txt projects/
+```
+
+Now check the directory:
+
+```
+ls projects/
+```
+
+**Output:**
+
+```
+notes.txt
+```
+
+The file has been copied into `projects`.
+
+The original `notes.txt` still exists in your current directory.
+
+### **2. Copy a File with a Different Name**
+
+You can also give the copied file a different name.
+
+**Example:**
+
+```
+cp notes.txt backup.txt
+```
+
+This creates a copy named `backup.txt`.
+
+Check the result:
+
+```
+ls
+```
+
+**Possible output:**
+
+```
+backup.txt  notes.txt  projects
+```
+
+Both files exist independently.
+
+### **3.&#x20;**`cp -r`**&#x20;— Copy Directories**
+
+By default, `cp` does not copy directories as ordinary files.
+
+To copy an entire directory and its contents, use the `-r` option.
+
+The `-r` stands for recursive, meaning the command also copies the contents of the directory and its subdirectories.
+
+**Example:**
+
+```
+cp -r projects projects_backup
+```
+
+This creates a new directory named `projects_backup` containing a copy of `projects`.
+
+**What should you remember?**
+
+| Command               | Purpose                            |
+| --------------------- | ---------------------------------- |
+| `cp file1 file2`      | Copy a file.                       |
+| `cp file1 directory/` | Copy a file into a directory.      |
+| `cp -r dir1 dir2`     | Copy a directory and its contents. |
+
+**Important distinction**
+
+`cp` copies a file. It does not remove the original.
+
+After copying, both the original and the copy remain available.
+
+## **D. Moving and Renaming Files**
+
+Linux uses the `mv` command for two operations:
+
+1. Moving files and directories.
+2. Renaming files and directories.
+
+You don't need separate commands for these operations.
+
+### **1. Move a File into Another Directory**
+
+**Syntax:**
+
+```
+mv source destination
+```
+
+**Example:**
+
+Suppose you have a file named `report.txt` and want to move it into `projects`.
+
+Execute:
+
+```
+mv report.txt projects/
+```
+
+Now check your current directory:
+
+```
+ls
+```
+
+The file `report.txt` should no longer appear there.
+
+Check the destination:
+
+```
+ls projects/
+```
+
+You should find:
+
+```
+notes.txt  report.txt
+```
+
+The file has been moved.
+
+### **2. Rename a File**
+
+You can rename a file using the same `mv` command.
+
+**Example:**
+
+```
+mv notes.txt study_notes.txt
+```
+
+This changes the filename from `notes.txt` to `study_notes.txt`.
+
+Check the result:
+
+```
+ls
+```
+
+You should now see:
+
+```
+study_notes.txt
+```
+
+The original filename is no longer present.
+
+### **3. Move a Directory**
+
+The `mv` command also works with directories.
+
+**Example:**
+
+```
+mv projects projects_archive
+```
+
+This renames the directory `projects` to `projects_archive` when the destination does not already exist.
+
+You can also move a directory into another directory:
+
+```
+mv projects_archive backup/
+```
+
+This moves the entire directory into `backup`, assuming that destination directory exists.
+
+**Be careful with&#x20;**`mv`
+
+If a destination file already exists, `mv` can overwrite it in some circumstances. Always check the destination before moving or renaming important files.
+
+**Remember:** `mv` moves or renames. It does not create an additional copy like `cp`.
+
+## **E. Reading Simple Files**
+
+Before editing files, you should know how to display their contents and identify their types.
+
+Two useful commands are `cat` and `file`.
+
+### **1.&#x20;**`cat`**&#x20;— Display File Contents**
+
+The `cat` command displays the contents of a text file in your terminal.
+
+**Syntax:**
+
+```
+cat filename
+```
+
+**Example:**
+
+Suppose you have a file named `notes.txt`.
+
+Execute:
+
+```
+cat notes.txt
+```
+
+**Possible output:**
+
+```
+Linux Fundamentals
+Learning file management
+Practicing Linux commands
+```
+
+The terminal displays the contents of the file.
+
+### **2.&#x20;**`file`**&#x20;— Identify File Types**
+
+Sometimes a filename doesn't tell you what kind of file you are working with.
+
+The `file` command examines a file and identifies its type based on its contents.
+
+**Syntax:**
+
+```
+file filename
+```
+
+**Example:**
+
+```
+file notes.txt
+```
+
+**Possible output:**
+
+```
+notes.txt: ASCII text
+```
+
+Another example:
+
+```
+file image.png
+```
+
+**Possible output:**
+
+```
+image.png: PNG image data, 800 x 600, 8-bit/color RGB
+```
+
+**What should you notice?**
+
+The command helps identify whether a file contains text, image data, executable content, or another recognized format.
+
+This can be useful when investigating unfamiliar files during cybersecurity exercises.
+
+## **F. Editing Text Files Using Nano**
+
+Sometimes you need to create or modify a text file directly from the terminal.
+
+Linux provides several text editors. For beginners, we will use **Nano**.
+
+Nano is a simple terminal-based text editor that allows you to write and edit text without opening a graphical application.
+
+### **1. Open or Create a File**
+
+To open a file using Nano:
+
+```
+nano filename
+```
+
+**Example:**
+
+```
+nano notes.txt
+```
+
+If `notes.txt` already exists, Nano opens it.
+
+If it doesn't exist, Nano opens a new editing buffer that can be saved as `notes.txt`.
+
+[Linux Fundamentals Part 3: Cybersecurity 101 Pathway — TryHackMe | by Farhad Anwari | Jan, 2026 | Medium](https://images.openai.com/static-rsc-4/iPt72ZGWEI97KxCAObXf-oxFS_nhDSkSaVW6SIUGZDLe43wbaHpl-bFvNgTLkqP5BgWcw--fy3t6Tt-1qLqvYgfB769uzfge7y_W12vlFc9fkXmkp6bagkOZ4OPVzYiNWA5EM__7cPyoiYlNScses4lCc_cyqF83jrGchfX7BW4?purpose=inline)
+
+[medium.com](https://medium.com/%40farhadanwari/linux-fundamentals-part-3-cybersecurity-101-pathway-tryhackme-8e97505b08ad?utm_source=chatgpt.com)
+
+### **2. Write and Edit Text**
+
+Once Nano opens:
+
+1. Type your text directly into the editor.
+2. Use the keyboard to move around.
+3. Add, remove, or modify text as needed.
+
+For example, write:
+
+```
+FORGESEC Academy
+Linux Fundamentals
+
+Today I learned:
+- Creating files
+- Creating directories
+- Copying files
+- Moving files
+```
+
+### **3. Save Your File**
+
+To save the file:
+
+Press:
+
+```
+Ctrl + O
+```
+
+Nano will display a prompt asking for the filename.
+
+For example:
+
+```
+File Name to Write: notes.txt
+```
+
+Press `Enter` to confirm the filename.
+
+### **4. Exit Nano**
+
+To leave the editor, press:
+
+```
+Ctrl + X
+```
+
+You will return to your terminal.
+
+### **Nano Keyboard Shortcuts**
+
+| Shortcut   | Action                            |
+| ---------- | --------------------------------- |
+| `Ctrl + O` | Save the file.                    |
+| `Enter`    | Confirm the filename when saving. |
+| `Ctrl + X` | Exit Nano.                        |
+
+**Nano tip**
+
+At the bottom of Nano, you will see available keyboard shortcuts.
+
+The `^` symbol represents the Ctrl key.
+
+For example, `^O` means `Ctrl + O`.
+
+### **Quick Exercise — Create a Notes File**
+
+Try creating a file named `my_notes.txt`.
+
+Open it:
+
+```
+nano my_notes.txt
+```
+
+Write:
+
+```
+My Linux Learning Notes
+
+Module 03:
+I learned how to create, copy, move,
+rename, and manage files.
+```
+
+Save using `Ctrl + O`, confirm with `Enter`, and exit using `Ctrl + X`.
+
+Now display the file:
+
+```
+cat my_notes.txt
+```
+
+You should see the text you entered.
+
+## **G. Deleting Files and Directories**
+
+Sometimes you need to remove files or directories that are no longer required.
+
+Linux provides three basic commands for this:
+
+- `rm`
+- `rmdir`
+- `rm -r`
+
+This section requires special attention because deleting files through the terminal can permanently remove data.
+
+**Important Safety Warning**
+
+Linux's `rm` command generally does not move files into a recycle bin.
+
+Deleted files may be difficult or impossible to recover.
+
+Always check the filename and location before executing a deletion command.
+
+For this lesson, practice only inside the dedicated `module03-practice` directory.
+
+### **1.&#x20;**`rm`**&#x20;— Remove Files**
+
+The `rm` command removes a file.
+
+**Syntax:**
+
+```
+rm filename
+```
+
+**Example:**
+
+```
+rm test.txt
+```
+
+This removes the file named `test.txt` from the current directory.
+
+You can check whether it is still present:
+
+```
+ls
+```
+
+If the deletion succeeded, `test.txt` will no longer appear.
+
+### **2.&#x20;**`rmdir`**&#x20;— Remove Empty Directories**
+
+The `rmdir` command removes an empty directory.
+
+**Syntax:**
+
+```
+rmdir directory_name
+```
+
+**Example:**
+
+```
+rmdir empty_folder
+```
+
+This removes `empty_folder` if it contains no files or subdirectories.
+
+If the directory contains something, Linux will display an error.
+
+For example:
+
+```
+rmdir: failed to remove 'empty_folder': Directory not empty
+```
+
+### **3.&#x20;**`rm -r`**&#x20;— Remove Directories and Their Contents**
+
+What if a directory contains files?
+
+You can use:
+
+```
+rm -r directory_name
+```
+
+The `-r` option means recursive.
+
+It removes the directory and its contents, including nested directories.
+
+**Example:**
+
+```
+rm -r test_folder
+```
+
+This removes `test_folder` and everything inside it.
+
+**Important:** This operation can permanently delete multiple files. Only use it when you are certain that the target directory is safe to remove.
+
+You do not need `rm -rf` for this module. Avoid using it as a beginner.
+
+## **H. Basic Wildcards**
+
+Sometimes you want to refer to multiple files without typing every filename individually.
+
+Linux supports wildcard characters for matching filenames.
+
+We will introduce two basic wildcards.
+
+### **1.&#x20;**`*`**&#x20;— Match Zero or More Characters**
+
+The asterisk (`*`) matches zero or more characters in a filename.
+
+Suppose your directory contains:
+
+```
+notes.txt
+report.txt
+image.png
+script.sh
+```
+
+To list files ending in `.txt`, execute:
+
+```
+ls *.txt
+```
+
+**Output:**
+
+```
+notes.txt  report.txt
+```
+
+The wildcard matches both text files.
+
+Another example:
+
+```
+ls *.sh
+```
+
+This lists filenames ending in `.sh`.
+
+### **2.&#x20;**`?`**&#x20;— Match Exactly One Character**
+
+The question mark (`?`) matches exactly one character.
+
+Suppose your directory contains:
+
+```
+file1.txt
+file2.txt
+file10.txt
+fileA.txt
+```
+
+Execute:
+
+```
+ls file?.txt
+```
+
+**Output:**
+
+```
+file1.txt  file2.txt  fileA.txt
+```
+
+Why doesn't `file10.txt` appear?
+
+Because `?` matches only one character, while `10` contains two characters.
+
+### **Quick Comparison**
+
+| Wildcard | Meaning                 | Example     |
+| -------- | ----------------------- | ----------- |
+| `*`      | Zero or more characters | `*.txt`     |
+| `?`      | Exactly one character   | `file?.txt` |
+
+**Wildcard safety**
+
+Wildcards can match multiple files at once.
+
+Before using a wildcard with a deletion command, inspect which files it matches.
+
+For example, use `ls *.txt` first to see the matching files.
+
+## **I. Hands-on Practice — Manage Your Linux Workspace**
+
+Practical exercise
+
+Estimated time: 7–10 minutes
+
+Now let's combine everything you have learned.
+
+You will create a small workspace, organize files, edit a document, and safely remove test files.
+
+**Important:** Follow the sequence in order. Keep all practice operations inside your dedicated `module03-practice` directory.
+
+### **Task 1 — Create Your Practice Directory**
+
+Execute:
+
+```
+mkdir -p ~/module03-practice
+```
+
+**What it does:**
+
+Creates a directory named `module03-practice` inside your home directory.
+
+**Expected result:**
+
+Your home directory now contains:
+
+```
+module03-practice/
+```
+
+### **Task 2 — Navigate into the Directory**
+
+Execute:
+
+```
+cd ~/module03-practice
+```
+
+Check your location:
+
+```
+pwd
+```
+
+**Expected output:**
+
+```
+/home/student/module03-practice
+```
+
+Your username may differ.
+
+**What to observe:**
+
+You are now working inside your practice directory.
+
+All remaining commands should be executed from this location unless instructed otherwise.
+
+### **Task 3 — Create Two Text Files**
+
+Execute:
+
+```
+touch notes.txt report.txt
+```
+
+**What it does:**
+
+Creates two empty files.
+
+Check the result:
+
+```
+ls
+```
+
+**Expected output:**
+
+```
+notes.txt  report.txt
+```
+
+### **Task 4 — Create a Subdirectory**
+
+Execute:
+
+```
+mkdir notes
+```
+
+**What it does:**
+
+Creates a directory named `notes`.
+
+Check the result:
+
+```
+ls
+```
+
+**Expected output:**
+
+```
+notes  notes.txt  report.txt
+```
+
+### **Task 5 — Copy One File into the Subdirectory**
+
+Execute:
+
+```
+cp notes.txt notes/
+```
+
+**What it does:**
+
+Copies `notes.txt` into the `notes` directory.
+
+Check the destination:
+
+```
+ls notes/
+```
+
+**Expected output:**
+
+```
+notes.txt
+```
+
+**What to observe:**
+
+The original `notes.txt` still exists in the main practice directory.
+
+You now have two copies.
+
+### **Task 6 — Rename the Other File**
+
+Execute:
+
+```
+mv report.txt report_backup.txt
+```
+
+**What it does:**
+
+Renames `report.txt` to `report_backup.txt`.
+
+Check the result:
+
+```
+ls
+```
+
+**Expected output:**
+
+```
+notes  notes.txt  report_backup.txt
+```
+
+### **Task 7 — Create and Edit a Text File with Nano**
+
+Execute:
+
+```
+nano notes.txt
+```
+
+Inside Nano, enter:
+
+```
+FORGESEC Academy
+
+Module 03 Practice
+
+I have learned:
+- Creating files
+- Creating directories
+- Copying files
+- Moving and renaming files
+```
+
+Save the file:
+
+1. Press `Ctrl + O`.
+2. Press `Enter` to confirm.
+3. Press `Ctrl + X` to exit.
+
+**What to observe:**
+
+You should return to your terminal with the edited file saved.
+
+### **Task 8 — Display the File Contents**
+
+Execute:
+
+```
+cat notes.txt
+```
+
+**Expected output:**
+
+```
+FORGESEC Academy
+
+Module 03 Practice
+
+I have learned:
+- Creating files
+- Creating directories
+- Copying files
+- Moving and renaming files
+```
+
+**What to observe:**
+
+The terminal displays the text you entered using Nano.
+
+### **Task 9 — Identify the File Type**
+
+Execute:
+
+```
+file notes.txt
+```
+
+**Possible output:**
+
+```
+notes.txt: ASCII text
+```
+
+The exact description may vary depending on the text you entered and your system.
+
+**What to observe:**
+
+Linux identifies the file as a text file.
+
+### **Task 10 — Practice Wildcard Listing**
+
+Execute:
+
+```
+ls *.txt
+```
+
+**Expected output:**
+
+```
+notes.txt
+```
+
+Why?
+
+Because `notes.txt` is the only file ending in `.txt` in your main practice directory.
+
+Now try:
+
+```
+ls *.bak
+```
+
+You may receive a message saying no such file or directory exists because there are no matching filenames.
+
+**What to observe:**
+
+Wildcards allow you to match files based on their names.
+
+### **Task 11 — Remove a Test File**
+
+First, create a temporary test file:
+
+```
+touch test_delete.txt
+```
+
+Check that it exists:
+
+```
+ls
+```
+
+Now remove it:
+
+```
+rm test_delete.txt
+```
+
+Check again:
+
+```
+ls
+```
+
+**What to observe:**
+
+The test file should no longer appear.
+
+**Safety reminder:** Only remove files you have intentionally created for this exercise.
+
+### **Task 12 — Remove an Empty Test Directory**
+
+Create an empty directory:
+
+```
+mkdir empty_test
+```
+
+Now remove it:
+
+```
+rmdir empty_test
+```
+
+Check the result:
+
+```
+ls
+```
+
+**What to observe:**
+
+The directory should no longer appear.
+
+Remember, `rmdir` only works with empty directories.
+
+### **Final Workspace**
+
+Your practice directory should now look approximately like this:
+
+```
+module03-practice/
+├── notes/
+│   └── notes.txt
+├── notes.txt
+└── report_backup.txt
+```
+
+**Practical completion checklist**
+
+0 of 12 completed
+
+0%
+
+Created module03-practice
+
+Navigated into the practice directory
+
+Created notes.txt and report.txt
+
+Created the notes directory
+
+Copied notes.txt into notes/
+
+Renamed report.txt
+
+Edited notes.txt using Nano
+
+Displayed contents using cat
+
+Identified the file type using file
+
+Practiced wildcard listing
+
+Removed test_delete.txt
+
+Removed the empty_test directory
+
+## **J. Knowledge Check**
+
+Test your understanding of file and directory management.
+
+Try answering all five questions before revealing the answer key.
+
+### **Question 1 — Multiple Choice**
+
+Which command creates an empty file named `example.txt`?
+
+- A. `mkdir example.txt`
+- B. `touch example.txt`
+- C. `cp example.txt`
+- D. `rm example.txt`
+
+### **Question 2 — Multiple Choice**
+
+Which command copies a directory and its contents?
+
+- A. `mv -r`
+- B. `cp`
+- C. `cp -r`
+- D. `rmdir`
+
+### **Question 3 — Identify the Correct Command**
+
+You have a file named `old_notes.txt`.
+
+You want to rename it to `new_notes.txt`.
+
+Which command should you use?
+
+### **Question 4 — Identify the Correct Command**
+
+You want to remove an empty directory named `temporary`.
+
+Which command should you use?
+
+### **Question 5 — Practical Task**
+
+You are inside your `module03-practice` directory.
+
+Write the commands needed to:
+
+1. Create a directory named `backup`.
+2. Create a file named `sample.txt`.
+3. Copy `sample.txt` into `backup`.
+4. Rename the original file to `final.txt`.
+5. Display the contents of `final.txt` (you may first add text using Nano).
+
+## **Answer Key**
+
+Reveal answer key
+
+## **K. Module Recap**
+
+In this module, you learned how to manage files and directories using Linux commands.
+
+Here are the essential commands to remember:
+
+| Command    | Purpose                                            |
+| ---------- | -------------------------------------------------- |
+| `touch`    | Create an empty file or update its timestamp.      |
+| `mkdir`    | Create a directory.                                |
+| `mkdir -p` | Create nested directories.                         |
+| `cp`       | Copy files.                                        |
+| `cp -r`    | Copy directories and their contents.               |
+| `mv`       | Move or rename files and directories.              |
+| `cat`      | Display file contents.                             |
+| `file`     | Identify file types.                               |
+| `nano`     | Edit text files in the terminal.                   |
+| `rm`       | Remove files.                                      |
+| `rmdir`    | Remove empty directories.                          |
+| `rm -r`    | Remove directories and their contents recursively. |
+
+You also learned:
+
+- The difference between copying, moving, and renaming.
+- How to create and edit text files using Nano.
+- How to identify file types.
+- How to use `*` and `?` as basic wildcards.
+- Why deletion commands require extra caution.
+
+**The important thing is not to memorize every command immediately. Practice using them until file management becomes familiar.**
+
+## **Next Module: Reading, Searching and Processing Text**
+
+[Linux Terminal for Beginners - Mastering Text Processing](https://images.openai.com/static-rsc-4/2xkE_OmBrBdB4I9WLMAAQFsJ_sSLINDOnxPJrSr5SPgBElYvnvmjzPJPzVgBQyRLYUpiV3tpjFylW1khLOFg3BHY5fPJZIo74aiwppUl9tlaBlLk3aICldbLFqKpZiu-rT9mI8CCpsSuwdJHTGABvgvpUp8Ha1ZIgi32p7NiRFs?purpose=inline)
+
+**Module 04 — Reading, Searching and Processing Text**
+
+Beginner / Essential
+
+Coming next
+
+In the next module, you will learn how to inspect, search, filter, and process text files using Linux commands.
+
+You will work with:
+
+- Reading text files.
+- Searching for specific words and patterns.
+- Filtering command output.
+- Understanding text-based system logs.
+- Extracting useful information from files.
+
+These skills are especially important in cybersecurity, where analyzing logs, configuration files, and command output is part of everyday work.
+
+**End of Module 03 — FORGESEC Academy**

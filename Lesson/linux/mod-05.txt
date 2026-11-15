@@ -1,0 +1,871 @@
+# **FORGESEC ACADEMY**
+
+## **Linux Fundamentals: From Zero to Command-Line Confidence**
+
+# **Module 05 — Users, Groups and File Permissions**
+
+Beginner / Essential
+
+15–20 minutes
+
+## **A. Welcome to Linux Users and Permissions**
+
+Linux is designed to support multiple users. Each user may have different levels of access to files, directories, and system resources.
+
+Not everyone should be able to read, modify, or execute every file. Linux uses **users, groups, ownership, and permissions** to control access.
+
+Think of a building with different keys:
+
+- The owner has access to their private office.
+- Members of a department can access shared rooms.
+- Visitors have limited access to public areas.
+
+Linux permissions work in a similar way.
+
+In cybersecurity, understanding permissions is essential because incorrectly assigned permissions can expose private information or allow unwanted changes to files.
+
+In this module, you will learn how Linux identifies users, assigns ownership, and controls access to files and directories.
+
+## **B. Understanding Linux Users**
+
+### **What is a user account?**
+
+A **user account** represents an individual or service that interacts with a Linux system.
+
+Each user has an identity that Linux uses to determine what they can access.
+
+There are two important types of users to understand:
+
+**1. Regular user**
+
+A regular user is intended for everyday activities, such as:
+
+- Running applications.
+- Creating and editing personal files.
+- Browsing directories they have permission to access.
+- Executing commands available to them.
+
+Most of your daily Linux activities should happen through a regular user account.
+
+**2. Root user**
+
+The `root` user is the system's main administrative account.
+
+It has extensive privileges, including the ability to:
+
+- Modify system configuration.
+- Install and remove software.
+- Manage other user accounts.
+- Access and modify most files.
+- Change system-wide permissions.
+
+Root is not simply another name for `sudo`. Root is a user account with administrative privileges. `sudo` is a command that allows an authorized user to execute another command with elevated privileges.
+
+**Why avoid using root for everyday work?**
+
+Because root has extensive control over the system, a mistake can have serious consequences. For example, accidentally deleting an important system file while operating as root could damage the operating system.
+
+Using a regular account reduces the risk of accidental system-wide changes.
+
+### **Useful commands for identifying users**
+
+| Command  | Purpose                      |
+| -------- | ---------------------------- |
+| `whoami` | Display the current username |
+| `id`     | Display user and group IDs   |
+| `groups` | Display group memberships    |
+
+**Example 1: Check your username**
+
+```
+whoami
+```
+
+Example output:
+
+```
+student
+```
+
+This means the current terminal session is running as the user `student`.
+
+**Example 2: Check your user and group information**
+
+```
+id
+```
+
+Example output:
+
+```
+uid=1000(student) gid=1000(student) groups=1000(student),27(sudo)
+```
+
+Understand the important parts:
+
+- `uid=1000`: Your user ID.
+- `student`: Your username.
+- `gid=1000`: Your primary group ID.
+- `groups=...`: Groups your account belongs to.
+
+A **UID** (User ID) is a numerical identifier assigned to a user. A **GID** (Group ID) identifies a group.
+
+**Example 3: Display your groups**
+
+```
+groups
+```
+
+Example output:
+
+```
+student sudo
+```
+
+This indicates that the user belongs to the `student` and `sudo` groups.
+
+Group membership can determine which shared resources a user is allowed to access.
+
+## **C. Understanding sudo**
+
+Some Linux operations require administrative privileges.
+
+For example, installing software or modifying certain system configuration files usually requires elevated access.
+
+The `sudo` command allows an authorized user to execute a command with elevated privileges.
+
+**Example: Check whether sudo is available**
+
+```
+sudo -v
+```
+
+This checks and refreshes your sudo authentication credentials. It may ask for your password.
+
+**Example: Display a system information file**
+
+```
+sudo cat /etc/shadow
+```
+
+This command attempts to display a sensitive system file. It is included here only to illustrate that administrative privileges can grant access to protected files. Do not share or publish its contents.
+
+A safer administrative example is checking the system's hostname:
+
+```
+sudo hostname
+```
+
+This runs the hostname command with elevated privileges. It does not change the hostname.
+
+**Important sudo guidelines:**
+
+- Do not use `sudo` when ordinary user privileges are sufficient.
+- Understand what a command does before running it with `sudo`.
+- Be especially careful with commands that delete files or modify permissions.
+- Never assume a command is safe just because it appears in a tutorial.
+
+Remember: `sudo` does not make a command harmless. It gives that command more authority to make changes.
+
+## **D. Understanding File Ownership**
+
+Every Linux file and directory has an **owner** and an associated **group**.
+
+The owner is the user account associated with the file. The group determines which group of users may receive shared access through the file's group permissions.
+
+### **Viewing file ownership**
+
+Use `ls -l` to display detailed file information.
+
+```
+ls -l
+```
+
+Example output:
+
+```
+-rw-r--r-- 1 student student 120 Nov 16 10:30 notes.txt
+```
+
+Let's break down the important parts:
+
+## **Understanding ls -l**
+
+Example: notes.txt
+
+**Permission string**
+
+-rw-r--r--
+
+**Owner**\
+`student`
+
+**Group**\
+`student`
+
+**File size**\
+`120 bytes`
+
+**Filename**\
+`notes.txt`
+
+The two `student` entries have different meanings:
+
+- First `student`: The file's owner.
+- Second `student`: The file's associated group.
+
+### **Changing ownership with chown**
+
+The `chown` command changes the owner and, optionally, the group of a file.
+
+Basic syntax:
+
+```
+chown new_owner filename
+```
+
+For example, suppose you have a practice file named `notes.txt` and want to change its owner to another existing user:
+
+```
+sudo chown anotheruser notes.txt
+```
+
+This changes the file's owner to `anotheruser`, assuming that account exists and you have permission to perform the operation.
+
+Changing ownership normally requires administrative privileges or appropriate ownership permissions.
+
+We will use a safer ownership example later only if another account is available. You do not need to change ownership of your practice files to complete this module.
+
+## **E. Understanding File Permissions**
+
+Linux permissions determine what users can do with files and directories.
+
+There are three basic permission types:
+
+| Permission    | Meaning for files                   | Meaning for directories                                      |
+| ------------- | ----------------------------------- | ------------------------------------------------------------ |
+| `r` — Read    | Read file contents                  | List directory contents                                      |
+| `w` — Write   | Modify file contents                | Create, remove, or rename entries, subject to other controls |
+| `x` — Execute | Run the file as a program or script | Enter or traverse the directory                              |
+
+The meaning of execute permission is particularly important.
+
+For a file, `x` allows execution, provided the file is a suitable executable or script and other requirements are met.
+
+For a directory, `x` allows a user to traverse it. Without directory execute permission, a user generally cannot access entries inside it by name, even if they have read permission.
+
+### **Three permission categories**
+
+Linux divides permissions into three categories:
+
+1. **Owner (**`u`**)** — The user who owns the file.
+2. **Group (**`g`**)** — Users belonging to the file's associated group.
+3. **Others (**`o`**)** — Everyone else.
+
+Each category can have read, write, and execute permissions.
+
+### **Reading a permission string**
+
+Consider this example:
+
+```
+-rwxr-xr--
+```
+
+It contains ten characters.
+
+## **Permission string breakdown**
+
+# **-**
+
+File type
+
+# **rwx**
+
+Owner
+
+# **r-x**
+
+Group
+
+# **r--**
+
+Others
+
+- First character `-`: Regular file.
+- `rwx`: Owner can read, write, and execute.
+- `r-x`: Group members can read and execute, but cannot write.
+- `r--`: Others can only read.
+
+The first character indicates the file type. A `-` represents a regular file, while `d` represents a directory.
+
+The remaining nine characters are divided into three groups of three:
+
+```
+-rwxr-xr--
+ ||| ||| |||
+ ||| ||| +++--- Others
+ ||| +++------- Group
+ +++----------- Owner
+```
+
+This permission model allows different users to have different levels of access to the same file.
+
+## **F. Changing Permissions with chmod**
+
+The `chmod` command changes file and directory permissions.
+
+There are two common ways to use it:
+
+1. Symbolic notation.
+2. Numeric notation.
+
+### **1. Symbolic notation**
+
+Symbolic notation uses letters to specify whose permissions should change and what change should happen.
+
+| Symbol | Meaning               |
+| ------ | --------------------- |
+| `u`    | Owner                 |
+| `g`    | Group                 |
+| `o`    | Others                |
+| `a`    | All categories        |
+| `+`    | Add permission        |
+| `-`    | Remove permission     |
+| `=`    | Set exact permissions |
+
+**Example 1: Give the owner execute permission**
+
+```
+chmod u+x script.sh
+```
+
+Adds execute permission for the owner.
+
+**Example 2: Remove write permission from the group**
+
+```
+chmod g-w notes.txt
+```
+
+The group can no longer modify the file.
+
+**Example 3: Remove read permission from others**
+
+```
+chmod o-r secret.txt
+```
+
+Users outside the owner and group categories lose read permission.
+
+You can inspect the changes using:
+
+```
+ls -l
+```
+
+### **2. Numeric notation**
+
+Linux also allows permissions to be represented using numbers.
+
+Each permission has a numerical value:
+
+| Permission    | Value |
+| ------------- | ----- |
+| Read (`r`)    | 4     |
+| Write (`w`)   | 2     |
+| Execute (`x`) | 1     |
+
+Add the values together to get a permission number.
+
+For example:
+
+- `r--` = 4
+- `rw-` = 4 + 2 = 6
+- `r-x` = 4 + 1 = 5
+- `rwx` = 4 + 2 + 1 = 7
+
+Here is the complete basic permission reference:
+
+| Number | Permission |
+| ------ | ---------- |
+| 0      | `---`      |
+| 1      | `--x`      |
+| 2      | `-w-`      |
+| 3      | `-wx`      |
+| 4      | `r--`      |
+| 5      | `r-x`      |
+| 6      | `rw-`      |
+| 7      | `rwx`      |
+
+Three digits represent permissions for:
+
+1. Owner.
+2. Group.
+3. Others.
+
+For example:
+
+# **755**
+
+# **7**
+
+**Owner**
+
+`rwx`
+
+Read, write, execute
+
+# **5**
+
+**Group**
+
+`r-x`
+
+Read and execute
+
+# **5**
+
+**Others**
+
+`r-x`
+
+Read and execute
+
+### **Common permission examples**
+
+**Example 1:&#x20;**`755`**&#x20;— Executable script**
+
+```
+chmod 755 script.sh
+```
+
+Meaning:
+
+- Owner: Read, write, execute.
+- Group: Read and execute.
+- Others: Read and execute.
+
+This is commonly used for scripts that the owner maintains and other users may execute.
+
+**Example 2:&#x20;**`644`**&#x20;— Regular text file**
+
+```
+chmod 644 notes.txt
+```
+
+Meaning:
+
+- Owner: Read and write.
+- Group: Read only.
+- Others: Read only.
+
+This is suitable for non-sensitive files intended to be readable by other users. It is not appropriate for confidential information.
+
+**Example 3:&#x20;**`700`**&#x20;— Private directory**
+
+```
+chmod 700 private-directory
+```
+
+Meaning:
+
+- Owner: Read, write, execute.
+- Group: No permissions.
+- Others: No permissions.
+
+The owner can access and manage the directory, while group members and others receive no permissions through these basic mode bits.
+
+**Example 4:&#x20;**`600`**&#x20;— Private text file**
+
+```
+chmod 600 secret.txt
+```
+
+Meaning:
+
+- Owner: Read and write.
+- Group: No permissions.
+- Others: No permissions.
+
+This is useful for files that should only be accessible to their owner through ordinary file permissions.
+
+**Important:** `755` and `644` are not automatically safe for every file. Choose permissions based on the file's purpose and whether its contents should be accessible to other users.
+
+## **G. Hands-on Practice — Manage File Permissions**
+
+Now you will create a dedicated practice directory and experiment with ownership and permissions.
+
+All operations in this exercise stay inside your home directory.
+
+### **Step 1: Check your username**
+
+Run:
+
+```
+whoami
+```
+
+Example output:
+
+```
+student
+```
+
+This displays the username of your current account.
+
+### **Step 2: Inspect your user and group information**
+
+Run:
+
+```
+id
+```
+
+Example output:
+
+```
+uid=1000(student) gid=1000(student) groups=1000(student),27(sudo)
+```
+
+Look for your username, UID, GID, and group memberships.
+
+### **Step 3: Create a practice directory**
+
+Run:
+
+```
+mkdir -p ~/module05-practice
+cd ~/module05-practice
+```
+
+The first command creates a directory named `module05-practice` inside your home directory.
+
+The second command moves you into it.
+
+Check your current location:
+
+```
+pwd
+```
+
+Your output should end with:
+
+```
+/module05-practice
+```
+
+### **Step 4: Create a practice file**
+
+Run:
+
+```
+echo "Linux permissions practice" > notes.txt
+```
+
+This creates `notes.txt` and writes a line of text into it.
+
+Inspect the file:
+
+```
+ls -l notes.txt
+```
+
+Example output:
+
+```
+-rw-r--r-- 1 student student 28 Nov 16 10:30 notes.txt
+```
+
+Your output may differ. The default permissions assigned when a file is created depend on system settings, including the user's `umask`. Always inspect the actual result.
+
+### **Step 5: Change permissions using symbolic notation**
+
+Run:
+
+```
+chmod u+x notes.txt
+```
+
+This adds execute permission for the owner.
+
+Now inspect the result:
+
+```
+ls -l notes.txt
+```
+
+Example output:
+
+```
+-rwxr--r-- 1 student student 28 Nov 16 10:30 notes.txt
+```
+
+Notice that the owner's permission section changed from `rw-` to `rwx`.
+
+This example is only for practicing permissions. A text file does not need execute permission to be read.
+
+Remove that permission again:
+
+```
+chmod u-x notes.txt
+```
+
+### **Step 6: Change permissions using numeric notation**
+
+Run:
+
+```
+chmod 644 notes.txt
+```
+
+Inspect the result:
+
+```
+ls -l notes.txt
+```
+
+Expected permission string:
+
+```
+-rw-r--r--
+```
+
+This means:
+
+- Owner: Read and write.
+- Group: Read only.
+- Others: Read only.
+
+### **Step 7: Compare permissions**
+
+Now run:
+
+```
+chmod 600 notes.txt
+ls -l notes.txt
+```
+
+Expected permission string:
+
+```
+-rw-------
+```
+
+Compare it with the previous result:
+
+| Setting | Owner       | Group | Others |
+| ------- | ----------- | ----- | ------ |
+| `644`   | Read, write | Read  | Read   |
+| `600`   | Read, write | None  | None   |
+
+The `600` setting prevents group members and others from accessing the file through its ordinary permission bits.
+
+Restore the original practice setting:
+
+```
+chmod 644 notes.txt
+```
+
+### **Step 8: Create a private directory**
+
+Run:
+
+```
+mkdir private-directory
+chmod 700 private-directory
+```
+
+Inspect it:
+
+```
+ls -ld private-directory
+```
+
+Example output:
+
+```
+drwx------ 2 student student 4096 Nov 16 10:35 private-directory
+```
+
+The `d` indicates a directory.
+
+The permission string `rwx------` means:
+
+- Owner: Full directory permissions.
+- Group: No permissions.
+- Others: No permissions.
+
+### **Step 9: Create a private file**
+
+Run:
+
+```
+echo "This is private practice data." > private-directory/secret.txt
+chmod 600 private-directory/secret.txt
+```
+
+Inspect the file:
+
+```
+ls -l private-directory/secret.txt
+```
+
+Expected permission string:
+
+```
+-rw-------
+```
+
+The file's owner can read and modify it. Group members and others have no access through the file's permission bits.
+
+Remember that accessing a file inside a directory also depends on having appropriate permissions to traverse its parent directories.
+
+### **Step 10: Review your practice files**
+
+Run:
+
+```
+ls -l
+```
+
+Then inspect the private directory:
+
+```
+ls -ld private-directory
+ls -l private-directory
+```
+
+You should be able to identify:
+
+- The owner and group of each file.
+- The permission string.
+- Which users can read, write, or execute.
+- Why the private directory uses `700`.
+- Why the private text file uses `600`.
+
+**Practice complete**
+
+You have checked your user identity, inspected ownership, created files and directories, and changed permissions using both symbolic and numeric notation.
+
+## **H. Knowledge Check**
+
+Test your understanding before moving to the next module.
+
+**Questions 1–2: Multiple choice**
+
+2 questions
+
+**1. Which Linux account has the highest level of ordinary system administrative privileges?**
+
+guest
+
+student
+
+root
+
+operator
+
+
+
+**2. What does the permission number 644 mean?**
+
+Owner: read/write; group: read; others: read
+
+Owner: read/execute; group: read; others: execute
+
+Owner: full access; group: read; others: read
+
+Everyone has read and write access
+
+
+
+**Questions 3–4: Command identification**
+
+**3. Which command displays your current username?**
+
+
+
+**4. Which command removes write permission from the group for notes.txt?**
+
+
+
+**5. Practical permission analysis**
+
+A file has the permission string:
+
+```
+-rw-r-----
+```
+
+Explain what the owner, group, and others can do.
+
+Check answers
+
+
+
+## **Answer Key**
+
+Use this section to review the correct answers.
+
+**1. Which account has the highest administrative privileges?**
+
+Correct answer: **root**
+
+**2. What does&#x20;**`644`**&#x20;mean?**
+
+Correct answer: Owner can read and write; group and others can read only.
+
+**3. Which command displays your current username?**
+
+```
+whoami
+```
+
+**4. Which command removes group write permission?**
+
+```
+chmod g-w notes.txt
+```
+
+**5. Analyze&#x20;**`-rw-r-----`**.**
+
+- Owner: Read and write.
+- Group: Read only.
+- Others: No permissions.
+
+## **I. Module Recap**
+
+In this module, you learned how Linux controls access through users, groups, ownership, and permissions.
+
+| Topic            | What you learned                                              |
+| ---------------- | ------------------------------------------------------------- |
+| Users            | Regular users and the root account have different privileges. |
+| Groups           | Groups allow multiple users to share access.                  |
+| Ownership        | Files and directories have an owner and an associated group.  |
+| Permissions      | Read, write, and execute control access.                      |
+| `chmod`          | Changes file and directory permissions.                       |
+| Numeric notation | Three digits represent owner, group, and others.              |
+| `sudo`           | Runs an authorized command with elevated privileges.          |
+
+**Remember these commands:**
+
+```
+whoami
+id
+groups
+sudo command
+ls -l
+chown owner filename
+chmod u+x filename
+chmod 644 filename
+chmod 700 directory
+```
+
+You should now be able to identify your Linux user, inspect file ownership, understand basic permission strings, and change permissions safely within a practice environment.
+
+## **Next Module: Software and Package Management**
+
+In Module 06, you will learn how Linux installs, updates, and manages software through package managers.
+
+You will explore practical commands for installing applications, updating package lists, upgrading installed software, and removing packages on Debian- and Ubuntu-based systems.

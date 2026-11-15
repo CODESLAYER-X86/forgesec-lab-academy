@@ -1,0 +1,1328 @@
+# **FORGESEC ACADEMY**
+
+# **Linux Fundamentals: From Zero to Command-Line Confidence**
+
+Beginner / Essential
+
+Module 04
+
+15–20 minutes
+
+# **Module 04 — Reading, Searching and Processing Text**
+
+## **A. Welcome to Reading and Processing Text**
+
+Linux systems generate and store a lot of information in text files.
+
+These files may contain application activity, login attempts, system events, configuration settings, and other useful information.
+
+In cybersecurity, examining this information is an important everyday activity.
+
+For example, imagine you are investigating a suspicious login attempt. You might need to:
+
+- Read an application log.
+- Find failed login attempts.
+- Identify timestamps and IP addresses.
+- Count how many times an event occurred.
+- Extract useful information into another file.
+
+Reading every line manually would take too much time.
+
+Think of a large notebook containing thousands of entries. Instead of reading every page, you want to search for a particular word, count matching entries, and organize the results.
+
+Linux provides commands that make this possible.
+
+In this module, you will learn how to read, search, count, sort, and extract information from text files.
+
+Let's start practicing.
+
+## **B. Reading Text Files**
+
+Linux provides several commands for displaying text file contents.
+
+You already learned `cat` in Module 03. Now let's explore some additional commands that make reading files easier.
+
+### **1.&#x20;**`cat`**&#x20;— Display File Contents**
+
+The `cat` command displays the contents of a text file directly in the terminal.
+
+**Syntax:**
+
+```
+cat filename
+```
+
+**Example:**
+
+```
+cat notes.txt
+```
+
+**Possible output:**
+
+```
+Linux Fundamentals
+Learning Linux commands
+Practicing cybersecurity
+```
+
+**When should you use it?**
+
+Use `cat` when you want to display a short file quickly.
+
+However, displaying a very large file using `cat` may fill your terminal with too much information.
+
+For large files, other commands are more convenient.
+
+### **2.&#x20;**`less`**&#x20;— Read Files Page by Page**
+
+The `less` command allows you to read a file one screen at a time.
+
+**Syntax:**
+
+```
+less filename
+```
+
+**Example:**
+
+```
+less application.log
+```
+
+Instead of printing the entire file, `less` opens an interactive viewer.
+
+[Using less to view text files at the Linux command line | Opensource.com](https://images.openai.com/static-rsc-4/RTrWkcSYj5KZvlMxOJ7Xfgghc2umamdSv_QvNwGGm21F4emGCa0iLkNIEjN74ac9VDRnXJGwASJpFxCmrmymuLvkFdJHGgTUUImmLC7UvIC6dXkY6p9B_5xrOx28RyGIv1PRtHgm6e-JaQ-yANXMGd8YoEOP0faM1CuAl_OT6tY?purpose=inline)
+
+[opensource.com](https://opensource.com/article/18/4/using-less-view-text-files-command-line?utm_source=chatgpt.com)
+
+**Useful keyboard shortcuts:**
+
+| Key          | Action                      |
+| ------------ | --------------------------- |
+| `Space`      | Move forward one screen.    |
+| `b`          | Move backward one screen.   |
+| `Arrow Down` | Move down one line.         |
+| `Arrow Up`   | Move up one line.           |
+| `/word`      | Search forward for a word.  |
+| `n`          | Find the next search match. |
+| `q`          | Exit `less`.                |
+
+**When should you use it?**
+
+Use `less` when working with large logs, reports, or configuration files that you don't want to print entirely.
+
+### **3.&#x20;**`head`**&#x20;— Display the Beginning of a File**
+
+The `head` command displays the first lines of a file.
+
+**Syntax:**
+
+```
+head filename
+```
+
+By default, it displays the first 10 lines.
+
+**Example:**
+
+```
+head application.log
+```
+
+To display a specific number of lines, use `-n`.
+
+```
+head -n 5 application.log
+```
+
+This displays only the first five lines.
+
+**Possible output:**
+
+```
+2026-11-16 08:00:01 INFO Application started
+2026-11-16 08:01:10 INFO User student logged in
+2026-11-16 08:02:15 INFO Dashboard accessed
+2026-11-16 08:03:20 INFO Configuration loaded
+2026-11-16 08:04:30 INFO Database connection established
+```
+
+**When should you use it?**
+
+Use `head` when you want to quickly inspect the beginning of a file.
+
+### **4.&#x20;**`tail`**&#x20;— Display the End of a File**
+
+The `tail` command displays the last lines of a file.
+
+**Syntax:**
+
+```
+tail filename
+```
+
+By default, it displays the last 10 lines.
+
+To display only the last five lines:
+
+```
+tail -n 5 application.log
+```
+
+**When should you use it?**
+
+Use `tail` when you want to inspect the most recent entries in a log file.
+
+### **5.&#x20;**`tail -f`**&#x20;— Watch New Log Entries**
+
+The `tail -f` command allows you to watch a file as new lines are added.
+
+**Example:**
+
+```
+tail -f application.log
+```
+
+When another process writes new lines to the file, they appear in your terminal.
+
+This is useful when observing application logs during testing.
+
+To stop watching the file, press:
+
+```
+Ctrl + C
+```
+
+**Remember:** `tail -f` is useful for observing ongoing activity, but it does not independently analyze or interpret the events.
+
+### **Quick Comparison**
+
+| Command   | Purpose                          |
+| --------- | -------------------------------- |
+| `cat`     | Display the complete file.       |
+| `less`    | Read a file page by page.        |
+| `head`    | Display the beginning of a file. |
+| `tail`    | Display the end of a file.       |
+| `tail -f` | Watch new lines as they appear.  |
+
+## **C. Searching Text with grep**
+
+One of the most useful Linux commands for cybersecurity beginners is `grep`.
+
+The `grep` command searches for specific text patterns inside files.
+
+Imagine an application log containing thousands of lines. You only want to find entries containing the word `FAILED`.
+
+Instead of reading the entire file, you can use `grep`.
+
+### **1. Basic grep Command**
+
+**Syntax:**
+
+```
+grep "pattern" filename
+```
+
+**Example:**
+
+```
+grep "FAILED" application.log
+```
+
+This searches for lines containing `FAILED`.
+
+**Possible output:**
+
+```
+2026-11-16 08:15:22 AUTH FAILED user=admin ip=192.0.2.15
+2026-11-16 08:18:40 AUTH FAILED user=student ip=198.51.100.20
+```
+
+The command displays only the matching lines.
+
+### **2. Case-Insensitive Search Using&#x20;**`-i`
+
+By default, `grep` distinguishes between uppercase and lowercase letters.
+
+For example, these are different:
+
+```
+FAILED
+failed
+Failed
+```
+
+To search without considering letter case, use `-i`.
+
+**Example:**
+
+```
+grep -i "failed" application.log
+```
+
+This can match `FAILED`, `failed`, and `Failed`.
+
+### **3. Display Line Numbers Using&#x20;**`-n`
+
+Sometimes you want to know where a matching entry appears inside a file.
+
+Use the `-n` option.
+
+**Example:**
+
+```
+grep -n "FAILED" application.log
+```
+
+**Possible output:**
+
+```
+6:2026-11-16 08:15:22 AUTH FAILED user=admin ip=192.0.2.15
+9:2026-11-16 08:18:40 AUTH FAILED user=student ip=198.51.100.20
+```
+
+The numbers at the beginning indicate the matching line numbers.
+
+### **4. Search Recursively Using&#x20;**`-r`
+
+You can search through files inside a directory and its subdirectories using `-r`.
+
+**Syntax:**
+
+```
+grep -r "pattern" directory/
+```
+
+**Example:**
+
+```
+grep -r "ERROR" logs/
+```
+
+This searches files inside `logs/` and its subdirectories for the word `ERROR`.
+
+### **5. Count Matching Lines Using&#x20;**`-c`
+
+If you only want to know how many lines contain a particular pattern, use `-c`.
+
+**Example:**
+
+```
+grep -c "FAILED" application.log
+```
+
+**Possible output:**
+
+```
+2
+```
+
+This means two lines contain the matching text.
+
+It counts matching lines, not necessarily the total number of occurrences of the word.
+
+### **Quick Comparison**
+
+| Command                      | Purpose                          |
+| ---------------------------- | -------------------------------- |
+| `grep "FAILED" file`         | Search for matching text.        |
+| `grep -i "failed" file`      | Search without case sensitivity. |
+| `grep -n "FAILED" file`      | Display matching line numbers.   |
+| `grep -r "ERROR" directory/` | Search recursively.              |
+| `grep -c "FAILED" file`      | Count matching lines.            |
+
+**Cybersecurity tip**
+
+Finding a matching line does not automatically mean an attack occurred.
+
+For example, a failed login may result from a user entering the wrong password.
+
+Always examine the surrounding information and context before drawing conclusions.
+
+## **D. Counting Text with wc**
+
+The `wc` command helps you count information inside text files.
+
+It can count:
+
+- Lines.
+- Words.
+- Bytes.
+
+### **1.&#x20;**`wc`**&#x20;— Count Lines, Words and Bytes**
+
+**Syntax:**
+
+```
+wc filename
+```
+
+**Example:**
+
+```
+wc application.log
+```
+
+**Possible output:**
+
+```
+12  96  1050 application.log
+```
+
+The output represents:
+
+| Value  | Meaning          |
+| ------ | ---------------- |
+| `12`   | Number of lines. |
+| `96`   | Number of words. |
+| `1050` | Number of bytes. |
+
+The exact values depend on the file contents.
+
+### **2. Count Lines Using&#x20;**`-l`
+
+To count only the lines:
+
+```
+wc -l application.log
+```
+
+**Possible output:**
+
+```
+12 application.log
+```
+
+### **3. Count Words Using&#x20;**`-w`
+
+To count the words:
+
+```
+wc -w application.log
+```
+
+**Possible output:**
+
+```
+96 application.log
+```
+
+### **4. Count Bytes Using&#x20;**`-c`
+
+To count the bytes:
+
+```
+wc -c application.log
+```
+
+**Possible output:**
+
+```
+1050 application.log
+```
+
+**When should you use&#x20;**`wc`**?**
+
+You might use it to determine how many entries a log contains, how many lines a search returned, or how large a text file is.
+
+**Remember:** `wc -c` counts bytes, not necessarily human-readable characters. For ordinary ASCII text, the counts are generally the same.
+
+## **E. Sorting Text with sort**
+
+The `sort` command arranges lines of text into a particular order.
+
+This is useful when you want to organize usernames, IP addresses, or other text-based information.
+
+### **1.&#x20;**`sort`**&#x20;— Sort Alphabetically**
+
+Suppose you have a file named `users.txt` containing:
+
+```
+charlie
+alice
+bob
+david
+```
+
+Execute:
+
+```
+sort users.txt
+```
+
+**Output:**
+
+```
+alice
+bob
+charlie
+david
+```
+
+The command sorts the lines alphabetically.
+
+### **2.&#x20;**`sort -n`**&#x20;— Sort Numerically**
+
+The `-n` option sorts numbers based on their numerical values rather than their alphabetical order.
+
+Suppose `numbers.txt` contains:
+
+```
+100
+20
+5
+40
+```
+
+Execute:
+
+```
+sort -n numbers.txt
+```
+
+**Output:**
+
+```
+5
+20
+40
+100
+```
+
+### **3.&#x20;**`sort -r`**&#x20;— Reverse Sorting**
+
+The `-r` option reverses the sorting order.
+
+**Example:**
+
+```
+sort -r users.txt
+```
+
+**Output:**
+
+```
+david
+charlie
+bob
+alice
+```
+
+You can also combine options:
+
+```
+sort -nr numbers.txt
+```
+
+This sorts numbers numerically in reverse order.
+
+**What should you remember?**
+
+| Command             | Purpose                            |
+| ------------------- | ---------------------------------- |
+| `sort file.txt`     | Sort alphabetically.               |
+| `sort -n file.txt`  | Sort numerically.                  |
+| `sort -r file.txt`  | Reverse sorting.                   |
+| `sort -nr file.txt` | Sort numerically in reverse order. |
+
+## **F. Extracting Fields with cut**
+
+Sometimes you don't need an entire line of information.
+
+You only want a particular part of it.
+
+The `cut` command helps extract selected sections or fields from each line of a text file.
+
+This is particularly useful when working with structured text.
+
+### **1. Understanding Fields**
+
+Imagine you have a file named `users.csv` containing:
+
+```
+alice,admin,active
+bob,student,inactive
+charlie,student,active
+```
+
+Each line contains three fields separated by commas.
+
+The fields represent:
+
+1. Username.
+2. Role.
+3. Account status.
+
+You may only want to extract the usernames.
+
+### **2. Using&#x20;**`cut -d`**&#x20;and&#x20;**`cut -f`
+
+The `-d` option specifies the delimiter, meaning the character separating the fields.
+
+The `-f` option selects which field to display.
+
+**Basic syntax:**
+
+```
+cut -d "delimiter" -f field_number filename
+```
+
+**Example: Extract Usernames**
+
+```
+cut -d "," -f 1 users.csv
+```
+
+**Output:**
+
+```
+alice
+bob
+charlie
+```
+
+The command uses the comma as a separator and displays the first field.
+
+### **3. Extract Another Field**
+
+To extract the second field:
+
+```
+cut -d "," -f 2 users.csv
+```
+
+**Output:**
+
+```
+admin
+student
+student
+```
+
+To extract the third field:
+
+```
+cut -d "," -f 3 users.csv
+```
+
+**Output:**
+
+```
+active
+inactive
+active
+```
+
+### **4. Using a Different Delimiter**
+
+You can also work with colon-separated text.
+
+For example, consider:
+
+```
+alice:admin:active
+bob:student:inactive
+```
+
+To extract the usernames:
+
+```
+cut -d ":" -f 1 users.txt
+```
+
+**Output:**
+
+```
+alice
+bob
+```
+
+**When should you use&#x20;**`cut`**?**
+
+Use it when you want to extract specific fields from consistently structured text files.
+
+It is useful for working with simple CSV files, colon-separated records, and other structured text.
+
+## **G. Input, Output and Pipes**
+
+Linux commands can receive information, display results, and pass information to other commands.
+
+Understanding these basic concepts will help you work more efficiently in the terminal.
+
+Let's introduce three important terms.
+
+### **1. Standard Input, Output and Error**
+
+Linux commonly uses three standard data streams.
+
+| Stream                     | Description                           |
+| -------------------------- | ------------------------------------- |
+| Standard Input (`stdin`)   | Information a command receives.       |
+| Standard Output (`stdout`) | Normal output produced by a command.  |
+| Standard Error (`stderr`)  | Error messages produced by a command. |
+
+For example, when you execute:
+
+```
+ls
+```
+
+The filenames are normally displayed through standard output.
+
+If you execute a command that references a nonexistent file, an error message is normally displayed through standard error.
+
+You don't need to manage these streams manually yet. Just understand their basic purpose.
+
+### **2. Output Redirection Using&#x20;**`>`
+
+The `>` symbol redirects command output into a file.
+
+**Example:**
+
+```
+ls > files.txt
+```
+
+This saves the output of `ls` into a file named `files.txt`.
+
+Instead of displaying the directory listing in your terminal, Linux writes it into the file.
+
+You can inspect the result:
+
+```
+cat files.txt
+```
+
+**Important:** If `files.txt` already exists, `>` replaces its existing contents.
+
+### **3. Append Output Using&#x20;**`>>`
+
+The `>>` symbol also redirects output, but it adds the new information to the end of an existing file.
+
+**Example:**
+
+```
+echo "Linux practice completed" >> notes.txt
+```
+
+This adds the text to the end of `notes.txt`.
+
+It does not replace the existing contents.
+
+To inspect the file:
+
+```
+cat notes.txt
+```
+
+### **Difference Between&#x20;**`>`**&#x20;and&#x20;**`>>`
+
+**Using&#x20;**`>`**&#x20;— Replace existing contents**
+
+```
+echo "First entry" > log.txt
+```
+
+If log.txt already contains information, that content is replaced.
+
+**Using&#x20;**`>>`**&#x20;— Append new contents**
+
+```
+echo "Second entry" >> log.txt
+```
+
+The new text is added after the existing content.
+
+### **4. Pipes Using&#x20;**`|`
+
+A pipe allows you to connect two commands.
+
+It takes the standard output of the first command and passes it as standard input to the second command.
+
+**Example:**
+
+```
+ls | wc -l
+```
+
+Let's understand what happens:
+
+1. `ls` lists the files and directories.
+2. `|` passes that output to the next command.
+3. `wc -l` counts the lines it receives.
+
+**Possible output:**
+
+```
+8
+```
+
+This tells you that the listing produced eight lines.
+
+### **5. Search Command Output Using a Pipe**
+
+You can also combine commands to find useful information.
+
+**Example:**
+
+```
+cat application.log | grep "FAILED"
+```
+
+This displays lines containing `FAILED` from the output of `cat`.
+
+A simpler and more direct approach for this particular task is:
+
+```
+grep "FAILED" application.log
+```
+
+Both demonstrate how commands can be connected, but the second avoids an unnecessary extra command.
+
+**Remember:**
+
+- `>` replaces existing file contents.
+- `>>` appends to existing file contents.
+- `|` passes one command's standard output to another command's standard input.
+
+## **H. Hands-on Practice — Analyze a Sample Log**
+
+Practical exercise
+
+Estimated time: 7–10 minutes
+
+Now let's apply your new skills to a cybersecurity-related example.
+
+You will analyze a fictional application log containing login attempts, application activity, timestamps, and IP addresses.
+
+The objective is to identify useful information without reading every line manually.
+
+### **Step 1 — Create a Practice Directory**
+
+Execute:
+
+```
+mkdir -p ~/module04-practice
+```
+
+Navigate into it:
+
+```
+cd ~/module04-practice
+```
+
+Check your location:
+
+```
+pwd
+```
+
+**Expected output:**
+
+```
+/home/student/module04-practice
+```
+
+Your username may differ.
+
+### **Step 2 — Create the Sample Log File**
+
+Open Nano:
+
+```
+nano application.log
+```
+
+Enter the following fictional log entries:
+
+```
+2026-11-16 08:00:01 INFO Application started
+2026-11-16 08:01:10 AUTH SUCCESS user=alice ip=192.0.2.10
+2026-11-16 08:02:15 INFO Dashboard accessed
+2026-11-16 08:03:20 INFO Configuration loaded
+2026-11-16 08:04:30 AUTH SUCCESS user=bob ip=198.51.100.20
+2026-11-16 08:05:40 AUTH FAILED user=admin ip=203.0.113.15
+2026-11-16 08:06:50 INFO Report generated
+2026-11-16 08:07:55 AUTH FAILED user=alice ip=203.0.113.15
+2026-11-16 08:08:45 INFO Database connection established
+2026-11-16 08:09:30 AUTH SUCCESS user=charlie ip=192.0.2.25
+2026-11-16 08:10:15 AUTH FAILED user=admin ip=203.0.113.20
+2026-11-16 08:11:00 INFO Application backup completed
+```
+
+Save the file:
+
+1. Press `Ctrl + O`.
+2. Press `Enter`.
+3. Press `Ctrl + X`.
+
+**What to observe:**
+
+You now have a log file containing 12 fictional events.
+
+The log includes:
+
+- Normal application events.
+- Successful authentication attempts.
+- Failed authentication attempts.
+- Different usernames.
+- Timestamps.
+- IP addresses.
+
+All IP addresses belong to documentation ranges reserved for examples. They do not identify real users.
+
+### **Step 3 — Display the Complete Log**
+
+Execute:
+
+```
+cat application.log
+```
+
+**What it does:**
+
+Displays every line in the log file.
+
+**What to observe:**
+
+You should see all 12 entries.
+
+Notice that the file contains different types of events.
+
+### **Step 4 — Read the Log Using less**
+
+Execute:
+
+```
+less application.log
+```
+
+**What it does:**
+
+Opens the log in an interactive viewer.
+
+**What to observe:**
+
+You can move through the file using the arrow keys.
+
+Press:
+
+```
+q
+```
+
+to return to the terminal.
+
+### **Step 5 — Display the First Five Lines**
+
+Execute:
+
+```
+head -n 5 application.log
+```
+
+**What it does:**
+
+Displays only the first five entries.
+
+**Expected output:**
+
+```
+2026-11-16 08:00:01 INFO Application started
+2026-11-16 08:01:10 AUTH SUCCESS user=alice ip=192.0.2.10
+2026-11-16 08:02:15 INFO Dashboard accessed
+2026-11-16 08:03:20 INFO Configuration loaded
+2026-11-16 08:04:30 AUTH SUCCESS user=bob ip=198.51.100.20
+```
+
+**What to observe:**
+
+The first five entries show the beginning of the application's activity.
+
+### **Step 6 — Display the Last Five Lines**
+
+Execute:
+
+```
+tail -n 5 application.log
+```
+
+**What it does:**
+
+Displays the last five entries.
+
+**Expected output:**
+
+```
+2026-11-16 08:07:55 AUTH FAILED user=alice ip=203.0.113.15
+2026-11-16 08:08:45 INFO Database connection established
+2026-11-16 08:09:30 AUTH SUCCESS user=charlie ip=192.0.2.25
+2026-11-16 08:10:15 AUTH FAILED user=admin ip=203.0.113.20
+2026-11-16 08:11:00 INFO Application backup completed
+```
+
+**What to observe:**
+
+You can quickly inspect the most recent entries without displaying the entire file.
+
+### **Step 7 — Search for Failed Login Attempts**
+
+Execute:
+
+```
+grep "FAILED" application.log
+```
+
+**What it does:**
+
+Displays only entries containing `FAILED`.
+
+**Expected output:**
+
+```
+2026-11-16 08:05:40 AUTH FAILED user=admin ip=203.0.113.15
+2026-11-16 08:07:55 AUTH FAILED user=alice ip=203.0.113.15
+2026-11-16 08:10:15 AUTH FAILED user=admin ip=203.0.113.20
+```
+
+**What to observe:**
+
+There are three failed authentication entries.
+
+Notice that two entries involve the `admin` username.
+
+This is information worth examining, but it does not automatically establish malicious activity.
+
+### **Step 8 — Display Matching Line Numbers**
+
+Execute:
+
+```
+grep -n "FAILED" application.log
+```
+
+**Expected output:**
+
+```
+6:2026-11-16 08:05:40 AUTH FAILED user=admin ip=203.0.113.15
+8:2026-11-16 08:07:55 AUTH FAILED user=alice ip=203.0.113.15
+11:2026-11-16 08:10:15 AUTH FAILED user=admin ip=203.0.113.20
+```
+
+**What to observe:**
+
+The matching events appear on lines 6, 8, and 11.
+
+Line numbers help you locate specific entries inside larger files.
+
+### **Step 9 — Count Failed Login Entries**
+
+Execute:
+
+```
+grep -c "FAILED" application.log
+```
+
+**Expected output:**
+
+```
+3
+```
+
+**What to observe:**
+
+There are three lines containing `FAILED`.
+
+You have now extracted useful information without manually counting the entries.
+
+### **Step 10 — Sort a List of IP Addresses**
+
+Create a small file:
+
+```
+nano ips.txt
+```
+
+Enter:
+
+```
+203.0.113.20
+192.0.2.25
+198.51.100.20
+203.0.113.15
+192.0.2.10
+```
+
+Save and exit Nano.
+
+Now execute:
+
+```
+sort ips.txt
+```
+
+**Possible output:**
+
+```
+192.0.2.10
+192.0.2.25
+198.51.100.20
+203.0.113.15
+203.0.113.20
+```
+
+**What to observe:**
+
+The IP addresses are sorted alphabetically as text.
+
+This is not numerical IP-address ordering, but it is useful for organizing a simple list.
+
+### **Step 11 — Extract Usernames from the Log**
+
+The authentication entries contain information such as:
+
+```
+AUTH FAILED user=admin ip=203.0.113.15
+```
+
+Let's extract the username field.
+
+First, use `grep` to select authentication events:
+
+```
+grep "AUTH" application.log
+```
+
+Then extract the third space-separated field:
+
+```
+grep "AUTH" application.log | cut -d " " -f 4
+```
+
+**Expected output:**
+
+```
+user=alice
+user=bob
+user=admin
+user=alice
+user=charlie
+user=admin
+```
+
+**What to observe:**
+
+The pipe sends the matching authentication entries to `cut`.
+
+The `cut` command extracts the fourth space-separated field, which contains the username.
+
+### **Step 12 — Save Failed Login Entries into Another File**
+
+Suppose you want to save the failed authentication events for later inspection.
+
+Execute:
+
+```
+grep "FAILED" application.log > failed_logins.txt
+```
+
+**What it does:**
+
+Searches for failed authentication entries and saves the matching lines into `failed_logins.txt`.
+
+Check the new file:
+
+```
+cat failed_logins.txt
+```
+
+**Expected output:**
+
+```
+2026-11-16 08:05:40 AUTH FAILED user=admin ip=203.0.113.15
+2026-11-16 08:07:55 AUTH FAILED user=alice ip=203.0.113.15
+2026-11-16 08:10:15 AUTH FAILED user=admin ip=203.0.113.20
+```
+
+**What to observe:**
+
+You now have a separate file containing only the matching entries.
+
+The original `application.log` remains unchanged.
+
+### **Step 13 — Count the Saved Entries**
+
+Execute:
+
+```
+wc -l failed_logins.txt
+```
+
+**Expected output:**
+
+```
+3 failed_logins.txt
+```
+
+**What to observe:**
+
+The extracted file contains three lines.
+
+You have successfully:
+
+1. Read a log file.
+2. Searched for specific events.
+3. Displayed matching line numbers.
+4. Counted matching entries.
+5. Sorted text.
+6. Extracted a field.
+7. Saved search results.
+8. Counted the saved results.
+
+This is a basic example of how Linux text-processing commands help during cybersecurity investigations.
+
+**Practical completion checklist**
+
+0 of 13 completed
+
+0%
+
+Created module04-practice
+
+Created the fictional application.log
+
+Displayed the complete log
+
+Read the log using less
+
+Displayed the first five lines
+
+Displayed the last five lines
+
+Searched for FAILED events
+
+Displayed matching line numbers
+
+Counted failed login entries
+
+Sorted the IP address list
+
+Extracted usernames using cut
+
+Saved failed login entries to another file
+
+Counted the resulting lines
+
+## **I. Knowledge Check**
+
+Test your understanding of the commands covered in this module.
+
+Try answering these questions without looking back at the lesson.
+
+### **Question 1 — Multiple Choice**
+
+Which command allows you to read a large text file page by page?
+
+- A. `cat`
+- B. `less`
+- C. `touch`
+- D. `mkdir`
+
+### **Question 2 — Multiple Choice**
+
+What does the following command do?
+
+```
+grep -n "FAILED" application.log
+```
+
+- A. Deletes failed login entries.
+- B. Counts the total number of words.
+- C. Displays matching lines with their line numbers.
+- D. Sorts the log alphabetically.
+
+### **Question 3 — Identify the Correct Command**
+
+You have a file named `system.log`.
+
+You want to count how many lines contain the word `ERROR`.
+
+Which command should you use?
+
+### **Question 4 — Identify the Correct Command**
+
+You want to save the output of a command into a file without replacing the file's existing contents.
+
+Which redirection operator should you use?
+
+### **Question 5 — Practical Log Analysis**
+
+You have a file named `security.log` containing several authentication events.
+
+Write the commands needed to:
+
+1. Find all lines containing `FAILED`.
+2. Display their line numbers.
+3. Save those matching lines into `failed.txt`.
+4. Count how many lines are in `failed.txt`.
+
+## **Answer Key**
+
+Reveal answer key
+
+## **J. Module Recap**
+
+In this module, you learned how to read, search, and process text files using Linux commands.
+
+Here are the essential commands to remember:
+
+| Command   | Purpose                          |
+| --------- | -------------------------------- |
+| `cat`     | Display file contents.           |
+| `less`    | Read files page by page.         |
+| `head`    | Display the beginning of a file. |
+| `tail`    | Display the end of a file.       |
+| `tail -f` | Watch new log entries.           |
+| `grep`    | Search for matching text.        |
+| `grep -i` | Search without case sensitivity. |
+| `grep -n` | Display matching line numbers.   |
+| `grep -r` | Search recursively.              |
+| `grep -c` | Count matching lines.            |
+| `wc`      | Count lines, words, and bytes.   |
+| `sort`    | Sort text lines.                 |
+| `cut`     | Extract selected fields.         |
+
+You also learned three important concepts:
+
+- `>` redirects output and replaces existing file contents.
+- `>>` appends output to an existing file.
+- `|` passes the output of one command into another command.
+
+Most importantly, you practiced analyzing a fictional application log and extracting useful information.
+
+These skills form an important foundation for future cybersecurity activities, including log investigation, troubleshooting, and security analysis.
+
+## **Next Module: Users, Groups and File Permissions**
+
+[Mastering User, Group, and Permission Management on Linux | by Amudha Balamurugan | Medium](https://images.openai.com/static-rsc-4/M2m9ulrZELDqpQ3PWqhbTV6NtYjLljMLAzTikhoM6chTYjpaRMiKNbDxF9Van2TpSq4_FVzNwvUmZqrXKdVRrut85TF-EU4UTyJXly5to0QPHrxTNnb445FiNLskbz05SpmiqfKtrUNEzpLFTUCNlmbJj4_Xu-9szfhqcHReeQw?purpose=inline)
+
+**Module 05 — Users, Groups and File Permissions**
+
+Beginner / Essential
+
+Coming next
+
+In the next module, you will learn how Linux controls access to files and directories.
+
+You will explore:
+
+- Linux users and groups.
+- File ownership.
+- Read, write, and execute permissions.
+- Understanding permission information.
+- Basic permission management.
+
+These concepts are essential in cybersecurity because incorrect file permissions and access controls can create security vulnerabilities.
+
+**End of Module 04 — FORGESEC Academy**

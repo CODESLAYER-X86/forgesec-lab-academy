@@ -1,0 +1,871 @@
+# **FORGESEC Academy**
+
+## **Linux Fundamentals: From Zero to Command-Line Confidence**
+
+# **Module 09 — Linux Networking Fundamentals and Commands**
+
+
+
+Beginner / Essential
+
+15–20 minutes
+
+
+
+## **A. Welcome to Linux Networking**
+
+A computer network allows two or more devices to communicate and exchange information.
+
+For example, when you open a website, your computer communicates with other systems over a network to request and receive information.
+
+Think of networking like a road system:
+
+- An **IP address** is like a destination address.
+- A **network interface** is like a connection to a road.
+- A **router** directs traffic between networks.
+- **DNS** works like a contact directory that helps you find the address associated with a name.
+- A **port** identifies a particular communication endpoint on a device.
+
+Linux networking is especially important in cybersecurity. Security professionals inspect network interfaces, addresses, routes, and connections to understand how a machine communicates.
+
+In this module, you will learn practical commands for inspecting your Linux network from the terminal.
+
+## **B. Essential Networking Concepts**
+
+Before using networking commands, understand these basic terms.
+
+| Concept           | Basic explanation                                                        |
+| ----------------- | ------------------------------------------------------------------------ |
+| IP address        | Identifies a device or network interface on an IP network                |
+| IPv4              | A widely used IP addressing format                                       |
+| Private IP        | An address used inside private networks                                  |
+| Public IP         | An address used for communication across the public internet             |
+| MAC address       | A link-layer address associated with a network interface                 |
+| Network interface | A connection point between a machine and a network                       |
+| Default gateway   | The next-hop router used for destinations outside the local network      |
+| DNS               | Resolves domain names to IP addresses                                    |
+| Port              | Identifies a communication endpoint associated with a transport protocol |
+
+### **Private and public IP addresses**
+
+An IP address helps identify where network traffic should be delivered.
+
+There are two important categories to understand.
+
+**Private IP addresses**
+
+Private addresses are used inside private networks, such as home, university, and office networks.
+
+Common private IPv4 ranges include:
+
+| Private range    | Example        |
+| ---------------- | -------------- |
+| `10.0.0.0/8`     | `10.0.0.15`    |
+| `172.16.0.0/12`  | `172.20.5.10`  |
+| `192.168.0.0/16` | `192.168.1.25` |
+
+**Public IP addresses**
+
+A public IP address is used for communication across the public internet.
+
+For example, your router may use a public IP address for internet communication while your laptop uses a private IP address inside your home network.
+
+Your machine's local IP address and your internet-facing public IP address are not necessarily the same.
+
+### **What is a MAC address?**
+
+A MAC address is a link-layer address associated with a network interface.
+
+An illustrative MAC address looks like this:
+
+```
+08:00:27:ab:cd:ef
+```
+
+It is commonly used for communication within a local network.
+
+### **What is a port?**
+
+A port identifies a communication endpoint associated with a transport protocol.
+
+For example:
+
+- Port `22` is commonly used by SSH.
+- Port `80` is commonly used by HTTP.
+- Port `443` is commonly used by HTTPS.
+
+Ports help a computer distinguish between different network services.
+
+## **C. Inspecting Network Interfaces**
+
+A network interface is the point through which your computer connects to a network.
+
+Depending on your system, you may have:
+
+- A wired Ethernet interface.
+- A wireless Wi-Fi interface.
+- A loopback interface.
+- Virtual interfaces created by software or virtualization tools.
+
+Linux provides the `ip` command to inspect network interfaces.
+
+### **1. List network interfaces**
+
+Run:
+
+```
+ip link
+```
+
+This displays information about your network interfaces.
+
+Illustrative output:
+
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536
+    link/loopback 00:00:00:00:00:00
+
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500
+    link/ether 08:00:27:ab:cd:ef
+```
+
+Let's understand the important parts:
+
+- `lo` is the loopback interface.
+- `enp0s3` is an example of a network interface name.
+- `UP` indicates that the interface is administratively enabled.
+- `LOWER_UP` indicates that the underlying link is operational.
+- `link/ether` identifies the interface's Ethernet-style MAC address.
+
+Your interface names may be different. For example, you might see `eth0`, `wlan0`, `ens33`, or another name.
+
+Do not assume every Linux machine uses the same interface names.
+
+### **2. Display interface addresses**
+
+Run:
+
+```
+ip addr
+```
+
+This displays network interface information, including assigned IPv4 and IPv6 addresses.
+
+Illustrative output:
+
+```
+1: lo: <LOOPBACK,UP,LOWER_UP>
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host
+
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP>
+    link/ether 08:00:27:ab:cd:ef
+    inet 192.168.1.105/24 brd 192.168.1.255
+    inet6 fe80::a00:27ff:feab:cdef/64 scope link
+```
+
+Important information:
+
+| Output              | Meaning                    |
+| ------------------- | -------------------------- |
+| `127.0.0.1`         | IPv4 loopback address      |
+| `::1`               | IPv6 loopback address      |
+| `192.168.1.105`     | Example local IPv4 address |
+| `08:00:27:ab:cd:ef` | Example MAC address        |
+| `inet`              | IPv4 address information   |
+| `inet6`             | IPv6 address information   |
+
+The `lo` interface is used for communication within your own machine.
+
+### **3. Display a shorter interface summary**
+
+If you prefer a more compact output, use:
+
+```
+ip -br addr
+```
+
+Illustrative output:
+
+```
+lo       UNKNOWN        127.0.0.1/8 ::1/128
+enp0s3   UP             192.168.1.105/24
+```
+
+This is useful when you want to quickly identify interface names and assigned addresses.
+
+## **D. Finding IP Addresses and the Default Gateway**
+
+Now that you understand network interfaces, let's find your machine's local IP address and default gateway.
+
+### **1. Find local IP addresses**
+
+Run:
+
+```
+hostname -I
+```
+
+Illustrative output:
+
+```
+192.168.1.105 172.17.0.1
+```
+
+This command displays IP addresses assigned to the machine.
+
+You may see more than one address if your computer has multiple network interfaces or virtual networking interfaces.
+
+**Important:** `hostname -I` does not directly identify your public internet IP address. It displays addresses assigned to your machine.
+
+For more detailed information, use:
+
+```
+ip addr
+```
+
+### **2. Find the default gateway**
+
+A default gateway is the next-hop router your machine uses when sending traffic to destinations that do not have a more specific route.
+
+For example, when you visit a website outside your local network, your computer will commonly send traffic through its default gateway.
+
+Run:
+
+```
+ip route
+```
+
+Illustrative output:
+
+```
+default via 192.168.1.1 dev enp0s3
+192.168.1.0/24 dev enp0s3 proto kernel scope link src 192.168.1.105
+```
+
+The important line is:
+
+```
+default via 192.168.1.1 dev enp0s3
+```
+
+This tells you:
+
+- `default`: This is the default route.
+- `via 192.168.1.1`: The next-hop gateway is `192.168.1.1`.
+- `dev enp0s3`: Traffic uses the `enp0s3` interface.
+
+Your gateway address and interface name may be different.
+
+**Remember:** Use `ip route` to inspect routing information. You do not need to change any routes in this module.
+
+## **E. Understanding DNS**
+
+Imagine typing a website name into your browser:
+
+```
+example.com
+```
+
+Computers communicate using IP addresses, so the system needs a way to resolve the domain name into an address.
+
+This is the basic role of **DNS (Domain Name System)**.
+
+DNS works like a directory:
+
+- You provide a domain name.
+- The system performs a name lookup.
+- It obtains an associated IP address, if resolution succeeds.
+- Applications can then use that address to communicate with the destination.
+
+### **Look up a hostname**
+
+Linux provides the `getent` command for querying information through configured system databases, including hostname resolution.
+
+Run:
+
+```
+getent hosts example.com
+```
+
+Illustrative output:
+
+```
+93.184.216.34 example.com
+```
+
+The output associates the hostname `example.com` with an IP address.
+
+The actual address returned can vary depending on DNS responses, network configuration, and address selection.
+
+If the command produces no result, the hostname may not have resolved through your system's configured name-resolution mechanisms.
+
+**Remember:** `getent hosts` is a simple way to test hostname resolution using your system's normal configuration.
+
+## **F. Testing Network Connectivity**
+
+Sometimes a machine has an IP address but cannot communicate with another device.
+
+The `ping` command helps test basic network reachability.
+
+It sends ICMP echo requests and waits for ICMP echo replies.
+
+### **1. Test the local loopback interface**
+
+Run:
+
+```
+ping -c 4 127.0.0.1
+```
+
+This sends four packets to your own machine through the loopback interface.
+
+Illustrative output:
+
+```
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.05 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.04 ms
+64 bytes from 127.0.0.1: icmp_seq=3 ttl=64 time=0.04 ms
+64 bytes from 127.0.0.1: icmp_seq=4 ttl=64 time=0.04 ms
+
+--- 127.0.0.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss
+```
+
+The option `-c 4` tells `ping` to send four packets and then stop.
+
+Successful replies show that local loopback communication is working.
+
+### **2. Test an external hostname**
+
+Run:
+
+```
+ping -c 4 example.com
+```
+
+This attempts to send four ICMP echo requests to the destination associated with `example.com`.
+
+Illustrative output:
+
+```
+PING example.com (93.184.216.34) 56(84) bytes of data.
+64 bytes from 93.184.216.34: icmp_seq=1 ttl=56 time=25.4 ms
+64 bytes from 93.184.216.34: icmp_seq=2 ttl=56 time=24.9 ms
+
+--- example.com ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss
+```
+
+Your output may contain different addresses, timings, or packet counts.
+
+### **Understanding packet loss**
+
+At the end of a ping test, you may see:
+
+```
+4 packets transmitted, 3 received, 25% packet loss
+```
+
+This means one of the four packets did not receive a reply.
+
+Packet loss can indicate network problems, congestion, or filtering.
+
+However, a failed ping does not necessarily mean the destination is offline. Some networks and servers block or filter ICMP traffic.
+
+**Key distinction:**
+
+- `ping 127.0.0.1` tests communication through your local loopback interface.
+- `ping example.com` tests communication with an external hostname, including hostname resolution and network reachability.
+
+## **G. Inspecting Ports and Connections**
+
+In Module 08, you learned that services provide background functionality.
+
+Some services communicate with other devices over a network. To understand this communication, you need to know about ports and network sockets.
+
+A **listening port** is a communication endpoint waiting for incoming connections.
+
+For example, an SSH server commonly listens on TCP port `22`.
+
+Linux provides the `ss` command to inspect sockets and network connections.
+
+### **1. List listening TCP and UDP sockets**
+
+Run:
+
+```
+ss -tuln
+```
+
+Here is what each option means:
+
+| Option | Meaning                                 |
+| ------ | --------------------------------------- |
+| `-t`   | Show TCP sockets                        |
+| `-u`   | Show UDP sockets                        |
+| `-l`   | Show listening sockets                  |
+| `-n`   | Show numeric addresses and port numbers |
+
+Illustrative output:
+
+```
+Netid State   Recv-Q Send-Q Local Address:Port Peer Address:Port
+tcp   LISTEN  0      128    0.0.0.0:22        0.0.0.0:*
+tcp   LISTEN  0      128    127.0.0.1:631    0.0.0.0:*
+udp   UNCONN  0      0      127.0.0.53:53    0.0.0.0:*
+```
+
+Let's understand some of these entries:
+
+- `tcp`: The socket uses TCP.
+- `udp`: The socket uses UDP.
+- `LISTEN`: A TCP socket is waiting for incoming connections.
+- `0.0.0.0:22`: The socket is listening on TCP port 22 on all local IPv4 addresses.
+- `127.0.0.1:631`: The socket is bound to the local loopback address.
+- `127.0.0.53:53`: An example of a local DNS-related listening endpoint.
+
+Your system may display different entries. Some machines may have no listening TCP ports.
+
+### **2. List TCP and UDP sockets, including connections**
+
+Run:
+
+```
+ss -tun
+```
+
+This displays TCP and UDP sockets without restricting the output to listening sockets.
+
+You may see states such as:
+
+- `LISTEN`: Waiting for incoming TCP connections.
+- `ESTAB`: An established TCP connection.
+
+UDP does not use the same connection-establishment process as TCP, so UDP sockets may appear with states such as `UNCONN`.
+
+### **Listening sockets vs. established connections**
+
+| Listening socket                  | Established connection                     |
+| --------------------------------- | ------------------------------------------ |
+| Waits for incoming connections    | Represents an active TCP connection        |
+| Commonly associated with a server | Represents communication between endpoints |
+| May be visible with `ss -tuln`    | Can be visible with `ss -tun`              |
+
+### **Why inspect listening ports?**
+
+Security professionals inspect listening ports to understand which services may accept network communication.
+
+For example, if an SSH service is listening, the machine may be accepting SSH connection attempts.
+
+However, an open listening port is not automatically a vulnerability. Its security depends on the service, configuration, access controls, and network exposure.
+
+**Remember:** This module focuses on inspecting your own machine. You do not need to scan other systems.
+
+## **H. Viewing Nearby Network Devices**
+
+When devices communicate on a local network, Linux may store information about nearby network neighbors.
+
+The neighbor table contains information used to associate local network addresses with link-layer addresses.
+
+On common Ethernet and Wi-Fi networks using IPv4, this is closely related to ARP. IPv6 uses Neighbor Discovery.
+
+### **Inspect the neighbor table**
+
+Run:
+
+```
+ip neigh
+```
+
+Illustrative output:
+
+```
+192.168.1.1 dev enp0s3 lladdr 00:11:22:33:44:55 REACHABLE
+192.168.1.20 dev enp0s3 lladdr aa:bb:cc:dd:ee:ff STALE
+```
+
+Let's understand the important parts:
+
+| Output        | Meaning                                                            |
+| ------------- | ------------------------------------------------------------------ |
+| `192.168.1.1` | Neighbor's IP address                                              |
+| `dev enp0s3`  | Network interface used                                             |
+| `lladdr`      | Neighbor's link-layer address                                      |
+| `REACHABLE`   | Neighbor information is currently considered reachable             |
+| `STALE`       | Entry exists, but its reachability has not recently been confirmed |
+
+Your neighbor table may be empty or contain different entries.
+
+This is normal.
+
+### **Important limitation**
+
+The neighbor table does not necessarily show every device connected to your network.
+
+It only displays neighbor information currently known to your machine. Devices that have not communicated recently may not appear.
+
+**Remember:** `ip neigh` is useful for inspecting cached local neighbor information, not for producing a complete network inventory.
+
+## **I. Hands-on Practice — Inspect Your Linux Network**
+
+Practical exercise
+
+Now you will use the commands from this module to inspect your own Linux machine.
+
+You do not need administrative privileges for these ordinary inspection tasks. Do not modify network settings.
+
+### **Task 1 — List network interfaces**
+
+Run:
+
+```
+ip link
+```
+
+**What it does:** Displays the available network interfaces.
+
+**What to observe:**
+
+- Find the `lo` interface.
+- Identify another interface if one is available.
+- Look for interface states such as `UP` and `LOWER_UP`.
+
+Your interface names may differ from the examples in this lesson.
+
+### **Task 2 — Inspect interface addresses**
+
+Run:
+
+```
+ip addr
+```
+
+**What it does:** Displays interface addresses and related information.
+
+**What to observe:**
+
+- Look for `inet` entries for IPv4.
+- Look for `inet6` entries for IPv6.
+- Identify the MAC address shown after `link/ether`.
+
+If your machine has multiple interfaces, it may have multiple addresses.
+
+### **Task 3 — Identify the loopback interface**
+
+Run:
+
+```
+ip -br addr
+```
+
+**What it does:** Displays a compact summary of network interfaces and their addresses.
+
+**What to observe:**
+
+Look for:
+
+```
+lo    UNKNOWN    127.0.0.1/8 ::1/128
+```
+
+The loopback interface allows your machine to communicate with itself.
+
+Your output may use different spacing or show additional addresses.
+
+### **Task 4 — Find your local IPv4 address**
+
+Run:
+
+```
+hostname -I
+```
+
+**What it does:** Displays IP addresses assigned to the machine.
+
+**What to observe:**
+
+Identify the address associated with your active network connection.
+
+For more detail, compare the result with:
+
+```
+ip addr
+```
+
+If multiple addresses appear, that may be because your system has multiple network interfaces or virtual network connections.
+
+Remember that these are not necessarily your public internet address.
+
+### **Task 5 — Identify your MAC address**
+
+Run:
+
+```
+ip link
+```
+
+**What it does:** Displays link-layer interface information.
+
+**What to observe:**
+
+Find the line beginning with:
+
+```
+link/ether
+```
+
+The address following it is the interface's MAC address.
+
+For example:
+
+```
+link/ether 08:00:27:ab:cd:ef
+```
+
+If your interface is virtual, its MAC address may be generated by virtualization software.
+
+### **Task 6 — Find the default gateway**
+
+Run:
+
+```
+ip route
+```
+
+**What it does:** Displays your system's routing table.
+
+**What to observe:**
+
+Look for a line beginning with:
+
+```
+default via
+```
+
+For example:
+
+```
+default via 192.168.1.1 dev enp0s3
+```
+
+Here, `192.168.1.1` is the default gateway.
+
+If there is no default route, your machine may not currently have a configured route to external networks.
+
+### **Task 7 — Test loopback connectivity**
+
+Run:
+
+```
+ping -c 4 127.0.0.1
+```
+
+**What it does:** Sends four ICMP echo requests to your own machine.
+
+**What to observe:**
+
+Look for successful replies and the final packet-loss summary.
+
+A successful test confirms that local loopback communication is working.
+
+### **Task 8 — Test external hostname connectivity**
+
+Run:
+
+```
+ping -c 4 example.com
+```
+
+**What it does:** Attempts to send ICMP echo requests to an external hostname.
+
+**What to observe:**
+
+- Whether the hostname resolves to an IP address.
+- Whether you receive replies.
+- Whether any packets are lost.
+
+If it fails, do not immediately assume your internet connection is broken. ICMP traffic may be filtered by the network or destination.
+
+### **Task 9 — Resolve a hostname**
+
+Run:
+
+```
+getent hosts example.com
+```
+
+**What it does:** Looks up the hostname using the system's configured name-resolution mechanisms.
+
+**What to observe:**
+
+You should see an IP address associated with `example.com` if resolution succeeds.
+
+The returned address may differ from the example in this lesson.
+
+If there is no output, hostname resolution may not be working through your current system configuration.
+
+### **Task 10 — List listening TCP and UDP sockets**
+
+Run:
+
+```
+ss -tuln
+```
+
+**What it does:** Displays listening TCP and UDP sockets.
+
+**What to observe:**
+
+- Identify the protocol in the `Netid` column.
+- Look for `LISTEN` entries.
+- Identify the local address and port.
+- Notice whether a socket is bound to `127.0.0.1` or `0.0.0.0`.
+
+Your machine may show very few listening sockets. That is normal.
+
+### **Task 11 — Inspect the local neighbor table**
+
+Run:
+
+```
+ip neigh
+```
+
+**What it does:** Displays cached information about nearby network neighbors.
+
+**What to observe:**
+
+- Look for IP addresses.
+- Identify the associated network interface.
+- Look for link-layer addresses.
+- Notice neighbor states such as `REACHABLE` or `STALE`.
+
+If the output is empty, your machine may not currently have cached neighbor entries. This does not necessarily indicate a network problem.
+
+### **Practical exercise checklist**
+
+- Listed network interfaces.
+- Inspected interface addresses.
+- Identified the loopback interface.
+- Found local IP addresses.
+- Identified a MAC address.
+- Found the default gateway, if configured.
+- Tested loopback connectivity.
+- Tested external hostname connectivity.
+- Resolved a hostname using `getent`.
+- Listed listening TCP and UDP sockets.
+- Inspected the neighbor table.
+
+## **J. Knowledge Check**
+
+Test your understanding before moving to the next module.
+
+**Questions 1–4: Select the correct answer.**
+
+**1. Which command displays your system's network interfaces and their assigned IP addresses?**
+
+ip addr
+
+systemctl status
+
+chmod 755
+
+ps aux
+
+
+
+**2. What does a default gateway normally do?**
+
+Stores passwords
+
+Routes traffic toward destinations outside the local network
+
+Resolves every domain name
+
+Assigns MAC addresses
+
+
+
+**3. Which command checks whether a hostname resolves through the system's configured name-resolution mechanisms?**
+
+ip link
+
+ss -tuln
+
+getent hosts example.com
+
+ping -c 4 127.0.0.1
+
+
+
+**4. Which command displays listening TCP and UDP sockets using numeric addresses and port numbers?**
+
+ss -tun
+
+ss -tuln
+
+ip neigh
+
+hostname -I
+
+
+
+Check answers
+
+### **Question 5 — Practical command identification**
+
+You want to identify the default gateway configured on your Linux machine.
+
+Which command should you use?
+
+Write the command below.
+
+Reveal answer
+
+## **K. Answer Key**
+
+| Question | Correct answer                                               |
+| -------- | ------------------------------------------------------------ |
+| 1        | `ip addr`                                                    |
+| 2        | Routes traffic toward destinations outside the local network |
+| 3        | `getent hosts example.com`                                   |
+| 4        | `ss -tuln`                                                   |
+| 5        | `ip route`                                                   |
+
+If you made mistakes, revisit Sections C, D, E, and G before continuing.
+
+## **Module Recap**
+
+In this module, you learned how to inspect your Linux machine's network configuration and understand its basic communication behavior.
+
+Key takeaways:
+
+- **Network interfaces** connect your machine to networks.
+- **IP addresses** identify network interfaces on IP networks.
+- **MAC addresses** are link-layer addresses associated with interfaces.
+- **Private IP addresses** are used inside private networks, while public IP addresses are used for communication across the public internet.
+- **Default gateways** provide a next hop for destinations outside the local network.
+- **DNS** resolves domain names to IP addresses.
+- `ping` tests basic network reachability using ICMP.
+- `ss` displays listening sockets and network connections.
+- `ip neigh` displays cached information about nearby network neighbors.
+
+You can now inspect basic network information using the Linux terminal without changing your system's network configuration.
+
+## **Next Module: SSH and Remote Access**
+
+Linux machines often need to communicate with and be managed from other computers.
+
+In Module 10, you will learn about **SSH (Secure Shell)** and remote access.
+
+You will explore how to:
+
+- Connect securely to another Linux machine.
+- Understand SSH client and server roles.
+- Execute commands on a remote machine.
+- Work with basic SSH connection syntax.
+- Understand why SSH is important for secure remote administration.
+
+These skills will help you manage Linux systems remotely and prepare for practical cybersecurity labs.

@@ -1,0 +1,795 @@
+# FORGESEC Academy
+## Linux Fundamentals: From Zero to Command-Line Confidence
+
+# Module 10 — SSH and Remote Access
+
+**Level:** Beginner / Essential  
+**Estimated time:** 15–20 minutes  
+**Primary reference:** *Linux Basics for Hackers*, Second Edition, by OccupyTheWeb  
+**Previous module:** Module 09 — Linux Networking Fundamentals and Commands
+
+---
+
+## A. Welcome to SSH and Remote Access
+
+Imagine that you need to manage a Linux server located in another building. You do not need to travel there and sit in front of it. Instead, you can connect to it from your own computer and control it through a terminal.
+
+This is called **remote access**.
+
+Remote access is useful for:
+
+- Managing Linux servers.
+- Accessing university or cybersecurity lab machines.
+- Running commands on another computer.
+- Troubleshooting remote systems.
+- Working with cloud-based Linux environments.
+
+One of the most widely used tools for secure remote access is **SSH**.
+
+SSH allows you to communicate with another machine through an encrypted connection. Think of it as securely entering a remote office: you identify yourself, verify that you are entering the correct place, and then access the resources you are authorized to use.
+
+In this module, you will learn how to connect to a remote Linux machine, execute commands, and disconnect safely.
+
+---
+
+## B. Understanding SSH
+
+**SSH** stands for **Secure Shell**.
+
+It is a protocol that allows users to securely access and control another computer over a network.
+
+SSH provides encrypted communication between the client and server. This helps protect information, such as login credentials and commands, from ordinary network eavesdropping.
+
+SSH commonly uses:
+
+- **TCP port:** `22`
+- **Client:** The machine initiating the connection.
+- **Server:** The machine accepting the connection.
+
+SSH is preferred over older insecure remote-login methods because it encrypts communication.
+
+However, SSH does not automatically make a server secure. The server still needs appropriate security practices, updated software, and controlled access.
+
+### The basic SSH connection
+
+```text
+Your Linux Machine                 Remote Linux Machine
+   SSH Client     ------------->      SSH Server
+                   Encrypted
+                   Connection
+```
+
+The client initiates the connection. The server accepts it if the SSH service is running and the user is authorized to access an account.
+
+---
+
+## C. Understanding the SSH Client and Server
+
+SSH uses a client-server model.
+
+| Component | Purpose |
+|---|---|
+| SSH client | The machine initiating the connection |
+| SSH server | The machine accepting the connection |
+| Username | Identifies the remote account |
+| IP address or hostname | Identifies the destination machine |
+| Port | Identifies the SSH service endpoint |
+
+For example, imagine you have two Linux machines:
+
+- Your laptop is the SSH client.
+- A lab computer is the SSH server.
+- Your remote username is `student`.
+- The lab computer's IP address is `192.168.1.100`.
+
+Your connection will look like this:
+
+```text
+Local machine (SSH client)
+        |
+        | SSH connection
+        |
+        v
+Remote machine (SSH server)
+Username: student
+IP: 192.168.1.100
+Port: 22
+```
+
+### What do you need before connecting?
+
+You need:
+
+1. A remote Linux machine that you can reach over the network.
+2. A valid username on that machine.
+3. A running SSH server on the remote machine.
+4. Authorization to access the remote account.
+
+**Important:** Having an SSH client does not mean your computer can accept incoming SSH connections. The server needs its own SSH server software installed and running.
+
+---
+
+## D. Connecting to a Remote Machine
+
+The basic SSH connection syntax is:
+
+```bash
+ssh username@IP_ADDRESS
+```
+
+For example:
+
+```bash
+ssh student@192.168.1.100
+```
+
+This command means:
+
+- `ssh`: Start the SSH client.
+- `student`: The username on the remote machine.
+- `192.168.1.100`: The destination IP address.
+
+Replace the example username and address with the details provided by your authorized lab administrator.
+
+### What happens during the first connection?
+
+When you connect to a server for the first time, SSH may display a host authenticity prompt.
+
+Illustrative example:
+
+```text
+The authenticity of host '192.168.1.100 (192.168.1.100)' can't be established.
+ED25519 key fingerprint is SHA256:EXAMPLE_FINGERPRINT.
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+```
+
+This message means your SSH client has not previously recorded this server's host key.
+
+### What is a host key?
+
+A host key helps identify the SSH server.
+
+The fingerprint is a short representation of the server's host key. It helps you check whether you are connecting to the expected server.
+
+Before accepting an unfamiliar host key:
+
+1. Ask your lab administrator for the server's expected fingerprint through a trusted channel.
+2. Compare it with the fingerprint displayed by your SSH client.
+3. Accept the connection only if the fingerprint matches and you trust the destination.
+
+If you cannot verify an unfamiliar fingerprint, do not blindly accept it. Ask the administrator to confirm it first.
+
+After accepting a verified host key, SSH normally records it in a local file called `known_hosts`. This allows the client to recognize the server on future connections.
+
+If the recorded host key changes unexpectedly, SSH may display a warning. Do not ignore the warning or blindly remove the old entry. Confirm with the server administrator that the change is legitimate.
+
+### What happens after host verification?
+
+After the server's identity has been accepted, SSH proceeds with user authentication.
+
+Depending on the server's configuration, you may be asked for a password or use another supported authentication method.
+
+Illustrative example:
+
+```text
+student@192.168.1.100's password:
+```
+
+After successful authentication, you should see the remote machine's shell prompt.
+
+You are now working inside the remote machine.
+
+**Remember:** Host-key verification checks the server's identity. User authentication checks whether you are allowed to access an account. They are two different steps.
+
+---
+
+## E. Executing Commands Remotely
+
+You do not always need to open an interactive SSH session to execute a command on another machine.
+
+SSH can execute a command remotely and return its output to your local terminal.
+
+The basic syntax is:
+
+```bash
+ssh username@IP_ADDRESS "command"
+```
+
+For example:
+
+### 1. Check the remote username
+
+**Local machine:**
+
+```bash
+ssh student@192.168.1.100 "whoami"
+```
+
+Illustrative output:
+
+```text
+student
+```
+
+The `whoami` command runs on the remote machine and displays the remote account name.
+
+### 2. Check the remote hostname
+
+**Local machine:**
+
+```bash
+ssh student@192.168.1.100 "hostname"
+```
+
+Illustrative output:
+
+```text
+lab-server
+```
+
+This displays the hostname of the remote machine.
+
+### 3. Check the remote working directory
+
+**Local machine:**
+
+```bash
+ssh student@192.168.1.100 "pwd"
+```
+
+Illustrative output:
+
+```text
+/home/student
+```
+
+This displays the current working directory of the remote command's shell.
+
+### Important distinction
+
+When you run:
+
+```bash
+ssh student@192.168.1.100 "hostname"
+```
+
+The command runs on the remote machine, even though you typed it into your local terminal.
+
+The output is returned to your local terminal.
+
+This is useful when you need to perform a quick check without opening a full interactive session.
+
+---
+
+## F. Connecting Through a Different Port
+
+SSH commonly uses TCP port `22` by default.
+
+However, a server administrator may configure the SSH server to listen on a different port.
+
+To connect to a server using a non-default port, use the `-p` option.
+
+The syntax is:
+
+```bash
+ssh -p PORT username@IP_ADDRESS
+```
+
+For example:
+
+```bash
+ssh -p 2222 student@192.168.1.100
+```
+
+This tells the SSH client to connect to:
+
+- Port: `2222`
+- Username: `student`
+- Destination: `192.168.1.100`
+
+The server must actually be configured to accept SSH connections on that port.
+
+If you use the wrong port, the connection may fail.
+
+**Remember:** The `-p` option specifies the destination port for the SSH client. It does not change the server's configuration.
+
+---
+
+## G. Disconnecting from SSH
+
+After finishing your work, you should close the remote session properly.
+
+The simplest method is:
+
+```bash
+exit
+```
+
+You can also press:
+
+```text
+Ctrl + D
+```
+
+Both methods can end the current shell session.
+
+### Understanding local and remote prompts
+
+Consider this example:
+
+**Local machine:**
+
+```text
+student@laptop:~$
+```
+
+You connect:
+
+```bash
+ssh student@192.168.1.100
+```
+
+After successful authentication, the prompt changes:
+
+**Remote machine:**
+
+```text
+student@lab-server:~$
+```
+
+Now run:
+
+```bash
+hostname
+```
+
+Output:
+
+```text
+lab-server
+```
+
+You are executing commands on the remote machine.
+
+To disconnect:
+
+```bash
+exit
+```
+
+You should return to your original local prompt:
+
+**Local machine:**
+
+```text
+student@laptop:~$
+```
+
+This confirms that you have left the remote shell and returned to your local terminal.
+
+---
+
+## H. Basic SSH Security Practices
+
+SSH provides encrypted communication, but using it safely still requires good security habits.
+
+Follow these basic practices:
+
+### 1. Connect only to trusted servers
+
+Make sure you know which machine you are connecting to. Avoid connecting to unfamiliar systems without confirming their identity.
+
+### 2. Verify unfamiliar host keys
+
+Compare the displayed host-key fingerprint with a trusted value supplied by the administrator.
+
+Do not blindly accept an unknown host key.
+
+### 3. Use strong authentication
+
+Use strong, unique credentials when password authentication is enabled.
+
+SSH also supports **key-based authentication**, which uses a key pair to authenticate users. It is commonly used because it can provide convenient and strong authentication.
+
+You will explore SSH keys in a more advanced learning path.
+
+### 4. Never share credentials
+
+Do not share your SSH passwords or private authentication credentials with other people.
+
+### 5. Avoid unnecessary public exposure
+
+An SSH server should not be exposed to the public internet unless there is a clear requirement and appropriate security controls.
+
+For this module, all practical connections should remain inside a trusted local network or authorized private lab environment.
+
+### 6. Keep systems updated
+
+The SSH server and operating system should receive appropriate security updates.
+
+### 7. Access only authorized systems
+
+Never attempt to connect to systems without permission.
+
+**Security reminder:** SSH is a tool for secure administration and authorized access, not permission to access someone else's machine.
+
+---
+
+## I. Hands-on Practice — Connect to a Linux Lab Machine
+
+**Practical exercise**
+
+Now you will connect to another Linux machine using SSH.
+
+You need two Linux environments:
+
+- A local machine that acts as the SSH client.
+- A remote machine that acts as the SSH server.
+
+Both machines must be able to communicate through a trusted local network or isolated lab network.
+
+Do not expose SSH to the public internet for this exercise.
+
+### Task 1 — Identify the client and server
+
+Choose two authorized Linux machines.
+
+For example:
+
+| Machine | Role |
+|---|---|
+| Your laptop | SSH client |
+| Your lab VM | SSH server |
+
+The client initiates the connection. The server accepts it.
+
+If you have only one physical computer, you can use two isolated virtual machines configured to communicate through an appropriate private lab network.
+
+### Task 2 — Check whether an SSH server is available
+
+**Remote machine (SSH server):**
+
+Run:
+
+```bash
+systemctl status ssh
+```
+
+**What it does:** Checks the status of the SSH server service on a systemd-based Debian/Ubuntu installation.
+
+**Possible result:**
+
+```text
+Active: active (running)
+```
+
+This means the SSH service is currently active.
+
+If the service is not found, OpenSSH Server may not be installed. If it is installed but inactive, the service may not be running.
+
+Do not assume SSH Server is installed by default.
+
+### If OpenSSH Server is not installed
+
+An authorized lab administrator can install it on the remote machine.
+
+**Remote machine (SSH server):**
+
+```bash
+sudo apt update
+sudo apt install openssh-server
+```
+
+The first command refreshes package information. The second installs the OpenSSH Server package.
+
+After installation, the administrator can start the service and configure it to start automatically:
+
+```bash
+sudo systemctl enable --now ssh
+```
+
+This command enables the service for automatic startup and starts it immediately.
+
+Verify the result:
+
+```bash
+systemctl status ssh
+```
+
+Expected information includes:
+
+```text
+Active: active (running)
+```
+
+These installation and service-management commands require administrative privileges.
+
+Only an authorized administrator should install or start the SSH server.
+
+### Task 3 — Find the server's IP address
+
+**Remote machine (SSH server):**
+
+Run:
+
+```bash
+hostname -I
+```
+
+Illustrative output:
+
+```text
+192.168.1.100
+```
+
+Use the reachable address associated with the lab network.
+
+If multiple addresses appear, inspect the interfaces with:
+
+```bash
+ip addr
+```
+
+Choose the address that the client can reach through the lab network.
+
+### Task 4 — Connect to the remote machine
+
+**Local machine (SSH client):**
+
+Run:
+
+```bash
+ssh student@192.168.1.100
+```
+
+Replace:
+
+- `student` with your actual remote username.
+- `192.168.1.100` with your remote machine's IP address.
+
+**What it does:** Starts an SSH connection to the remote machine.
+
+On the first connection, you may see a host authenticity prompt.
+
+Verify the displayed fingerprint with your lab administrator through a trusted channel.
+
+Only after confirming that it matches should you accept the host key.
+
+You may then be asked for the remote account's password or another authentication method.
+
+**Expected result:** After successful authentication, you should see the remote machine's shell prompt.
+
+### Task 5 — Execute `whoami` remotely
+
+**Remote machine (inside the SSH session):**
+
+Run:
+
+```bash
+whoami
+```
+
+Illustrative output:
+
+```text
+student
+```
+
+**What it does:** Displays the username of the remote account.
+
+The command runs on the remote machine, not your local machine.
+
+### Task 6 — Execute `hostname` remotely
+
+**Remote machine (inside the SSH session):**
+
+Run:
+
+```bash
+hostname
+```
+
+Illustrative output:
+
+```text
+lab-server
+```
+
+**What it does:** Displays the remote machine's hostname.
+
+This helps confirm which machine you are accessing.
+
+### Task 7 — Execute `pwd` remotely
+
+**Remote machine (inside the SSH session):**
+
+Run:
+
+```bash
+pwd
+```
+
+Illustrative output:
+
+```text
+/home/student
+```
+
+**What it does:** Displays the current working directory in the remote shell.
+
+The exact directory may differ depending on the remote account.
+
+### Task 8 — Disconnect from the remote machine
+
+**Remote machine (inside the SSH session):**
+
+Run:
+
+```bash
+exit
+```
+
+**What it does:** Ends the remote shell session.
+
+**Expected result:** Your terminal returns to the local machine's shell prompt.
+
+You can also use `Ctrl + D`.
+
+### Task 9 — Optional: Connect using a non-default port
+
+Only complete this task if your lab administrator has configured the SSH server to listen on a different port.
+
+For example, if the server uses port `2222`:
+
+**Local machine (SSH client):**
+
+```bash
+ssh -p 2222 student@192.168.1.100
+```
+
+**What it does:** Connects to the remote SSH server using TCP port `2222` instead of the default port `22`.
+
+If the server is not configured for that port, the connection will fail.
+
+### Practical exercise checklist
+
+- [ ] Identified the SSH client and server.
+- [ ] Checked whether OpenSSH Server was available.
+- [ ] Confirmed that the SSH server was running.
+- [ ] Found the remote machine's IP address.
+- [ ] Connected using `ssh username@IP_ADDRESS`.
+- [ ] Verified the host-key fingerprint through a trusted channel.
+- [ ] Executed `whoami` on the remote machine.
+- [ ] Executed `hostname` on the remote machine.
+- [ ] Executed `pwd` on the remote machine.
+- [ ] Disconnected using `exit`.
+- [ ] Optionally tested a non-default SSH port.
+
+**If you cannot complete the connection:** Check that both machines are connected to the intended lab network, the remote IP address is correct, the SSH server is installed and running, and you have a valid account. Ask your lab administrator for help rather than changing network settings or exposing the server publicly.
+
+---
+
+## J. Knowledge Check
+
+Test your understanding of SSH and remote access.
+
+### Questions 1–2: Multiple Choice
+
+**1. What does SSH stand for?**
+
+A. Secure System Hosting  
+B. Secure Shell  
+C. System Service Handler  
+D. Server Security Host
+
+**2. Which component initiates an SSH connection?**
+
+A. SSH server  
+B. Network gateway  
+C. SSH client  
+D. DNS server
+
+### Questions 3–4: Command Identification
+
+**3. Write the command to connect to a remote machine using username `student` and IP address `192.168.1.100`.**
+
+```bash
+# Write your command here
+```
+
+**4. Write the command to connect to the same machine using SSH port `2222`.**
+
+```bash
+# Write your command here
+```
+
+### Question 5: Practical Remote-Connection Task
+
+You have successfully connected to a remote Linux machine.
+
+Write the command that:
+
+1. Displays the remote machine's hostname.
+2. Ends the remote SSH session and returns you to your local terminal.
+
+---
+
+## K. Answer Key
+
+| Question | Correct answer |
+|---|---|
+| 1 | B — Secure Shell |
+| 2 | C — SSH client |
+| 3 | `ssh student@192.168.1.100` |
+| 4 | `ssh -p 2222 student@192.168.1.100` |
+| 5 | Run `hostname` inside the remote session, then run `exit` to disconnect. |
+
+### Additional explanation
+
+- The SSH client initiates the connection.
+- The SSH server accepts incoming connections.
+- The server's host key helps identify the server.
+- User authentication determines whether you can access the remote account.
+- The `-p` option specifies the destination port.
+- `exit` ends the remote shell session.
+
+---
+
+## L. Module Recap and Beginner Path Completion
+
+In this module, you learned how to access another Linux machine securely using SSH.
+
+Key takeaways:
+
+- **SSH (Secure Shell)** provides encrypted remote access.
+- The **SSH client** initiates a connection.
+- The **SSH server** accepts incoming connections.
+- SSH commonly uses TCP port `22` by default.
+- The basic connection syntax is `ssh username@IP_ADDRESS`.
+- Host-key verification helps confirm the identity of the remote server.
+- User authentication verifies access to the remote account.
+- You can execute commands remotely without opening an interactive shell.
+- The `-p` option allows connections through a non-default SSH port.
+- The `exit` command safely ends an interactive remote shell session.
+- SSH should be used with trusted servers and authorized accounts.
+
+---
+
+# Congratulations — Beginner / Essential Linux Fundamentals Completed!
+
+You have now completed all 10 modules of the **FORGESEC Academy — Linux Fundamentals: From Zero to Command-Line Confidence** learning path.
+
+Throughout this course, you developed practical skills in:
+
+- Understanding Linux and using the terminal.
+- Navigating the filesystem.
+- Managing files and directories.
+- Reading and processing text.
+- Understanding users, groups, and permissions.
+- Installing and managing software.
+- Inspecting and controlling processes.
+- Managing basic Linux services.
+- Inspecting network configuration and connections.
+- Connecting to remote Linux machines using SSH.
+
+These skills provide a foundation for working with Linux in cybersecurity environments.
+
+You do not need to master every part of Linux administration before beginning cybersecurity practice. You can continue developing your Linux knowledge as you work through practical labs, projects, and security challenges.
+
+## Explore Your Next Learning Path
+
+After completing this beginner course, consider exploring:
+
+### 1. Linux for Cybersecurity Practice
+Build practical Linux skills for security labs, system inspection, and cybersecurity workflows.
+
+### 2. Bash Scripting and Automation
+Learn how to automate repetitive tasks and combine Linux commands into useful scripts.
+
+### 3. Linux Administration and Hardening
+Explore system administration, service management, security controls, and Linux system protection.
+
+### 4. Linux Networking and Troubleshooting
+Develop deeper networking knowledge and learn how to investigate connectivity and network-related problems.
+
+**Your Linux fundamentals journey is complete. Now use what you have learned to build, experiment, and practice in authorized environments.**
