@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import fg from "fast-glob";
 import matter from "gray-matter";
 import { load as parseYaml } from "js-yaml";
 import {
@@ -40,6 +39,21 @@ export interface ResourceDocument {
 
 const root = process.cwd();
 
+function listFilesByExt(dir: string, ext: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const results: string[] = [];
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...listFilesByExt(fullPath, ext));
+    } else if (entry.isFile() && entry.name.endsWith(ext)) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
 export function slugifyHeading(text: string): string {
   return text
     .toLowerCase()
@@ -74,10 +88,10 @@ export function extractHeadings(markdown: string): TocHeading[] {
 }
 
 export function getPublishedLessons(): LessonDocument[] {
-  const files = fg.sync("content/lessons/**/*.mdx", { cwd: root });
+  const files = listFilesByExt(path.join(root, "content", "lessons"), ".mdx");
   const lessons: LessonDocument[] = [];
-  for (const rel of files) {
-    const raw = fs.readFileSync(path.join(root, rel), "utf8");
+  for (const filePath of files) {
+    const raw = fs.readFileSync(filePath, "utf8");
     const { data, content } = matter(raw);
     const meta = LessonFrontmatterSchema.parse(data);
     if (meta.status !== "published") continue;
@@ -104,10 +118,10 @@ export function getLessonById(id: string): LessonDocument | null {
 }
 
 export function getPublishedLearningPaths(): LearningPath[] {
-  const files = fg.sync("content/paths/*.yaml", { cwd: root });
+  const files = listFilesByExt(path.join(root, "content", "paths"), ".yaml");
   const paths: LearningPath[] = [];
-  for (const rel of files) {
-    const raw = fs.readFileSync(path.join(root, rel), "utf8");
+  for (const filePath of files) {
+    const raw = fs.readFileSync(filePath, "utf8");
     const parsed = LearningPathSchema.parse(parseYaml(raw));
     if (parsed.status !== "published") continue;
     paths.push(parsed);
@@ -158,10 +172,10 @@ export function getLessonNeighbors(lesson: LessonDocument): {
 }
 
 export function getPublishedWriteups(): WriteupDocument[] {
-  const files = fg.sync("content/writeups/*.mdx", { cwd: root });
+  const files = listFilesByExt(path.join(root, "content", "writeups"), ".mdx");
   return files
-    .map((rel) => {
-      const raw = fs.readFileSync(path.join(root, rel), "utf8");
+    .map((filePath) => {
+      const raw = fs.readFileSync(filePath, "utf8");
       const { data, content } = matter(raw);
       return { meta: WriteupFrontmatterSchema.parse(data), content };
     })
@@ -174,10 +188,10 @@ export function getWriteupBySlug(slug: string): WriteupDocument | null {
 }
 
 export function getPublishedResources(): ResourceDocument[] {
-  const files = fg.sync("content/resources/*.mdx", { cwd: root });
+  const files = listFilesByExt(path.join(root, "content", "resources"), ".mdx");
   return files
-    .map((rel) => {
-      const raw = fs.readFileSync(path.join(root, rel), "utf8");
+    .map((filePath) => {
+      const raw = fs.readFileSync(filePath, "utf8");
       const { data, content } = matter(raw);
       return { meta: ResourceFrontmatterSchema.parse(data), content };
     })

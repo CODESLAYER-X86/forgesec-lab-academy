@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import type {
   AssignmentProgressRecord,
@@ -24,8 +25,13 @@ export interface PreviewDatabase {
   auditLogs: AuditLogEntry[];
 }
 
-const DB_DIR = path.join(process.cwd(), ".data");
+const DB_DIR =
+  process.env.VERCEL === "1"
+    ? path.join(os.tmpdir(), "forgesec-preview")
+    : path.join(process.cwd(), ".data");
 const DB_FILE = path.join(DB_DIR, "preview-db.json");
+
+let memoryFallbackDb: PreviewDatabase | null = null;
 
 function createInitialSeed(): PreviewDatabase {
   const now = new Date().toISOString();
@@ -708,27 +714,36 @@ function createInitialSeed(): PreviewDatabase {
 }
 
 export function readPreviewDb(): PreviewDatabase {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(DB_FILE)) {
-    const seed = createInitialSeed();
-    fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2), "utf8");
-    return seed;
-  }
   try {
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(DB_FILE)) {
+      const seed = memoryFallbackDb ?? createInitialSeed();
+      fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2), "utf8");
+      memoryFallbackDb = seed;
+      return seed;
+    }
     const raw = fs.readFileSync(DB_FILE, "utf8");
-    return JSON.parse(raw) as PreviewDatabase;
+    const parsed = JSON.parse(raw) as PreviewDatabase;
+    memoryFallbackDb = parsed;
+    return parsed;
   } catch {
-    const seed = createInitialSeed();
-    fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2), "utf8");
-    return seed;
+    if (!memoryFallbackDb) {
+      memoryFallbackDb = createInitialSeed();
+    }
+    return memoryFallbackDb;
   }
 }
 
 export function writePreviewDb(db: PreviewDatabase): void {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+  memoryFallbackDb = db;
+  try {
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf8");
+  } catch {
+    // Read-only filesystem fallback stays in memoryFallbackDb
   }
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf8");
 }

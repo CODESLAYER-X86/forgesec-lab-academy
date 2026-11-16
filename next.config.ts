@@ -23,6 +23,9 @@ export default function nextConfig(phase: string): NextConfig {
       ],
     },
     output: 'standalone',
+    outputFileTracingIncludes: {
+      '/**': ['./content/**/*'],
+    },
     transpilePackages: ['motion'],
     webpack: (config, {dev}) => {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
