@@ -18,10 +18,6 @@ quizSlug: linux-permissions-check
 assignmentSlug: audit-local-file-permissions
 ---
 
-# **Module 05 — Users, Groups and File Permissions**
-
-
-
 ## **A. Welcome to Linux Users and Permissions**
 
 Linux is designed to support multiple users. Each user may have different levels of access to files, directories, and system resources.
@@ -762,93 +758,7 @@ You should be able to identify:
 
 You have checked your user identity, inspected ownership, created files and directories, and changed permissions using both symbolic and numeric notation.
 
-## **H. Knowledge Check**
-
-Test your understanding before moving to the next module.
-
-**Questions 1–2: Multiple choice**
-
-2 questions
-
-**1. Which Linux account has the highest level of ordinary system administrative privileges?**
-
-guest
-
-student
-
-root
-
-operator
-
-
-
-**2. What does the permission number 644 mean?**
-
-Owner: read/write; group: read; others: read
-
-Owner: read/execute; group: read; others: execute
-
-Owner: full access; group: read; others: read
-
-Everyone has read and write access
-
-
-
-**Questions 3–4: Command identification**
-
-**3. Which command displays your current username?**
-
-
-
-**4. Which command removes write permission from the group for notes.txt?**
-
-
-
-**5. Practical permission analysis**
-
-A file has the permission string:
-
-```
--rw-r-----
-```
-
-Explain what the owner, group, and others can do.
-
-Check answers
-
-
-
-## **Answer Key**
-
-Use this section to review the correct answers.
-
-**1. Which account has the highest administrative privileges?**
-
-Correct answer: **root**
-
-**2. What does&#x20;**`644`**&#x20;mean?**
-
-Correct answer: Owner can read and write; group and others can read only.
-
-**3. Which command displays your current username?**
-
-```
-whoami
-```
-
-**4. Which command removes group write permission?**
-
-```
-chmod g-w notes.txt
-```
-
-**5. Analyze&#x20;**`-rw-r-----`**.**
-
-- Owner: Read and write.
-- Group: Read only.
-- Others: No permissions.
-
-## **I. Module Recap**
+## **H. Module Recap**
 
 In this module, you learned how Linux controls access through users, groups, ownership, and permissions.
 
@@ -877,9 +787,3 @@ chmod 700 directory
 ```
 
 You should now be able to identify your Linux user, inspect file ownership, understand basic permission strings, and change permissions safely within a practice environment.
-
-## **Next Module: Software and Package Management**
-
-In Module 06, you will learn how Linux installs, updates, and manages software through package managers.
-
-You will explore practical commands for installing applications, updating package lists, upgrading installed software, and removing packages on Debian- and Ubuntu-based systems.

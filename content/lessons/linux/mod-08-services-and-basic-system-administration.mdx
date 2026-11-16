@@ -18,15 +18,6 @@ quizSlug: linux-sysadmin-check
 assignmentSlug: audit-local-systemd-services
 ---
 
-# **Module 08 — Services and Basic System Administration**
-
-
-
-
-15–20 minutes
-
-
-
 ## **A. Welcome to Linux Services**
 
 When you use Linux, many tasks happen in the background without requiring you to open a terminal or launch an application manually.
@@ -603,89 +594,7 @@ active
 - Inspected another service.
 - Optionally practiced starting and stopping a safe service.
 
-## **J. Knowledge Check**
-
-Test your understanding before moving to the next module.
-
-**Questions 1–4: Select the correct answer.**
-
-**1. Which command displays detailed information about a service?**
-
-systemctl status cron
-
-systemctl enable cron
-
-ps aux
-
-chmod cron
-
-
-
-**2. What does systemctl enable cron do?**
-
-Immediately stops cron
-
-Configures cron for automatic startup at boot
-
-Deletes the cron service
-
-Displays cron's process ID
-
-
-
-**3. Which command checks whether a service is currently active?**
-
-systemctl is-enabled cron
-
-systemctl is-active cron
-
-systemctl list-unit-files
-
-sudo systemctl disable cron
-
-
-
-**4. Which command asks systemd to restart a service?**
-
-systemctl reload service-name
-
-systemctl enable service-name
-
-sudo systemctl restart service-name
-
-systemctl list-units
-
-
-
-Check answers
-
-### **Question 5 — Practical command identification**
-
-You want to check whether the `ssh` service is currently running.
-
-Which command would you use?
-
-```
-# Write the correct command:
-```
-
-Hint: Use the command that checks whether a service is active, not whether it is enabled at boot.
-
-Reveal answer
-
-## **K. Answer Key**
-
-| Question | Correct answer                                |
-| -------- | --------------------------------------------- |
-| 1        | `systemctl status cron`                       |
-| 2        | Configures cron for automatic startup at boot |
-| 3        | `systemctl is-active cron`                    |
-| 4        | `sudo systemctl restart service-name`         |
-| 5        | `systemctl is-active ssh`                     |
-
-If you made mistakes, revisit Sections D, E, and F before continuing.
-
-## **Module Recap**
+## **J. Module Recap**
 
 In this module, you learned how Linux manages background services and how to inspect and control them using systemd.
 
@@ -702,18 +611,3 @@ Key takeaways:
 - Unnecessary or improperly exposed services can increase a system's attack surface.
 
 You can now inspect basic Linux services and understand how they are managed.
-
-## **Next Module: Linux Networking Fundamentals and Commands**
-
-Your Linux machine does not operate in isolation. It communicates with other computers, servers, and networks.
-
-In Module 09, you will learn how to:
-
-- Inspect network interfaces.
-- Find IP addresses.
-- Understand basic routing information.
-- Check DNS resolution.
-- Test network connectivity.
-- Identify listening network ports.
-
-These skills will help you understand how Linux communicates with other systems and prepare you for practical cybersecurity and networking exercises.

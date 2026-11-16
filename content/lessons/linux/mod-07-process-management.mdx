@@ -14,13 +14,9 @@ tags:
   - signals
 status: published
 updatedAt: "2026-11-15"
-quizSlug: linux-sysadmin-check
+quizSlug: linux-processes-check
 assignmentSlug: inspect-running-processes
 ---
-
-# **Module 07 — Process Management**
-
-
 
 ## **A. Welcome to Process Management**
 
@@ -227,10 +223,6 @@ To exit `top`, press:
 q
 ```
 
-[How to View Running Processes on Linux](https://images.openai.com/static-rsc-4/itDJfVajUisDOZkR9b7cZ-dPEv0eMZdUqzcdT7REgoc_TpJ1rTvQEBNr3POvj0x5VY--IRktpo98lljxsuWH8V3w9-x7DMVrNJjF9DFG_8mRskIEj8VB4R5NDH5DqNSGI8RLjBLYXH60eCWEZIc46--xxmirZTYCpqXNEHvUpq8?purpose=inline)
-
-[howtoforge.com](https://www.howtoforge.com/how-to-view-running-processes-on-linux/?utm_source=chatgpt.com)
-
 ### **5. Using htop**
 
 `htop` is an interactive process viewer with a more visual interface.
@@ -250,10 +242,6 @@ sudo apt install htop
 This requires administrative privileges.
 
 You can use `htop` to view running processes and their resource usage. To exit, press `F10` or `q`.
-
-[11 System Resource Monitoring Tools for Linux Command Line](https://images.openai.com/static-rsc-4/0PG9OcA4_z_bV2x7POxibtzxIdHXesQHzoFfqYvM9aXHPQWjd0dLvspI0odSl0exSNSx4CKqYkJ7mSBPsGS9nKFp5xTE-Nly-AockmLq4y2DjQnDHjATdLOvO43hbLXl25ZHfvrut-IOlOmWPzFIl6L4SXBu-L3EitZXlQCQWqY?purpose=inline)
-
-[linuxhandbook.com](https://linuxhandbook.com/system-monitoring-tools/?utm_source=chatgpt.com)
 
 For now, `top` is enough. You do not need to install `htop` to complete this module.
 
@@ -718,101 +706,7 @@ Example: a logging service
 
 In the next module, you will learn how Linux manages services and how to inspect and control them.
 
-## **I. Knowledge Check**
-
-Test your understanding before moving forward.
-
-**Questions 1–2: Multiple choice**
-
-**1. What does PID stand for?**
-
-Program Information Display
-
-Process ID
-
-Package Identifier
-
-Parent Information Directory
-
-
-
-**2. Which command provides an interactive, continuously updating view of running processes?**
-
-free -h
-
-jobs
-
-top
-
-whoami
-
-
-
-**Questions 3–4: Command identification**
-
-**3. Which command displays background jobs associated with the current shell?**
-
-
-
-**4. Which command requests graceful termination of a process with PID 2450?**
-
-
-
-**5. Practical process-inspection task**
-
-You started a test process with:
-
-```
-sleep 300 &
-```
-
-Explain how you would:
-
-1. Find its PID.
-2. Request that it terminate.
-3. Verify that it has stopped.
-
-Check answers
-
-
-
-## **Answer Key**
-
-**1. What does PID stand for?**
-
-Correct answer: Process ID.
-
-**2. Which command provides an interactive process monitor?**
-
-Correct answer:
-
-```
-top
-```
-
-**3. Which command displays background jobs?**
-
-```
-jobs
-```
-
-**4. Which command requests graceful termination of PID 2450?**
-
-```
-kill 2450
-```
-
-**5. How do you inspect and terminate your test process?**
-
-```
-ps -ef
-kill PID
-ps -p PID
-```
-
-Identify the correct PID first, request termination, and verify that the process has stopped. You can also use `jobs` to inspect the background job associated with your shell.
-
-## **J. Module Recap**
+## **I. Module Recap**
 
 In this module, you learned how Linux executes programs and manages running processes.
 
@@ -867,17 +761,3 @@ ps -p PID
 ```
 
 You should now be able to inspect running processes, understand basic CPU and memory usage, manage foreground and background commands, and safely terminate a process you created.
-
-## **Next Module: Services and Basic System Administration**
-
-In Module 08, you will learn how Linux manages background services.
-
-You will explore how to:
-
-- Understand what system services do.
-- Inspect service status.
-- Start and stop services.
-- Restart services.
-- Check whether services are enabled to start automatically.
-
-You will begin using `systemctl` to manage services on systems that use systemd.

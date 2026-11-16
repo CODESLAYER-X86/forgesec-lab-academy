@@ -14,13 +14,9 @@ tags:
   - packages
 status: published
 updatedAt: "2026-11-15"
-quizSlug: linux-sysadmin-check
+quizSlug: linux-packages-check
 assignmentSlug: inspect-installed-packages
 ---
-
-# **Module 06 — Software and Package Management**
-
-
 
 ## **A. Welcome to Software and Package Management**
 
@@ -680,92 +676,7 @@ If you want to keep `tree` installed, skip this optional step.
 
 You have refreshed package information, searched for software, inspected package details, installed a utility, tested it, and checked its installation status.
 
-## **K. Knowledge Check**
-
-Test your understanding of software and package management.
-
-**Questions 1–2: Multiple choice**
-
-**1. What does \`sudo apt update\` do?**
-
-Installs all available software updates
-
-Refreshes package information from configured repositories
-
-Removes unused applications
-
-Lists every installed application
-
-
-
-**2. Which command removes a package and its package-managed system-wide configuration files?**
-
-sudo apt update
-
-sudo apt install
-
-sudo apt purge
-
-apt search
-
-
-
-**Questions 3–4: Command identification**
-
-**3. Which command searches available package information for curl?**
-
-
-
-**4. Which command displays information about the tree package?**
-
-
-
-**5. Practical package-management task**
-
-You want to install the `tree` utility, verify that it is installed, and display its version.
-
-Write the commands in the correct order.
-
-Check answers
-
-
-
-## **Answer Key**
-
-**1. What does&#x20;**`sudo apt update`**&#x20;do?**
-
-Correct answer: Refreshes package information from configured repositories.
-
-**2. Which command removes a package and its package-managed system-wide configuration files?**
-
-Correct answer:
-
-```
-sudo apt purge package-name
-```
-
-**3. Which command searches for curl?**
-
-```
-apt search curl
-```
-
-**4. Which command displays information about tree?**
-
-```
-apt show tree
-```
-
-**5. How do you install and verify tree?**
-
-```
-sudo apt update
-sudo apt install tree
-dpkg -l tree
-tree --version
-```
-
-## **L. Module Recap**
+## **K. Module Recap**
 
 In this module, you learned how to manage software on Debian- and Ubuntu-based Linux distributions using APT.
 
@@ -819,17 +730,3 @@ dpkg -l tree
 ```
 
 You should now be able to search for, inspect, install, upgrade, and remove software using APT.
-
-## **Next Module: Process Management**
-
-In Module 07, you will learn how Linux runs programs and manages processes.
-
-You will explore how to:
-
-- Identify running processes.
-- View process information.
-- Monitor system activity.
-- Understand process IDs (PIDs).
-- Stop or terminate processes when necessary.
-
-These skills will help you understand what is running on your Linux system and how to manage it from the command line.

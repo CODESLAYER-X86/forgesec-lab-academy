@@ -15,11 +15,19 @@ import {
   type WriteupFrontmatter,
 } from "@/modules/content/schemas";
 
-export interface TocHeading {
-  id: string;
-  text: string;
-  level: 2 | 3;
-}
+import {
+  extractHeadings,
+  slugifyHeading,
+  type TocHeading,
+} from "@/modules/content/headings";
+import {
+  clampPageNumber,
+  paginateLesson,
+  type LessonPageChunk,
+} from "@/modules/content/pagination";
+
+export { clampPageNumber, extractHeadings, paginateLesson, slugifyHeading };
+export type { LessonPageChunk, TocHeading };
 
 export interface LessonDocument {
   meta: LessonFrontmatter;
@@ -52,39 +60,6 @@ function listFilesByExt(dir: string, ext: string): string[] {
     }
   }
   return results;
-}
-
-export function slugifyHeading(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[`*_~]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
-}
-
-export function extractHeadings(markdown: string): TocHeading[] {
-  const lines = markdown.split("\n");
-  const headings: TocHeading[] = [];
-  let inFence = false;
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("```")) {
-      inFence = !inFence;
-      continue;
-    }
-    if (inFence) continue;
-    const h2 = /^##\s+(.+)$/.exec(trimmed);
-    const h3 = /^###\s+(.+)$/.exec(trimmed);
-    if (h2) {
-      const clean = h2[1].replace(/\*\*/g, "").trim();
-      headings.push({ id: slugifyHeading(clean), text: clean, level: 2 });
-    } else if (h3) {
-      const clean = h3[1].replace(/\*\*/g, "").trim();
-      headings.push({ id: slugifyHeading(clean), text: clean, level: 3 });
-    }
-  }
-  return headings;
 }
 
 export function getPublishedLessons(): LessonDocument[] {

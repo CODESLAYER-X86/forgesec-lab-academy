@@ -3,9 +3,17 @@
 
 INSERT INTO public.quizzes (id, slug, title, description, category, difficulty, lesson_id, pass_percentage, status)
 VALUES
-  ('11111111-1111-4111-8111-111111111101', 'linux-fundamentals-check', 'Linux Fundamentals Knowledge Check', 'Verify your understanding of the Linux kernel, shell basics, and foundational navigation commands.', 'linux', 'beginner', 'linux-001', 70, 'published'),
-  ('11111111-1111-4111-8111-111111111102', 'linux-permissions-check', 'Users, Groups & File Permissions Quiz', 'Test your mastery of ownership, chmod octal notation, and least-privilege file modes.', 'linux', 'beginner', 'linux-005', 70, 'published'),
-  ('11111111-1111-4111-8111-111111111103', 'networking-basics-check', 'Linux Networking & SSH Assessment', 'Check your grasp of IP routing, listening sockets, DNS queries, and SSH remote access.', 'networking', 'beginner', 'linux-009', 70, 'published')
+  ('11111111-1111-4111-8111-111111111101', 'linux-fundamentals-check', 'Module 01 Knowledge Check — Linux & Terminal', 'Verify your understanding of the Linux kernel, Bash shell, command syntax, and foundational navigation commands.', 'linux', 'beginner', 'linux-001', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111102', 'linux-filesystem-check', 'Module 02 Knowledge Check — Filesystem & Navigation', 'Test your grasp of the root directory, system folders, absolute vs. relative paths, and CLI navigation.', 'linux', 'beginner', 'linux-002', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111103', 'linux-file-management-check', 'Module 03 Knowledge Check — File & Directory Management', 'Verify your command of creating, copying, moving, renaming, inspecting, and safely removing files.', 'linux', 'beginner', 'linux-003', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111104', 'linux-text-processing-check', 'Module 04 Knowledge Check — Text Processing & Logs', 'Assess your command of less, grep, wc, sort, cut, pipes, and output redirection.', 'linux', 'beginner', 'linux-004', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111105', 'linux-permissions-check', 'Module 05 Knowledge Check — Users, Groups & Permissions', 'Test your mastery of ownership, chmod octal notation, and least-privilege file modes.', 'linux', 'beginner', 'linux-005', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111106', 'linux-packages-check', 'Module 06 Knowledge Check — Software & APT Packages', 'Evaluate your command of APT repository refreshes, searching, installing, inspecting, and purging packages.', 'linux', 'beginner', 'linux-006', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111107', 'linux-processes-check', 'Module 07 Knowledge Check — Process Management', 'Verify your grasp of PIDs, ps/top process monitoring, background jobs, and graceful termination.', 'linux', 'beginner', 'linux-007', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111108', 'linux-sysadmin-check', 'Module 08 Knowledge Check — Services & systemd', 'Test your understanding of systemd units, checking active vs. enabled states, and managing system services.', 'linux', 'beginner', 'linux-008', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111109', 'networking-basics-check', 'Module 09 Knowledge Check — Linux Networking', 'Check your grasp of IP routing, listening sockets, DNS queries, and interface inspection.', 'networking', 'beginner', 'linux-009', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111110', 'linux-ssh-check', 'Module 10 Knowledge Check — SSH & Remote Access', 'Verify your understanding of encrypted SSH connections, client vs. server roles, custom ports, and host keys.', 'linux', 'beginner', 'linux-010', 70, 'published'),
+  ('11111111-1111-4111-8111-111111111111', 'web-security-check', 'HTTP Trust Boundaries & Security Headers Quiz', 'Test your understanding of cookies, Same-Origin Policy, CSP, and server-side validation.', 'web-security', 'intermediate', 'web-001', 70, 'published')
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO public.assignments (id, slug, title, objective, category, difficulty, lesson_id, prerequisites, instructions, expected_outcome, safety_warning, status)

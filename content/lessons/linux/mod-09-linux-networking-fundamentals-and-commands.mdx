@@ -18,15 +18,6 @@ quizSlug: networking-basics-check
 assignmentSlug: inspect-local-network-interfaces
 ---
 
-# **Module 09 — Linux Networking Fundamentals and Commands**
-
-
-
-
-15–20 minutes
-
-
-
 ## **A. Welcome to Linux Networking**
 
 A computer network allows two or more devices to communicate and exchange information.
@@ -773,85 +764,7 @@ If the output is empty, your machine may not currently have cached neighbor entr
 - Listed listening TCP and UDP sockets.
 - Inspected the neighbor table.
 
-## **J. Knowledge Check**
-
-Test your understanding before moving to the next module.
-
-**Questions 1–4: Select the correct answer.**
-
-**1. Which command displays your system's network interfaces and their assigned IP addresses?**
-
-ip addr
-
-systemctl status
-
-chmod 755
-
-ps aux
-
-
-
-**2. What does a default gateway normally do?**
-
-Stores passwords
-
-Routes traffic toward destinations outside the local network
-
-Resolves every domain name
-
-Assigns MAC addresses
-
-
-
-**3. Which command checks whether a hostname resolves through the system's configured name-resolution mechanisms?**
-
-ip link
-
-ss -tuln
-
-getent hosts example.com
-
-ping -c 4 127.0.0.1
-
-
-
-**4. Which command displays listening TCP and UDP sockets using numeric addresses and port numbers?**
-
-ss -tun
-
-ss -tuln
-
-ip neigh
-
-hostname -I
-
-
-
-Check answers
-
-### **Question 5 — Practical command identification**
-
-You want to identify the default gateway configured on your Linux machine.
-
-Which command should you use?
-
-Write the command below.
-
-Reveal answer
-
-## **K. Answer Key**
-
-| Question | Correct answer                                               |
-| -------- | ------------------------------------------------------------ |
-| 1        | `ip addr`                                                    |
-| 2        | Routes traffic toward destinations outside the local network |
-| 3        | `getent hosts example.com`                                   |
-| 4        | `ss -tuln`                                                   |
-| 5        | `ip route`                                                   |
-
-If you made mistakes, revisit Sections C, D, E, and G before continuing.
-
-## **Module Recap**
+## **J. Module Recap**
 
 In this module, you learned how to inspect your Linux machine's network configuration and understand its basic communication behavior.
 
@@ -868,19 +781,3 @@ Key takeaways:
 - `ip neigh` displays cached information about nearby network neighbors.
 
 You can now inspect basic network information using the Linux terminal without changing your system's network configuration.
-
-## **Next Module: SSH and Remote Access**
-
-Linux machines often need to communicate with and be managed from other computers.
-
-In Module 10, you will learn about **SSH (Secure Shell)** and remote access.
-
-You will explore how to:
-
-- Connect securely to another Linux machine.
-- Understand SSH client and server roles.
-- Execute commands on a remote machine.
-- Work with basic SSH connection syntax.
-- Understand why SSH is important for secure remote administration.
-
-These skills will help you manage Linux systems remotely and prepare for practical cybersecurity labs.

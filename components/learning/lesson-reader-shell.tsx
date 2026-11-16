@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ChevronDown, ChevronRight, Circle, ListTree } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  ClipboardCheck,
+  ListTree,
+} from "lucide-react";
 import type { TocHeading } from "@/modules/content/loader";
 
 export interface PathNavItem {
@@ -13,6 +20,13 @@ export interface PathNavItem {
   completed: boolean;
 }
 
+export interface LessonPageStep {
+  pageNumber: number;
+  title: string;
+  estimatedMinutes: number;
+  isAssessmentPage: boolean;
+}
+
 export function LessonReaderShell({
   pathTitle,
   pathSlug,
@@ -20,6 +34,10 @@ export function LessonReaderShell({
   pathItems,
   headings,
   estimatedMinutes,
+  lessonSlug,
+  currentPage = 1,
+  pageSteps = [],
+  totalEstimatedMinutes,
   children,
 }: {
   pathTitle: string;
@@ -28,9 +46,16 @@ export function LessonReaderShell({
   pathItems: PathNavItem[];
   headings: TocHeading[];
   estimatedMinutes: number;
+  lessonSlug?: string;
+  currentPage?: number;
+  pageSteps?: LessonPageStep[];
+  totalEstimatedMinutes?: number;
   children: React.ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const totalPages = pageSteps.length;
+  const activeIsAssessment =
+    totalPages > 0 && currentPage === totalPages && pageSteps[totalPages - 1]?.isAssessmentPage;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -39,13 +64,16 @@ export function LessonReaderShell({
         <button
           type="button"
           onClick={() => setMobileNavOpen((p) => !p)}
-          className="flex w-full items-center justify-between rounded-lg border border-[#303A44] bg-[#171D23] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
+          className="flex min-h-11 w-full items-center justify-between rounded-lg border border-[#303A44] bg-[#171D23] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
         >
-          <span>{pathTitle} Curriculum</span>
+          <span className="truncate">
+            {pathTitle}
+            {totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}
+          </span>
           {mobileNavOpen ? (
-            <ChevronDown className="h-4 w-4 text-[#AAB4BE]" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-[#AAB4BE]" />
           ) : (
-            <ChevronRight className="h-4 w-4 text-[#AAB4BE]" />
+            <ChevronRight className="h-4 w-4 shrink-0 text-[#AAB4BE]" />
           )}
         </button>
         {mobileNavOpen ? (
@@ -56,25 +84,51 @@ export function LessonReaderShell({
             {pathItems.map((item) => {
               const active = item.id === currentLessonId;
               return (
-                <Link
-                  key={item.id}
-                  href={`/learn/lessons/${item.slug}`}
-                  onClick={() => setMobileNavOpen(false)}
-                  className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-xs transition-colors ${
-                    active
-                      ? "bg-[#173D35] text-[#A3E635] font-semibold"
-                      : "text-[#AAB4BE] hover:bg-[#202831] hover:text-[#F3F4F6]"
-                  }`}
-                >
-                  {item.completed ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#22C55E]" />
-                  ) : (
-                    <Circle className="h-3.5 w-3.5 shrink-0 text-[#52606D]" />
-                  )}
-                  <span className="truncate">
-                    {String(item.moduleNumber).padStart(2, "0")}. {item.title}
-                  </span>
-                </Link>
+                <div key={item.id} className="space-y-1">
+                  <Link
+                    href={`/learn/lessons/${item.slug}`}
+                    onClick={() => setMobileNavOpen(false)}
+                    className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-xs transition-colors ${
+                      active
+                        ? "bg-[#173D35] text-[#A3E635] font-semibold"
+                        : "text-[#AAB4BE] hover:bg-[#202831] hover:text-[#F3F4F6]"
+                    }`}
+                  >
+                    {item.completed ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#22C55E]" />
+                    ) : (
+                      <Circle className="h-3.5 w-3.5 shrink-0 text-[#52606D]" />
+                    )}
+                    <span className="truncate">
+                      {String(item.moduleNumber).padStart(2, "0")}. {item.title}
+                    </span>
+                  </Link>
+                  {active && totalPages > 1 && lessonSlug ? (
+                    <div className="ml-5 space-y-1 border-l border-[#303A44] pl-3">
+                      {pageSteps.map((step) => {
+                        const isStepActive = step.pageNumber === currentPage;
+                        return (
+                          <Link
+                            key={step.pageNumber}
+                            href={`/learn/lessons/${lessonSlug}?page=${step.pageNumber}`}
+                            onClick={() => setMobileNavOpen(false)}
+                            aria-current={isStepActive ? "page" : undefined}
+                            className={`flex items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors ${
+                              isStepActive
+                                ? "bg-[#202831] font-medium text-[#A3E635]"
+                                : "text-[#7B8794] hover:text-[#F3F4F6]"
+                            }`}
+                          >
+                            <span className="font-mono tabular-nums text-[11px]">
+                              {String(step.pageNumber).padStart(2, "0")}
+                            </span>
+                            <span className="truncate">{step.title}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
           </nav>
@@ -99,27 +153,60 @@ export function LessonReaderShell({
               {pathItems.map((item) => {
                 const active = item.id === currentLessonId;
                 return (
-                  <Link
-                    key={item.id}
-                    href={`/learn/lessons/${item.slug}`}
-                    className={`flex items-start gap-2 rounded-md px-2.5 py-2 text-xs leading-snug transition-colors ${
-                      active
-                        ? "bg-[#173D35] text-[#A3E635] font-semibold"
-                        : "text-[#AAB4BE] hover:bg-[#202831] hover:text-[#F3F4F6]"
-                    }`}
-                  >
-                    {item.completed ? (
-                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#22C55E]" />
-                    ) : (
-                      <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#52606D]" />
-                    )}
-                    <span>
-                      <span className="font-mono tabular-nums text-[#7B8794] mr-1">
-                        {String(item.moduleNumber).padStart(2, "0")}
+                  <div key={item.id} className="space-y-1">
+                    <Link
+                      href={`/learn/lessons/${item.slug}`}
+                      className={`flex items-start gap-2 rounded-md px-2.5 py-2 text-xs leading-snug transition-colors ${
+                        active
+                          ? "bg-[#173D35] text-[#A3E635] font-semibold"
+                          : "text-[#AAB4BE] hover:bg-[#202831] hover:text-[#F3F4F6]"
+                      }`}
+                    >
+                      {item.completed ? (
+                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#22C55E]" />
+                      ) : (
+                        <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#52606D]" />
+                      )}
+                      <span>
+                        <span className="font-mono tabular-nums text-[#7B8794] mr-1">
+                          {String(item.moduleNumber).padStart(2, "0")}
+                        </span>
+                        {item.title}
                       </span>
-                      {item.title}
-                    </span>
-                  </Link>
+                    </Link>
+
+                    {active && totalPages > 1 && lessonSlug ? (
+                      <div className="ml-4 space-y-0.5 border-l border-[#303A44] pl-2.5 py-0.5">
+                        {pageSteps.map((step) => {
+                          const isStepActive = step.pageNumber === currentPage;
+                          return (
+                            <Link
+                              key={step.pageNumber}
+                              href={`/learn/lessons/${lessonSlug}?page=${step.pageNumber}`}
+                              aria-current={isStepActive ? "page" : undefined}
+                              className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-[11px] leading-snug transition-colors ${
+                                isStepActive
+                                  ? "bg-[#202831] font-medium text-[#A3E635]"
+                                  : "text-[#7B8794] hover:bg-[#202831]/60 hover:text-[#F3F4F6]"
+                              }`}
+                            >
+                              {step.isAssessmentPage ? (
+                                <ClipboardCheck
+                                  className="h-3 w-3 shrink-0"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <span className="font-mono tabular-nums shrink-0">
+                                  {String(step.pageNumber).padStart(2, "0")}
+                                </span>
+                              )}
+                              <span className="truncate">{step.title}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
                 );
               })}
             </nav>
@@ -138,9 +225,20 @@ export function LessonReaderShell({
                 <span>On This Page</span>
               </div>
               <div className="mt-1 text-xs text-[#7B8794] tabular-nums">
-                Estimated reading time · {estimatedMinutes} min
+                {totalPages > 1
+                  ? `Page ${currentPage} of ${totalPages} · ~${estimatedMinutes} min`
+                  : `Estimated reading time · ${estimatedMinutes} min`}
               </div>
-              <nav aria-label="Table of contents" className="mt-3 space-y-1.5 max-h-[60vh] overflow-y-auto">
+              {totalEstimatedMinutes && totalPages > 1 ? (
+                <div className="mt-0.5 text-[11px] text-[#52606D] tabular-nums">
+                  {totalEstimatedMinutes} min full module
+                </div>
+              ) : null}
+
+              <nav
+                aria-label="Table of contents"
+                className="mt-3 space-y-1.5 max-h-[55vh] overflow-y-auto"
+              >
                 {headings.slice(0, 18).map((h) => (
                   <a
                     key={h.id}
@@ -152,7 +250,35 @@ export function LessonReaderShell({
                     {h.text}
                   </a>
                 ))}
+                {activeIsAssessment ? (
+                  <>
+                    <a
+                      href="#knowledge-check"
+                      className="block text-xs leading-snug text-[#A3E635] font-medium hover:underline"
+                    >
+                      Interactive Knowledge Check
+                    </a>
+                    <a
+                      href="#module-completion"
+                      className="block text-xs leading-snug text-[#AAB4BE] hover:text-[#A3E635]"
+                    >
+                      Module Completion
+                    </a>
+                  </>
+                ) : null}
               </nav>
+
+              {totalPages > 1 && lessonSlug && currentPage < totalPages ? (
+                <div className="mt-4 border-t border-[#303A44] pt-3">
+                  <Link
+                    href={`/learn/lessons/${lessonSlug}?page=${totalPages}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-[#A3E635] hover:underline"
+                  >
+                    <ClipboardCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>Jump to Knowledge Check</span>
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </div>
         </aside>

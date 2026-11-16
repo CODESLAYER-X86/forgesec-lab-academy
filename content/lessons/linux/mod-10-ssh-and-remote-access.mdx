@@ -14,17 +14,8 @@ tags:
   - remote-access
 status: published
 updatedAt: "2026-11-15"
-quizSlug: networking-basics-check
+quizSlug: linux-ssh-check
 assignmentSlug: configure-and-inspect-ssh-client
----
-
-# Module 10 — SSH and Remote Access
-
-**Level:** Beginner / Essential  
-**Estimated time:** 15–20 minutes  
-**Primary reference:** *Linux Basics for Hackers*, Second Edition, by OccupyTheWeb  
-**Previous module:** Module 09 — Linux Networking Fundamentals and Commands
-
 ---
 
 ## A. Welcome to SSH and Remote Access
@@ -684,75 +675,7 @@ If the server is not configured for that port, the connection will fail.
 
 **If you cannot complete the connection:** Check that both machines are connected to the intended lab network, the remote IP address is correct, the SSH server is installed and running, and you have a valid account. Ask your lab administrator for help rather than changing network settings or exposing the server publicly.
 
----
-
-## J. Knowledge Check
-
-Test your understanding of SSH and remote access.
-
-### Questions 1–2: Multiple Choice
-
-**1. What does SSH stand for?**
-
-A. Secure System Hosting  
-B. Secure Shell  
-C. System Service Handler  
-D. Server Security Host
-
-**2. Which component initiates an SSH connection?**
-
-A. SSH server  
-B. Network gateway  
-C. SSH client  
-D. DNS server
-
-### Questions 3–4: Command Identification
-
-**3. Write the command to connect to a remote machine using username `student` and IP address `192.168.1.100`.**
-
-```bash
-# Write your command here
-```
-
-**4. Write the command to connect to the same machine using SSH port `2222`.**
-
-```bash
-# Write your command here
-```
-
-### Question 5: Practical Remote-Connection Task
-
-You have successfully connected to a remote Linux machine.
-
-Write the command that:
-
-1. Displays the remote machine's hostname.
-2. Ends the remote SSH session and returns you to your local terminal.
-
----
-
-## K. Answer Key
-
-| Question | Correct answer |
-|---|---|
-| 1 | B — Secure Shell |
-| 2 | C — SSH client |
-| 3 | `ssh student@192.168.1.100` |
-| 4 | `ssh -p 2222 student@192.168.1.100` |
-| 5 | Run `hostname` inside the remote session, then run `exit` to disconnect. |
-
-### Additional explanation
-
-- The SSH client initiates the connection.
-- The SSH server accepts incoming connections.
-- The server's host key helps identify the server.
-- User authentication determines whether you can access the remote account.
-- The `-p` option specifies the destination port.
-- `exit` ends the remote shell session.
-
----
-
-## L. Module Recap and Beginner Path Completion
+## J. Module Recap and Beginner Path Completion
 
 In this module, you learned how to access another Linux machine securely using SSH.
 
@@ -770,9 +693,7 @@ Key takeaways:
 - The `exit` command safely ends an interactive remote shell session.
 - SSH should be used with trusted servers and authorized accounts.
 
----
-
-# Congratulations — Beginner / Essential Linux Fundamentals Completed!
+### Congratulations — Essential Linux Fundamentals Completed
 
 You have now completed all 10 modules of the **FORGESEC Academy — Linux Fundamentals: From Zero to Command-Line Confidence** learning path.
 
