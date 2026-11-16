@@ -1,0 +1,1017 @@
+---
+id: linux-002
+title: "Linux Filesystem and Navigation"
+slug: linux-filesystem-and-navigation
+description: "Navigate the Linux directory hierarchy, understand system paths like /etc and /var, and move confidently from the CLI."
+category: linux
+pathId: linux-fundamentals
+moduleNumber: 2
+difficulty: beginner
+estimatedMinutes: 20
+tags:
+  - linux
+  - filesystem
+  - navigation
+status: published
+updatedAt: "2026-11-15"
+quizSlug: linux-filesystem-check
+assignmentSlug: explore-linux-filesystem
+---
+
+# **Module 02 — Linux Filesystem and Navigation**
+
+## **A. Welcome to the Linux Filesystem**
+
+Every operating system needs a way to organize and store information. Linux uses a **filesystem** to organize files and directories.
+
+A filesystem is the structure Linux uses to store, arrange, and access information.
+
+Think of it like a filing cabinet:
+
+- The cabinet represents the entire filesystem.
+- Drawers represent directories.
+- Folders inside drawers represent subdirectories.
+- Documents inside folders represent files.
+
+Linux organizes its files and directories in a hierarchical structure, meaning directories can contain other directories and files.
+
+Understanding this structure is important in cybersecurity because you will regularly need to:
+
+- Navigate through system directories.
+- Locate configuration files.
+- Explore application files.
+- Find system logs.
+- Identify files that may be relevant during security investigations.
+
+Let's start exploring.
+
+## **B. Understanding the Linux Directory Structure**
+
+### **1. The Root Directory&#x20;**`/`
+
+Linux organizes its entire filesystem under one main directory called the **root directory**.
+
+It is represented by:
+
+```
+/
+```
+
+Think of `/` as the starting point of the Linux filesystem.
+
+Unlike Windows, where you might see separate drives such as `C:\` or `D:\`, Linux presents its filesystem through a single directory hierarchy.
+
+Directories, files, and other storage locations are organized under `/`.
+
+[Linux Directory Structure (Linux File System Hierarchy) \~ ServerKaKa](https://images.openai.com/static-rsc-4/h8-cI33ZkCK-hyFPLIFEs5za0itaMQpbWMCAtKyjVlRnl_3QB7pPMXDvarwn3NM84kckBOQImzTCxMdio60lxMGPioyRJQcKU-o6boyFGKhDUKtZUwGNZMyhNJlzldSd-JBq5wiuDcsTQKFqEkrMsU-4xLPoy_8aNloPpwnoasI?purpose=inline)
+
+[serverkaka.com](https://www.serverkaka.com/2018/01/key-locations-in-linux-file-system_21.html?utm_source=chatgpt.com)
+
+### **2. Important Linux Directories**
+
+You don't need to memorize every Linux directory right now. Start by recognizing these important locations.
+
+| Directory | Basic purpose                                                                                                           |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `/`       | Root of the entire filesystem.                                                                                          |
+| `/home`   | Contains regular users' home directories.                                                                               |
+| `/root`   | Home directory of the root (administrator) user.                                                                        |
+| `/etc`    | Contains system configuration files.                                                                                    |
+| `/var`    | Contains variable data, including system logs.                                                                          |
+| `/tmp`    | Stores temporary files.                                                                                                 |
+| `/usr`    | Contains many user-space programs and resources.                                                                        |
+| `/bin`    | Contains essential user commands. On modern distributions, this may be linked to `/usr/bin` through merged directories. |
+| `/dev`    | Contains device files representing hardware and virtual devices.                                                        |
+
+**Important distinction:**
+
+- `/` is the root of the entire filesystem.
+- `/root` is the home directory of the root user.
+- `/home` contains the home directories of regular users.
+
+These are three different things.
+
+**Tip:** In cybersecurity practice, `/etc` and `/var` are particularly useful directories to become familiar with because they commonly contain configuration files and logs.
+
+## **C. Absolute Paths vs Relative Paths**
+
+Before navigating through Linux, you need to understand paths.
+
+A **path** is the location of a file or directory in the filesystem.
+
+Linux uses two main types of paths.
+
+### **1. Absolute Paths**
+
+An absolute path specifies the complete location of a file or directory, starting from the root directory `/`.
+
+For example:
+
+```
+/home/student
+```
+
+Another example:
+
+```
+/etc/passwd
+```
+
+Both paths begin with `/`, so they are absolute paths.
+
+An absolute path identifies a location regardless of your current working directory.
+
+### **2. Relative Paths**
+
+A relative path describes a location based on your current working directory.
+
+For example, imagine your current location is:
+
+```
+/home/student
+```
+
+You want to access a directory named `Documents` inside your current directory.
+
+You can use:
+
+```
+cd Documents
+```
+
+You don't need to provide the complete path because Linux understands that `Documents` is inside your current location.
+
+### **3. Understanding&#x20;**`/`**,&#x20;**`~`**,&#x20;**`.`**&#x20;and&#x20;**`..`
+
+These symbols are frequently used when navigating Linux.
+
+| Symbol | Meaning                             |
+| ------ | ----------------------------------- |
+| `/`    | Root directory of the filesystem.   |
+| `~`    | Home directory of the current user. |
+| `.`    | Current directory.                  |
+| `..`   | Parent directory (one level above). |
+
+Let's look at a practical example.
+
+Suppose your current directory is:
+
+```
+/home/student/Documents
+```
+
+To move one directory upward:
+
+```
+cd ..
+```
+
+Your new location becomes:
+
+```
+/home/student
+```
+
+To return to your home directory from anywhere:
+
+```
+cd ~
+```
+
+To refer to the current directory:
+
+```
+.
+```
+
+To refer to the filesystem root:
+
+```
+/
+```
+
+**Remember:** `/` and `~` are not interchangeable. `/` represents the entire filesystem's root, while `~` represents your current user's home directory.
+
+## **D. Essential Navigation Commands**
+
+Now let's learn the commands you will use to explore the Linux filesystem.
+
+You don't need to memorize everything immediately. Execute each command and observe what happens.
+
+### **1.&#x20;**`pwd`**&#x20;— Print Working Directory**
+
+The `pwd` command displays your current location in the filesystem.
+
+**Syntax:**
+
+```
+pwd
+```
+
+**Example:**
+
+```
+pwd
+```
+
+**Sample output:**
+
+```
+/home/student
+```
+
+**What should you notice?**
+
+Linux tells you exactly which directory you are currently working in.
+
+This is useful whenever you are unsure of your current location.
+
+### **2.&#x20;**`ls`**&#x20;— List Directory Contents**
+
+The `ls` command displays files and directories inside a location.
+
+**Syntax:**
+
+```
+ls
+```
+
+**Example:**
+
+```
+ls
+```
+
+**Sample output:**
+
+```
+Desktop  Documents  Downloads  Music  Pictures
+```
+
+Your output may look different depending on your Linux distribution and the files you have.
+
+**What should you notice?**
+
+Each name represents a file or directory inside your current location.
+
+### **3.&#x20;**`ls -l`**&#x20;— Detailed Directory Listing**
+
+The `-l` option displays directory contents in a detailed format.
+
+**Example:**
+
+```
+ls -l
+```
+
+**Sample output:**
+
+```
+total 12
+drwxr-xr-x 2 student student 4096 Nov 15 10:30 Documents
+drwxr-xr-x 2 student student 4096 Nov 15 10:30 Downloads
+drwxr-xr-x 2 student student 4096 Nov 15 10:30 Pictures
+```
+
+**What should you notice?**
+
+The output contains additional information, including:
+
+- File type and permission indicators.
+- Number of links.
+- Owner and group names.
+- File size.
+- Last modification date.
+- File or directory name.
+
+You will learn about permissions and ownership in a later module.
+
+### **4.&#x20;**`ls -a`**&#x20;— Show Hidden Files**
+
+Linux does not normally display hidden files with a standard `ls` command.
+
+The `-a` option displays all entries, including hidden ones.
+
+**Example:**
+
+```
+ls -a
+```
+
+**Sample output:**
+
+```
+.  ..  .bashrc  .profile  Desktop  Documents  Downloads
+```
+
+**What should you notice?**
+
+Some entries begin with a dot (`.`).
+
+These are hidden files or special directory entries. We will explore hidden files in Section F.
+
+### **5.&#x20;**`ls -la`**&#x20;— Detailed Listing Including Hidden Files**
+
+You can combine options to get more information.
+
+**Example:**
+
+```
+ls -la
+```
+
+This displays hidden files along with detailed information.
+
+**Sample output:**
+
+```
+total 24
+drwxr-xr-x 5 student student 4096 Nov 15 10:30 .
+drwxr-xr-x 3 root    root    4096 Nov 14 09:00 ..
+-rw-r--r-- 1 student student  220 Nov 14 09:00 .bashrc
+-rw-r--r-- 1 student student  807 Nov 14 09:00 .profile
+drwxr-xr-x 2 student student 4096 Nov 15 10:30 Documents
+```
+
+**What should you notice?**
+
+You can now see both hidden and visible entries, along with their detailed information.
+
+### **6.&#x20;**`cd`**&#x20;— Change Directory**
+
+The `cd` command allows you to move between directories.
+
+**Syntax:**
+
+```
+cd directory_name
+```
+
+**Example:**
+
+```
+cd Documents
+```
+
+This moves you into the `Documents` directory, assuming it exists in your current location.
+
+Check your new location:
+
+```
+pwd
+```
+
+**Sample output:**
+
+```
+/home/student/Documents
+```
+
+### **7.&#x20;**`cd ~`**&#x20;— Go to Your Home Directory**
+
+You can use:
+
+```
+cd ~
+```
+
+This takes you directly to the home directory of your current user.
+
+It works regardless of your current location.
+
+### **8.&#x20;**`cd ..`**&#x20;— Move to the Parent Directory**
+
+To move one level upward:
+
+```
+cd ..
+```
+
+For example, if your current location is:
+
+```
+/home/student/Documents
+```
+
+After executing `cd ..`, your location becomes:
+
+```
+/home/student
+```
+
+### **9.&#x20;**`cd /`**&#x20;— Go to the Root Directory**
+
+To navigate to the root directory:
+
+```
+cd /
+```
+
+Check your location:
+
+```
+pwd
+```
+
+**Output:**
+
+```
+/
+```
+
+You are now at the top level of the Linux filesystem.
+
+### **10.&#x20;**`tree`**&#x20;— Display Directory Structure**
+
+The `tree` command displays directories and their contents in a tree-like structure.
+
+**Example:**
+
+```
+tree
+```
+
+**Sample output:**
+
+```
+.
+├── Desktop
+├── Documents
+│   ├── notes.txt
+│   └── projects
+├── Downloads
+└── Pictures
+```
+
+This makes it easier to understand how directories are organized.
+
+**What if&#x20;**`tree`**&#x20;is not installed?**
+
+Some Linux distributions do not include it by default.
+
+On Debian or Ubuntu-based systems, you can install it using:
+
+```
+sudo apt install tree
+```
+
+Installation is optional. You can complete this module without it.
+
+## **E. Finding Files and Directories**
+
+Sometimes you know the name of a file but don't know where it is located.
+
+Linux provides commands that help you search for files and directories.
+
+We will introduce two basic commands.
+
+### **1.&#x20;**`find`**&#x20;— Search for Files and Directories**
+
+The `find` command searches for files and directories within a specified location.
+
+**Basic syntax:**
+
+```
+find location -name "filename"
+```
+
+**Example:**
+
+Suppose you want to find a file named `notes.txt` inside your home directory.
+
+Execute:
+
+```
+find ~ -name "notes.txt"
+```
+
+**Possible output:**
+
+```
+/home/student/Documents/notes.txt
+```
+
+This tells you where Linux found the file.
+
+You can also search for a directory by its name:
+
+```
+find ~ -name "Documents"
+```
+
+**What should you notice?**
+
+The command searches through the specified directory and its subdirectories.
+
+The search may take longer if the location contains many files.
+
+### **2.&#x20;**`locate`**&#x20;— Search Using an Indexed Database**
+
+The `locate` command searches for files using a previously created database of file locations.
+
+**Example:**
+
+```
+locate notes.txt
+```
+
+**Possible output:**
+
+```
+/home/student/Documents/notes.txt
+```
+
+Unlike `find`, which searches through the specified directory structure, `locate` generally searches its database.
+
+**Important:** `locate` may not be installed on your Linux distribution. Its database may also be outdated, so recently created files might not appear in search results.
+
+You can complete this module without using `locate`.
+
+## **F. Understanding Hidden Files**
+
+You may have noticed filenames such as:
+
+```
+.bashrc
+.profile
+```
+
+These are examples of hidden files in Linux.
+
+### **What Are Hidden Files?**
+
+In Linux, filenames that begin with a dot (`.`) are treated as hidden by many standard directory-listing tools.
+
+For example:
+
+```
+.bashrc
+.profile
+.config
+```
+
+These files are not normally displayed when you execute:
+
+```
+ls
+```
+
+However, you can display them using:
+
+```
+ls -a
+```
+
+### **Why Does Linux Use Hidden Files?**
+
+Hidden files are commonly used to keep certain files and directories out of ordinary directory listings.
+
+They often contain user-specific settings, application configuration, and other supporting information.
+
+For example:
+
+| Hidden file | Basic purpose                                                           |
+| ----------- | ----------------------------------------------------------------------- |
+| `.bashrc`   | A user-specific Bash configuration file.                                |
+| `.profile`  | A user-specific login initialization file.                              |
+| `.config`   | Commonly used to store application configuration directories and files. |
+
+You don't need to understand how these files work yet.
+
+For now, remember:
+
+- Hidden files begin with a dot.
+- Standard `ls` does not normally display them.
+- `ls -a` displays hidden files.
+
+**Quick demonstration**
+
+**Normal listing**
+
+ls
+
+```
+Documents  Downloads  Pictures
+```
+
+**Listing with hidden files**
+
+ls -a
+
+```
+.  ..  .bashrc  .profile  Documents  Downloads  Pictures
+```
+
+## **G. Hands-on Practice — Explore Your Linux Filesystem**
+
+Practical exercise
+
+Estimated time: 5–7 minutes
+
+Now it's time to explore your Linux filesystem.
+
+Open your terminal and follow these tasks in order.
+
+Don't just read the commands. Execute them yourself and observe the results.
+
+### **Task 1 — Check Your Current Directory**
+
+**Command:**
+
+```
+pwd
+```
+
+**What it does:**
+
+Displays your current working directory.
+
+**What to observe:**
+
+Look at the path displayed by Linux.
+
+You might see:
+
+```
+/home/student
+```
+
+Your result may be different.
+
+### **Task 2 — Display Your Home Directory**
+
+**Command:**
+
+```
+cd ~
+```
+
+Then execute:
+
+```
+pwd
+```
+
+**What it does:**
+
+Moves you to your current user's home directory.
+
+**What to observe:**
+
+Your displayed path should represent your home directory, such as:
+
+```
+/home/student
+```
+
+### **Task 3 — List Your Home Directory Contents**
+
+**Command:**
+
+```
+ls
+```
+
+**What it does:**
+
+Displays the visible files and directories inside your home directory.
+
+**What to observe:**
+
+Identify the directories displayed by Linux.
+
+For example:
+
+```
+Desktop  Documents  Downloads  Pictures
+```
+
+Your directory contents may differ.
+
+### **Task 4 — Display Hidden Files**
+
+**Command:**
+
+```
+ls -la
+```
+
+**What it does:**
+
+Displays visible and hidden entries with detailed information.
+
+**What to observe:**
+
+Look for filenames beginning with a dot.
+
+You might find:
+
+```
+.bashrc
+.profile
+```
+
+### **Task 5 — Navigate to the Root Directory**
+
+**Command:**
+
+```
+cd /
+```
+
+Then execute:
+
+```
+pwd
+```
+
+**What it does:**
+
+Moves you to the root directory.
+
+**What to observe:**
+
+Your output should be:
+
+```
+/
+```
+
+Now list its contents:
+
+```
+ls
+```
+
+You should see directories such as `etc`, `home`, `tmp`, `usr`, and `var`, although the exact contents depend on your distribution.
+
+### **Task 6 — Explore&#x20;**`/etc`
+
+**Command:**
+
+```
+cd /etc
+```
+
+Then execute:
+
+```
+pwd
+```
+
+**What it does:**
+
+Moves you into the system configuration directory.
+
+**What to observe:**
+
+You should see:
+
+```
+/etc
+```
+
+Now list its contents:
+
+```
+ls
+```
+
+You will find many configuration files and directories.
+
+You don't need to open or modify anything.
+
+### **Task 7 — Explore&#x20;**`/var`
+
+**Command:**
+
+```
+cd /var
+```
+
+Then execute:
+
+```
+ls
+```
+
+**What it does:**
+
+Moves into the directory used for variable system data.
+
+**What to observe:**
+
+You may find directories such as:
+
+```
+cache  lib  local  log  tmp
+```
+
+Pay attention to the `log` directory. It commonly contains system and application logs.
+
+### **Task 8 — Return to Your Home Directory**
+
+**Command:**
+
+```
+cd ~
+```
+
+Then execute:
+
+```
+pwd
+```
+
+**What it does:**
+
+Returns you to your home directory from anywhere in the filesystem.
+
+**What to observe:**
+
+Your path should again point to your home directory.
+
+### **Task 9 — Move to a Parent Directory and Return**
+
+First, make sure you are in your home directory:
+
+```
+cd ~
+```
+
+Now move one directory upward:
+
+```
+cd ..
+```
+
+Check your location:
+
+```
+pwd
+```
+
+**What to observe:**
+
+If your home directory is `/home/student`, you should now be in:
+
+```
+/home
+```
+
+Return to your home directory:
+
+```
+cd ~
+```
+
+You should be back in:
+
+```
+/home/student
+```
+
+### **Task 10 — Find a File**
+
+**Command:**
+
+```
+find ~ -name ".bashrc"
+```
+
+**What it does:**
+
+Searches your home directory and its subdirectories for a file named `.bashrc`.
+
+**What to observe:**
+
+If the file exists in your home directory, you may see:
+
+```
+/home/student/.bashrc
+```
+
+If nothing appears, the file may not exist in your home directory or may be located elsewhere.
+
+**Practical completion checklist**
+
+Mark each task after completing it.
+
+0 of 10 completed
+
+0%
+
+Checked my current directory using pwd
+
+Navigated to my home directory
+
+Listed visible files and directories
+
+Displayed hidden files
+
+Navigated to /
+
+Explored /etc
+
+Explored /var
+
+Returned to my home directory
+
+Moved to a parent directory and returned
+
+Searched for .bashrc using find
+
+## **H. Knowledge Check**
+
+Test your understanding before moving to the next module.
+
+Try answering these questions without looking back at the lesson.
+
+### **Question 1 — Multiple Choice**
+
+What does the `/` directory represent in Linux?
+
+- A. The home directory of the current user.
+- B. The root of the entire filesystem.
+- C. The home directory of the administrator.
+- D. A temporary directory.
+
+### **Question 2 — Multiple Choice**
+
+Which command displays hidden files in a directory?
+
+- A. `pwd`
+- B. `cd`
+- C. `ls -a`
+- D. `find`
+
+### **Question 3 — Identify the Correct Command**
+
+You want to check your current working directory.
+
+Which command should you use?
+
+### **Question 4 — Identify the Correct Command**
+
+You are currently inside `/home/student/Documents` and want to move to `/home/student`.
+
+Which command should you execute?
+
+### **Question 5 — Practical Task**
+
+You are currently in your home directory.
+
+Write the commands needed to:
+
+1. Navigate to the root directory.
+2. Enter the `/etc` directory.
+3. Display its contents.
+4. Return to your home directory.
+
+## **Answer Key**
+
+Reveal answer key
+
+## **I. Module Recap**
+
+In this module, you learned how to explore and navigate the Linux filesystem.
+
+Here are the essential concepts to remember:
+
+- Linux organizes files and directories in a hierarchical structure starting from `/`.
+- `/home` contains regular users' home directories, while `/root` is the root user's home directory.
+- Absolute paths begin with `/`, while relative paths depend on your current location.
+- `~` represents your home directory.
+- `.` represents the current directory, and `..` represents its parent.
+- `pwd` displays your current location.
+- `ls` lists directory contents.
+- `ls -a` displays hidden files.
+- `cd` allows you to navigate between directories.
+- `find` searches for files and directories.
+- `locate` searches using an indexed database, when available.
+
+**You should now be comfortable exploring your Linux filesystem without relying on a graphical file manager.**
+
+## **Next Module: File and Directory Management**
+
+[TDDE23 Funktionell och imperativ programmering, del 1](https://images.openai.com/static-rsc-4/j10IrZENzxg_hp_aLT9Es5EqtOvncP_jmf8We1qQ-H2ZtW7IF3Od2aed_EZbNk1n4v_QXW2jYL7K6qyr8nnTxWI6GDDXlLJ2AtIlfNVzeAke8BgkXWrpeUJ-J2HL0ZYfR-kqCW1npde3UTTc9SB7JdBohJj83LW7IspydlunZQc?purpose=inline)
+
+**Module 03 — File and Directory Management**
+
+Beginner / Essential
+
+Coming next
+
+In the next module, you will learn how to work with files and directories using the Linux terminal.
+
+You will practice:
+
+- Creating files and directories.
+- Copying files.
+- Moving and renaming files.
+- Reading file contents.
+- Deleting files and directories.
+
+These skills will help you manage files efficiently during your future Linux and cybersecurity practice.
+
+**End of Module 02 — FORGESEC Academy**

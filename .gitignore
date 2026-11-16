@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.next-dev/
+coverage/
+.data/
+.aistudio/
+tsconfig.tsbuildinfo
+.DS_Store
+*.log
+.env*
+!.env.example

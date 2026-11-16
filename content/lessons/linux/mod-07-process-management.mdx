@@ -1,0 +1,883 @@
+---
+id: linux-007
+title: "Process Management"
+slug: process-management
+description: "Inspect active PIDs, monitor CPU and memory usage with ps and top, manage background jobs, and handle signals safely."
+category: linux
+pathId: linux-fundamentals
+moduleNumber: 7
+difficulty: beginner
+estimatedMinutes: 20
+tags:
+  - linux
+  - processes
+  - signals
+status: published
+updatedAt: "2026-11-15"
+quizSlug: linux-sysadmin-check
+assignmentSlug: inspect-running-processes
+---
+
+# **Module 07 — Process Management**
+
+
+
+## **A. Welcome to Process Management**
+
+Whenever you open a terminal, launch a browser, run a script, or start an application, Linux creates and manages running tasks.
+
+A **process** is a running instance of a program.
+
+Think of a computer as a workplace:
+
+- Programs are instructions for completing tasks.
+- Processes are workers carrying out those tasks.
+- The operating system manages the workers and distributes available resources.
+
+Linux needs process management to keep applications running, share CPU and memory resources, and respond when programs finish or need to stop.
+
+Process management is also useful in cybersecurity. Inspecting running processes helps you understand what is active on a system and investigate unusual resource usage or unfamiliar programs.
+
+In this module, you will learn how to view processes, monitor their resource usage, run commands in the background, and safely stop a test process.
+
+## **B. Understanding Processes and PIDs**
+
+### **What is a process?**
+
+A program is a set of instructions stored on a computer. When you execute that program, Linux creates a running instance called a process.
+
+For example:
+
+```
+sleep 30
+```
+
+The `sleep` program waits for 30 seconds. When you execute it, Linux creates a process that remains active during that time.
+
+A single program can have multiple running processes.
+
+### **What is a PID?**
+
+Every running process has a numerical identifier called a **Process ID (PID)**.
+
+Linux uses the PID to identify individual processes.
+
+For example:
+
+```
+PID    COMMAND
+1420   bash
+1532   sleep
+```
+
+Here:
+
+- `1420` identifies the Bash shell process.
+- `1532` identifies the `sleep` process.
+
+PIDs are useful when you need to inspect or terminate a specific process.
+
+### **Understanding parent processes**
+
+Processes can create other processes.
+
+The process that creates another process is called its **parent process**. The newly created process is called its **child process**.
+
+The parent process has a PID, while the child process has its own PID.
+
+Linux displays the parent's identifier as the **PPID (Parent Process ID)**.
+
+For example:
+
+```
+PID    PPID   COMMAND
+1420   1300   bash
+1532   1420   sleep
+```
+
+In this example, `sleep` has PID `1532` and PPID `1420`. This means the Bash process created it.
+
+You do not need to memorize process relationships yet. Just remember that processes can create other processes.
+
+## **C. Viewing Running Processes**
+
+Linux provides several commands for viewing running processes.
+
+| Command  | Purpose                                                |
+| -------- | ------------------------------------------------------ |
+| `ps`     | Display processes associated with the current terminal |
+| `ps aux` | Display a broad list of running processes              |
+| `ps -ef` | Display processes in full-format listing               |
+| `top`    | Monitor processes and resource usage interactively     |
+| `htop`   | Provide an interactive process viewer, if installed    |
+
+### **1. Using ps**
+
+Run:
+
+```
+ps
+```
+
+Example output:
+
+```
+    PID TTY          TIME CMD
+   1420 pts/0    00:00:00 bash
+   1584 pts/0    00:00:00 ps
+```
+
+This displays processes associated with your current terminal session.
+
+Important columns:
+
+- `PID`: Process identifier.
+- `TTY`: Terminal associated with the process.
+- `TIME`: CPU time used by the process.
+- `CMD`: Command name.
+
+The output may differ depending on which processes are running.
+
+### **2. Using ps aux**
+
+To see a broader list of processes, run:
+
+```
+ps aux
+```
+
+This is a commonly used BSD-style `ps` syntax.
+
+Example output:
+
+```
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.1 168000 12000 ?        Ss   08:00   0:02 /sbin/init
+student   1420  0.1  0.2  12000  5000 pts/0    Ss   09:10   0:00 bash
+student   1584  0.0  0.0   7000  2000 pts/0    R+   09:20   0:00 ps aux
+```
+
+Your output will contain different processes and values.
+
+Some useful columns:
+
+| Column    | Meaning                             |
+| --------- | ----------------------------------- |
+| `USER`    | User account running the process    |
+| `PID`     | Process ID                          |
+| `%CPU`    | Percentage of CPU usage             |
+| `%MEM`    | Percentage of physical memory usage |
+| `STAT`    | Process state                       |
+| `COMMAND` | Command or program being executed   |
+
+You do not need to understand every column yet. Focus on identifying the user, PID, process name, and resource usage.
+
+### **3. Using ps -ef**
+
+Another way to display a broad process list is:
+
+```
+ps -ef
+```
+
+Example output:
+
+```
+UID       PID   PPID  C STIME TTY          TIME CMD
+root        1      0  0 08:00 ?        00:00:02 /sbin/init
+student  1420   1300  0 09:10 pts/0    00:00:00 bash
+student  1584   1420  0 09:20 pts/0    00:00:00 ps -ef
+```
+
+Notice the `PID` and `PPID` columns. They identify the process and its parent.
+
+Both `ps aux` and `ps -ef` provide broad process listings, but their output formats are different.
+
+### **4. Monitoring processes with top**
+
+The `top` command displays a live, continuously updating view of system processes.
+
+Run:
+
+```
+top
+```
+
+You will see information about:
+
+- CPU usage.
+- Memory usage.
+- Running processes.
+- Process IDs.
+- Resource consumption.
+
+Example of the process-list portion:
+
+```
+PID    USER      PR  NI    VIRT    RES    %CPU  %MEM  COMMAND
+1420   student   20   0   12000   5000    0.5   0.2   bash
+1532   student   20   0    7000   2000    0.0   0.1   sleep
+```
+
+The exact display depends on your system.
+
+To exit `top`, press:
+
+```
+q
+```
+
+[How to View Running Processes on Linux](https://images.openai.com/static-rsc-4/itDJfVajUisDOZkR9b7cZ-dPEv0eMZdUqzcdT7REgoc_TpJ1rTvQEBNr3POvj0x5VY--IRktpo98lljxsuWH8V3w9-x7DMVrNJjF9DFG_8mRskIEj8VB4R5NDH5DqNSGI8RLjBLYXH60eCWEZIc46--xxmirZTYCpqXNEHvUpq8?purpose=inline)
+
+[howtoforge.com](https://www.howtoforge.com/how-to-view-running-processes-on-linux/?utm_source=chatgpt.com)
+
+### **5. Using htop**
+
+`htop` is an interactive process viewer with a more visual interface.
+
+Try:
+
+```
+htop
+```
+
+If the command is not available, you may need to install it:
+
+```
+sudo apt install htop
+```
+
+This requires administrative privileges.
+
+You can use `htop` to view running processes and their resource usage. To exit, press `F10` or `q`.
+
+[11 System Resource Monitoring Tools for Linux Command Line](https://images.openai.com/static-rsc-4/0PG9OcA4_z_bV2x7POxibtzxIdHXesQHzoFfqYvM9aXHPQWjd0dLvspI0odSl0exSNSx4CKqYkJ7mSBPsGS9nKFp5xTE-Nly-AockmLq4y2DjQnDHjATdLOvO43hbLXl25ZHfvrut-IOlOmWPzFIl6L4SXBu-L3EitZXlQCQWqY?purpose=inline)
+
+[linuxhandbook.com](https://linuxhandbook.com/system-monitoring-tools/?utm_source=chatgpt.com)
+
+For now, `top` is enough. You do not need to install `htop` to complete this module.
+
+## **D. Understanding CPU and Memory Usage**
+
+Running programs use system resources. Two important resources are CPU and memory.
+
+### **CPU usage**
+
+The **CPU (Central Processing Unit)** executes instructions.
+
+CPU usage indicates how much processing capacity a program is consuming.
+
+For example:
+
+- A text editor may use very little CPU when idle.
+- A video-processing application may use much more CPU.
+- A program performing complex calculations may use substantial CPU.
+
+High CPU usage is not automatically evidence of malicious activity. A legitimate application may need significant processing power to complete its work.
+
+### **Memory usage**
+
+Memory, commonly called RAM, stores information that running programs need while they operate.
+
+Different applications consume different amounts of memory.
+
+For example:
+
+- A small terminal command may use very little memory.
+- A web browser with many open tabs may use considerably more.
+- A large application may need additional memory to operate smoothly.
+
+### **Checking memory with free -h**
+
+Use:
+
+```
+free -h
+```
+
+The `-h` option means human-readable. It displays memory values in units such as MiB and GiB.
+
+Example output:
+
+```
+               total        used        free      shared  buff/cache   available
+Mem:            7.7Gi       2.1Gi       3.2Gi       180Mi       2.4Gi       5.1Gi
+Swap:           2.0Gi          0B       2.0Gi
+```
+
+Understand the important columns:
+
+| Column      | Meaning                                                          |
+| ----------- | ---------------------------------------------------------------- |
+| `total`     | Total memory available to the system                             |
+| `used`      | Memory currently in use                                          |
+| `free`      | Memory currently unused                                          |
+| `available` | Estimated memory available for new applications without swapping |
+| `Swap`      | Disk space used as an extension of memory when needed            |
+
+Linux uses available memory for caching to improve performance. Therefore, low `free` memory does not automatically mean the system is running out of memory.
+
+The `available` value is usually more useful when checking whether the system has enough memory for additional applications.
+
+## **E. Foreground and Background Processes**
+
+When you execute a command in a terminal, it usually runs in the **foreground**.
+
+A foreground process occupies the terminal until it finishes or is stopped. You generally cannot enter another command in that same terminal while it is running.
+
+A **background process** runs without occupying the terminal in the same way. This allows you to continue entering commands.
+
+### **1. Run a foreground process**
+
+We will use the harmless `ping` command.
+
+Run:
+
+```
+ping 127.0.0.1
+```
+
+The address `127.0.0.1` refers to your own computer, also called the loopback address.
+
+Example output:
+
+```
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.05 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.04 ms
+64 bytes from 127.0.0.1: icmp_seq=3 ttl=64 time=0.05 ms
+```
+
+The command continues running until you stop it.
+
+Press:
+
+```
+Ctrl + C
+```
+
+This sends an interrupt to the foreground process and normally stops it.
+
+### **2. Run a process in the background**
+
+You can start a command in the background by adding `&` at the end.
+
+Run:
+
+```
+ping 127.0.0.1 &
+```
+
+Example output:
+
+```
+[1] 2450
+```
+
+This indicates that the shell started a background job.
+
+- `[1]` is the job ID.
+- `2450` is the process ID (PID).
+
+The command may still print output in your terminal while it runs.
+
+### **3. View background jobs**
+
+Run:
+
+```
+jobs
+```
+
+Example output:
+
+```
+[1]+  Running    ping 127.0.0.1 &
+```
+
+This displays background jobs associated with your current shell.
+
+### **4. Bring a background job to the foreground**
+
+Use:
+
+```
+fg
+```
+
+This brings the current background job to the foreground.
+
+If you have multiple jobs, you can specify a job ID:
+
+```
+fg %1
+```
+
+Here, `%1` refers to job number 1.
+
+Once the job is in the foreground, press `Ctrl + C` to stop it.
+
+### **Job IDs and PIDs are different**
+
+| Identifier | Example | Purpose                                       |
+| ---------- | ------- | --------------------------------------------- |
+| Job ID     | `%1`    | Identifies a job managed by the current shell |
+| PID        | `2450`  | Identifies a process in Linux                 |
+
+A job ID is used with shell job-control commands such as `fg`. A PID is used to identify a process with commands such as `kill`.
+
+## **F. Terminating Processes**
+
+Sometimes a program stops responding, runs longer than expected, or is no longer needed.
+
+Linux provides commands to request that processes terminate.
+
+### **1. Using kill**
+
+Basic syntax:
+
+```
+kill PID
+```
+
+Replace `PID` with the process ID you want to terminate.
+
+For example:
+
+```
+kill 2450
+```
+
+By default, `kill` sends a signal called **SIGTERM**.
+
+SIGTERM requests that the process terminate gracefully. This gives the process an opportunity to finish its work and clean up.
+
+A process may not stop immediately, and some processes may not respond to the request.
+
+### **2. Using pkill**
+
+You can also request termination by process name:
+
+```
+pkill process-name
+```
+
+For example:
+
+```
+pkill sleep
+```
+
+This sends the default termination signal to matching processes whose names match `sleep`.
+
+Be careful: this can affect more than one matching process. For beginners, using a specific PID is generally safer when you know exactly which process you want to stop.
+
+### **Why not use kill -9 first?**
+
+You may encounter this command:
+
+```
+kill -9 PID
+```
+
+It sends SIGKILL, which forces the operating system to terminate the process without allowing it to handle the termination request.
+
+This should not be your normal first choice. Start with the default `kill PID` and allow the process time to exit.
+
+**Process termination safety**
+
+- Identify the correct PID before terminating a process.
+- Do not terminate unfamiliar system processes.
+- Avoid using `sudo` with `kill` unless you have a clear administrative reason.
+- Prefer a normal termination request over forced termination.
+
+## **G. Hands-on Practice — Inspect and Manage a Process**
+
+In this exercise, you will inspect running processes and safely terminate a test process that you create yourself.
+
+You will use `sleep 300` as the test process. It simply waits for five minutes and does not modify your files or system settings.
+
+### **Step 1: Display processes in your terminal**
+
+Run:
+
+```
+ps
+```
+
+**What it does:** Displays processes associated with your current terminal.
+
+**Expected result:** You should see entries such as your shell and the `ps` command.
+
+### **Step 2: Inspect a broader process list**
+
+Run:
+
+```
+ps aux
+```
+
+**What it does:** Displays a broad list of running processes.
+
+**Expected result:** You should see multiple processes, their users, PIDs, CPU usage, and memory usage.
+
+Look for the `PID`, `USER`, and `COMMAND` columns.
+
+### **Step 3: Identify a process and its PID**
+
+Run:
+
+```
+ps -ef
+```
+
+**What it does:** Displays a full-format process listing, including parent process IDs.
+
+**Expected result:** You should see processes with their PIDs and PPIDs.
+
+For this exercise, you will identify your own test process in a later step rather than terminate an unfamiliar process from this list.
+
+### **Step 4: Monitor processes with top**
+
+Run:
+
+```
+top
+```
+
+**What it does:** Opens an interactive view of running processes and resource usage.
+
+Observe:
+
+- Process IDs.
+- Process names.
+- CPU usage.
+- Memory usage.
+
+You may see processes using very little CPU. That is normal.
+
+Press `q` to exit.
+
+### **Step 5: Check available memory**
+
+Run:
+
+```
+free -h
+```
+
+**What it does:** Displays memory and swap information in human-readable units.
+
+**Expected result:** You should see `Mem` and `Swap` rows with total, used, free, and available memory information.
+
+Your numbers will depend on your computer.
+
+### **Step 6: Start a harmless background process**
+
+Run:
+
+```
+sleep 300 &
+```
+
+Example output:
+
+```
+[1] 2450
+```
+
+**What it does:** Starts a process that waits for 300 seconds in the background.
+
+The number in brackets is the shell job ID. The other number is the process ID.
+
+Your numbers will be different.
+
+### **Step 7: Inspect the background job**
+
+Run:
+
+```
+jobs
+```
+
+Example output:
+
+```
+[1]+  Running    sleep 300 &
+```
+
+**What it does:** Displays background jobs associated with the current shell.
+
+You should see your `sleep 300` command listed as running.
+
+### **Step 8: Identify the test process PID**
+
+Run:
+
+```
+ps -ef
+```
+
+Look for the line containing:
+
+```
+sleep 300
+```
+
+Example:
+
+```
+UID       PID   PPID  C STIME TTY          TIME CMD
+student  2450   1420  0 10:30 pts/0    00:00:00 sleep 300
+```
+
+In this example, the PID is `2450`.
+
+Your actual PID will be different.
+
+You can also use:
+
+```
+pgrep -a -u "$USER" -x sleep
+```
+
+This displays matching `sleep` processes owned by your current user, along with their PIDs and command lines.
+
+If you have other `sleep` processes running under your account, identify the one you started for this exercise before continuing.
+
+### **Step 9: Terminate your test process**
+
+Use the PID you identified in the previous step.
+
+For example:
+
+```
+kill 2450
+```
+
+Replace `2450` with your actual test process PID.
+
+**What it does:** Sends SIGTERM to your test process, requesting graceful termination.
+
+**Expected result:** The `sleep` process should stop.
+
+If the shell reports that the background job has completed, that is normal.
+
+### **Step 10: Verify that the process has stopped**
+
+Run:
+
+```
+jobs
+```
+
+If the process has terminated, the job should no longer appear as running. Your shell may briefly show a completed-job notification.
+
+You can also check the specific PID:
+
+```
+ps -p 2450
+```
+
+Replace the example PID with your actual PID.
+
+If the process has stopped, `ps` should display only its header and no matching process entry.
+
+**Practice complete**
+
+You have inspected processes, monitored CPU and memory, created a harmless background process, identified its PID, and safely requested its termination.
+
+## **H. Process vs Service — A Preview**
+
+You now understand how Linux manages running processes. Before moving forward, it is useful to understand one related term: **service**.
+
+A process is a running instance of a program.
+
+A service is a background system function that is commonly managed by a service manager such as systemd.
+
+For example:
+
+- A terminal command such as `sleep 300` creates a process.
+- A background service may handle network connections or system logging.
+
+Services are commonly backed by one or more processes, but not every process is a service.
+
+**The difference**
+
+**Process**
+
+A running instance of a program.
+
+Example: `sleep 300`
+
+**Service**
+
+A background system function commonly managed by a service manager.
+
+Example: a logging service
+
+In the next module, you will learn how Linux manages services and how to inspect and control them.
+
+## **I. Knowledge Check**
+
+Test your understanding before moving forward.
+
+**Questions 1–2: Multiple choice**
+
+**1. What does PID stand for?**
+
+Program Information Display
+
+Process ID
+
+Package Identifier
+
+Parent Information Directory
+
+
+
+**2. Which command provides an interactive, continuously updating view of running processes?**
+
+free -h
+
+jobs
+
+top
+
+whoami
+
+
+
+**Questions 3–4: Command identification**
+
+**3. Which command displays background jobs associated with the current shell?**
+
+
+
+**4. Which command requests graceful termination of a process with PID 2450?**
+
+
+
+**5. Practical process-inspection task**
+
+You started a test process with:
+
+```
+sleep 300 &
+```
+
+Explain how you would:
+
+1. Find its PID.
+2. Request that it terminate.
+3. Verify that it has stopped.
+
+Check answers
+
+
+
+## **Answer Key**
+
+**1. What does PID stand for?**
+
+Correct answer: Process ID.
+
+**2. Which command provides an interactive process monitor?**
+
+Correct answer:
+
+```
+top
+```
+
+**3. Which command displays background jobs?**
+
+```
+jobs
+```
+
+**4. Which command requests graceful termination of PID 2450?**
+
+```
+kill 2450
+```
+
+**5. How do you inspect and terminate your test process?**
+
+```
+ps -ef
+kill PID
+ps -p PID
+```
+
+Identify the correct PID first, request termination, and verify that the process has stopped. You can also use `jobs` to inspect the background job associated with your shell.
+
+## **J. Module Recap**
+
+In this module, you learned how Linux executes programs and manages running processes.
+
+| Topic      | What you learned                                                    |
+| ---------- | ------------------------------------------------------------------- |
+| Processes  | Running instances of programs.                                      |
+| PIDs       | Numerical identifiers assigned to processes.                        |
+| PPIDs      | Identifiers of parent processes.                                    |
+| `ps`       | Displays process information.                                       |
+| `ps aux`   | Displays a broad list of running processes.                         |
+| `top`      | Monitors processes and resource usage interactively.                |
+| `free -h`  | Displays memory and swap information.                               |
+| Foreground | A process that occupies the terminal while running.                 |
+| Background | A process that runs without occupying the terminal in the same way. |
+| `jobs`     | Displays jobs associated with the current shell.                    |
+| `fg`       | Brings a background job to the foreground.                          |
+| `kill`     | Sends a signal to a process, requesting termination by default.     |
+| Services   | Background system functions commonly managed by a service manager.  |
+
+### **Essential commands to remember**
+
+```
+# View current terminal processes
+ps
+
+# View a broad process list
+ps aux
+
+# View processes in full format
+ps -ef
+
+# Monitor running processes
+top
+
+# Check memory
+free -h
+
+# Start a background process
+sleep 300 &
+
+# View background jobs
+jobs
+
+# Bring a job to the foreground
+fg
+
+# Request process termination
+kill PID
+
+# Check whether a process still exists
+ps -p PID
+```
+
+You should now be able to inspect running processes, understand basic CPU and memory usage, manage foreground and background commands, and safely terminate a process you created.
+
+## **Next Module: Services and Basic System Administration**
+
+In Module 08, you will learn how Linux manages background services.
+
+You will explore how to:
+
+- Understand what system services do.
+- Inspect service status.
+- Start and stop services.
+- Restart services.
+- Check whether services are enabled to start automatically.
+
+You will begin using `systemctl` to manage services on systems that use systemd.

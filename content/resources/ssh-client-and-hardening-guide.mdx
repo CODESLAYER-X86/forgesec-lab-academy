@@ -1,0 +1,40 @@
+---
+id: resource-002
+title: "SSH Client & Hardening Guide"
+slug: ssh-client-and-hardening-guide
+description: "Practical reference for generating Ed25519 SSH keys, configuring ~/.ssh/config safely, and verifying daemon settings."
+category: linux
+difficulty: beginner
+estimatedMinutes: 10
+tags:
+  - ssh
+  - guide
+  - hardening
+status: published
+updatedAt: "2026-11-15"
+resourceType: guide
+---
+
+## Generating an Ed25519 Key Pair
+
+```bash
+ssh-keygen -t ed25519 -C "student@forgesec.local"
+```
+
+Verify key directory permissions strictly:
+
+```bash
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub
+```
+
+## Recommended Server Hardening Checks
+
+- `PermitRootLogin no`
+- `PasswordAuthentication no` (once key-based access is verified)
+- `AllowUsers` restricted to authorized accounts
+
+<Callout type="warning" title="Test Before Disconnecting">
+Always verify a new SSH key login in a second terminal window before closing an active administrative session or disabling password authentication.
+</Callout>

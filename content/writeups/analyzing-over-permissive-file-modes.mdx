@@ -1,0 +1,41 @@
+---
+id: writeup-001
+title: "Analyzing Over-Permissive File Modes on Shared Linux Hosts"
+slug: analyzing-over-permissive-file-modes
+description: "A defensive walkthrough showing how world-writable files and Misconfigured SUID bits create local privilege escalation risks."
+category: linux
+difficulty: beginner
+estimatedMinutes: 10
+tags:
+  - linux
+  - permissions
+  - hardening
+status: published
+updatedAt: "2026-11-15"
+author: FORGESEC LABS
+---
+
+## Context
+
+During routine host audits on multi-user Linux systems, overly broad file permissions (`777` or `666`) on scripts or configuration files remain one of the most common misconfigurations.
+
+## Detection Commands
+
+To inspect world-writable files safely inside a specific test directory without scanning restricted paths:
+
+```bash
+find ./workspace -type f -perm -0002 -ls
+```
+
+## Remediation
+
+Apply the principle of least privilege using explicit owner and group permissions:
+
+```bash
+chmod 640 ./workspace/app.conf
+chmod 750 ./workspace/run-backup.sh
+```
+
+## Key Takeaway
+
+Never use `chmod 777` as a shortcut to fix permission errors. Identify which user or service group genuinely requires access and grant only the minimum required mode bits.

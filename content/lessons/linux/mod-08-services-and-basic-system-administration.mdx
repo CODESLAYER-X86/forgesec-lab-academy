@@ -1,0 +1,719 @@
+---
+id: linux-008
+title: "Services and Basic System Administration"
+slug: services-and-basic-system-administration
+description: "Inspect systemd units, verify service health, check system logs, and understand attack-surface implications of open services."
+category: linux
+pathId: linux-fundamentals
+moduleNumber: 8
+difficulty: beginner
+estimatedMinutes: 20
+tags:
+  - linux
+  - systemd
+  - services
+status: published
+updatedAt: "2026-11-15"
+quizSlug: linux-sysadmin-check
+assignmentSlug: audit-local-systemd-services
+---
+
+# **Module 08 — Services and Basic System Administration**
+
+
+
+
+15–20 minutes
+
+
+
+## **A. Welcome to Linux Services**
+
+When you use Linux, many tasks happen in the background without requiring you to open a terminal or launch an application manually.
+
+For example:
+
+- An SSH service allows authorized users to connect remotely.
+- A networking service helps manage network connectivity.
+- A web server responds to requests from web browsers.
+- A scheduling service runs tasks at specified times.
+
+These background functions are commonly handled by **services**.
+
+Think of a Linux computer as an organization. Different departments have ongoing responsibilities: one handles communication, another manages records, and another maintains security. Services perform similar responsibilities in the background while the system is running.
+
+### **Why do services matter?**
+
+Services make Linux useful and manageable, but they also matter in cybersecurity.
+
+Every running service provides some functionality. If a service listens for network connections, for example, it may create an entry point that other devices can reach.
+
+Understanding services helps you:
+
+- Identify what is running on your system.
+- Understand which background functions are necessary.
+- Recognize services that may expose network functionality.
+- Avoid disabling something your system depends on.
+
+In this module, you will learn how to inspect and manage services using simple commands.
+
+## **B. Understanding systemd**
+
+Most modern Debian- and Ubuntu-based Linux systems use **systemd** as their initialization and service-management system.
+
+When Linux starts, systemd helps bring the system into its operational state. It also manages services and other system units.
+
+The main command-line tool for interacting with systemd is:
+
+```
+systemctl
+```
+
+You can use `systemctl` to:
+
+- Check service status.
+- Start or stop services.
+- Restart services.
+- Enable or disable automatic startup.
+- List available service units.
+
+For example:
+
+```
+systemctl status cron
+```
+
+This requests information about the `cron` service, if it is available on your system.
+
+**Remember:** These examples use systemd. Linux distributions that use other service managers may require different commands.
+
+## **C. Understanding Services and Processes**
+
+In Module 07, you learned that a process is a running instance of a program. You also learned how to inspect and manage processes.
+
+A service is closely related, but the terms are not interchangeable.
+
+| Process                          | Service                                      |
+| -------------------------------- | -------------------------------------------- |
+| A running instance of a program  | A background system function or managed unit |
+| Has a process ID (PID)           | Commonly managed through a service manager   |
+| Can run independently of systemd | Often started and monitored by systemd       |
+
+A service commonly runs one or more processes to perform its work.
+
+For example, an SSH service can run a process that handles incoming remote connections.
+
+However, not every process is a service. A terminal command such as `sleep 100` creates a process, but it is not normally managed as a system service.
+
+**Key idea:** A process describes a running program. A service describes a managed system function.
+
+## **D. Checking Service Status**
+
+Before changing a service, you should first inspect it.
+
+The most useful command is:
+
+```
+systemctl status service-name
+```
+
+Replace `service-name` with the actual service name.
+
+For example:
+
+```
+systemctl status cron
+```
+
+The `cron` service is commonly used to run scheduled tasks. It may not be installed or active on every Linux system.
+
+### **Understanding the output**
+
+Here is an illustrative example:
+
+```
+● cron.service - Regular background program processing daemon
+     Loaded: loaded (/usr/lib/systemd/system/cron.service; enabled)
+     Active: active (running) since Mon 2026-11-16 09:30:00 UTC
+   Main PID: 842 (cron)
+      Tasks: 1
+     Memory: 1.2M
+```
+
+The important parts are:
+
+| Output     | Meaning                                                                        |
+| ---------- | ------------------------------------------------------------------------------ |
+| `Loaded`   | The service unit has been loaded and its configuration is known to systemd     |
+| `enabled`  | Configured to start automatically at boot, according to its unit configuration |
+| `Active`   | Shows the service's current state                                              |
+| `Main PID` | The process ID associated with the service's main process                      |
+| `Memory`   | Memory currently reported for the service                                      |
+
+### **Check whether a service is active**
+
+```
+systemctl is-active cron
+```
+
+Possible results include:
+
+```
+active
+```
+
+Or:
+
+```
+inactive
+```
+
+- **Active:** The service is currently active.
+- **Inactive:** The service is not currently active.
+
+Other states may also appear, depending on the service.
+
+### **Check whether a service is enabled**
+
+```
+systemctl is-enabled cron
+```
+
+Possible results include:
+
+```
+enabled
+```
+
+Or:
+
+```
+disabled
+```
+
+- **Enabled:** Configured to start automatically at boot, according to its unit configuration.
+- **Disabled:** Not configured for automatic startup through the usual enablement mechanism.
+
+### **Active vs. enabled**
+
+This distinction is important.
+
+| State    | Meaning                                                     |
+| -------- | ----------------------------------------------------------- |
+| Active   | The service is running or otherwise currently active        |
+| Inactive | The service is not currently active                         |
+| Enabled  | The service is configured for automatic startup at boot     |
+| Disabled | The service is not configured for automatic startup at boot |
+
+A service can be active but disabled. It may have been started manually.
+
+A service can also be enabled but inactive. It is configured for automatic startup, but it is not currently running.
+
+**Remember:** Active describes the current state. Enabled describes boot-start configuration.
+
+## **E. Starting, Stopping and Restarting Services**
+
+Sometimes you need to change a service's current state.
+
+The `systemctl` command provides several operations.
+
+| Command                               | Purpose                                                 |
+| ------------------------------------- | ------------------------------------------------------- |
+| `sudo systemctl start service-name`   | Start a service                                         |
+| `sudo systemctl stop service-name`    | Stop a service                                          |
+| `sudo systemctl restart service-name` | Restart a service                                       |
+| `sudo systemctl reload service-name`  | Ask a service to reload its configuration, if supported |
+
+### **1. Start a service**
+
+```
+sudo systemctl start cron
+```
+
+This asks systemd to start the `cron` service.
+
+Starting a service does not necessarily configure it to start automatically at the next boot.
+
+### **2. Stop a service**
+
+```
+sudo systemctl stop cron
+```
+
+This asks systemd to stop the service.
+
+Only stop a service when you understand its purpose and know that stopping it will not disrupt your system.
+
+### **3. Restart a service**
+
+```
+sudo systemctl restart cron
+```
+
+This stops and starts the service again.
+
+Restarting can be useful when a service needs to be restarted after a change or when you need to refresh its running state.
+
+### **4. Reload a service**
+
+```
+sudo systemctl reload service-name
+```
+
+Some services support reloading their configuration without a full restart.
+
+However, not every service supports this operation. If a service does not support reloading, the command may fail.
+
+### **Why use&#x20;**`sudo`**?**
+
+Starting, stopping, and restarting system services generally require administrative privileges.
+
+The `sudo` command allows an authorized user to execute a command with elevated privileges.
+
+Before changing a service, inspect it:
+
+```
+systemctl status service-name
+```
+
+Do not stop unfamiliar services or services responsible for networking, login, display, or other essential system functions.
+
+## **F. Enabling and Disabling Services at Boot**
+
+Some services should start automatically whenever the computer boots.
+
+For example, a machine that provides SSH access may need its SSH service to start automatically.
+
+Systemd uses `enable` and `disable` to manage automatic startup.
+
+### **Enable a service**
+
+```
+sudo systemctl enable cron
+```
+
+This configures the service to start automatically at boot, according to its unit configuration.
+
+**Important:** Enabling a service does not necessarily start it immediately.
+
+### **Disable a service**
+
+```
+sudo systemctl disable cron
+```
+
+This removes the usual automatic-start configuration.
+
+**Important:** Disabling a service does not necessarily stop it if it is already running.
+
+### **Enable and start a service together**
+
+You can combine both operations:
+
+```
+sudo systemctl enable --now cron
+```
+
+This asks systemd to:
+
+1. Enable the service for automatic startup.
+2. Start the service immediately.
+
+### **Understand the difference**
+
+| Command        | Immediate effect              | Boot effect                     |
+| -------------- | ----------------------------- | ------------------------------- |
+| `start`        | Starts the service            | No automatic-start change       |
+| `stop`         | Stops the service             | No automatic-start change       |
+| `enable`       | Does not necessarily start it | Configures automatic startup    |
+| `disable`      | Does not necessarily stop it  | Removes usual automatic startup |
+| `enable --now` | Starts the service            | Configures automatic startup    |
+
+For this module, focus on understanding these operations. You do not need to enable or disable services during the practical exercise.
+
+## **G. Inspecting Available Services**
+
+Linux systems may have many installed and running services.
+
+You can inspect them using `systemctl`.
+
+### **List loaded service units**
+
+```
+systemctl list-units --type=service
+```
+
+This displays loaded service units known to systemd.
+
+Illustrative output:
+
+```
+UNIT             LOAD   ACTIVE   SUB      DESCRIPTION
+cron.service     loaded active   running  Regular background program
+ssh.service      loaded active   running  OpenBSD Secure Shell server
+dbus.service     loaded active   running  D-Bus System Message Bus
+
+3 loaded units listed.
+```
+
+The services shown here are examples. Your system may display different services.
+
+### **List installed service unit files**
+
+```
+systemctl list-unit-files --type=service
+```
+
+This displays installed service unit files and their enablement states.
+
+Illustrative output:
+
+```
+UNIT FILE                  STATE
+cron.service               enabled
+ssh.service                enabled
+some-example.service       disabled
+```
+
+The `STATE` column helps you understand whether a service is configured for automatic startup.
+
+These two commands provide different information:
+
+- `list-units` shows loaded service units and their current states.
+- `list-unit-files` shows installed service unit files and their enablement states.
+
+## **H. Basic Service Safety and Cybersecurity**
+
+Services are important from a cybersecurity perspective because they can provide access to system functionality.
+
+For example, an SSH service may allow remote users to connect to a Linux machine. A web server may accept requests from users on a network.
+
+Every unnecessary service can increase a machine's potential attack surface.
+
+### **Basic security principles**
+
+1. **Understand before disabling:** Do not disable a service simply because its name is unfamiliar.
+2. **Avoid unnecessary services:** A machine should not run services it does not need.
+3. **Be careful with network exposure:** Services should only be exposed to networks when necessary and appropriately secured.
+4. **Inspect service status:** Understand which services are active and which are configured to start automatically.
+5. **Do not assume a service is malicious:** An active service is not automatically vulnerable or suspicious.
+
+For example, SSH is a legitimate service used for remote administration. Its presence alone does not indicate a security problem.
+
+The goal is to understand what your system is running and why.
+
+## **I. Hands-on Practice — Inspect a Linux Service**
+
+Practical exercise
+
+In this exercise, you will inspect services on your Linux machine using `systemctl`.
+
+You will not need to install or modify any services.
+
+**Environment:** Debian/Ubuntu-based Linux with systemd.
+
+### **Task 1 — Check whether systemd is available**
+
+Run:
+
+```
+ps -p 1 -o comm=
+```
+
+**What it does:** Displays the name of the process with PID 1.
+
+**Expected result on a typical systemd installation:**
+
+```
+systemd
+```
+
+If the result is `systemd`, your system is using systemd as PID 1.
+
+If it displays something else, your environment may use another initialization system or may be running inside a container.
+
+### **Task 2 — Inspect a service**
+
+Try:
+
+```
+systemctl status cron
+```
+
+**What it does:** Displays information about the `cron` service.
+
+**Expected result:** If installed, you may see information such as:
+
+```
+Loaded: loaded
+Active: active (running)
+```
+
+Your output may differ.
+
+If the service is not found, it may not be installed. Do not install it just for this exercise.
+
+### **Task 3 — Check whether the service is active**
+
+Run:
+
+```
+systemctl is-active cron
+```
+
+**What it does:** Checks the current active state.
+
+**Possible result:**
+
+```
+active
+```
+
+Or:
+
+```
+inactive
+```
+
+If the service is unavailable, choose another installed service that you recognize.
+
+### **Task 4 — Check whether the service is enabled**
+
+Run:
+
+```
+systemctl is-enabled cron
+```
+
+**What it does:** Checks the service's automatic-start configuration.
+
+**Possible result:**
+
+```
+enabled
+```
+
+Or:
+
+```
+disabled
+```
+
+Other results are possible depending on the service's configuration.
+
+### **Task 5 — List loaded services**
+
+Run:
+
+```
+systemctl list-units --type=service
+```
+
+**What it does:** Displays loaded service units.
+
+**Expected result:** A list of services and their current states.
+
+Look at the `UNIT`, `ACTIVE`, and `SUB` columns.
+
+### **Task 6 — Inspect one available service**
+
+Choose a service you recognize from the previous list.
+
+For example:
+
+```
+systemctl status dbus
+```
+
+**What it does:** Displays status information for the D-Bus service, if available.
+
+**Expected result:** Information about whether the service is loaded and its current state.
+
+Do not stop this service. The purpose is inspection only.
+
+### **Task 7 — Optional: Practice starting and stopping a service**
+
+Optional — changes system state
+
+Only complete this task if you have identified an optional service that is safe to stop in your environment.
+
+Do not use networking, display, login, or other essential system services. Do not stop a service on a shared or production machine.
+
+You may use `cron` only if you understand its role and are comfortable temporarily interrupting scheduled tasks on your own test machine.
+
+First, inspect it:
+
+```
+systemctl status cron
+```
+
+If it is available and safe to use, start it:
+
+```
+sudo systemctl start cron
+```
+
+Check its status:
+
+```
+systemctl is-active cron
+```
+
+Then, if you intentionally want to test stopping it:
+
+```
+sudo systemctl stop cron
+```
+
+Check again:
+
+```
+systemctl status cron
+```
+
+**Expected result:** The service should show an inactive state after a successful stop.
+
+To restore it if you stopped it:
+
+```
+sudo systemctl start cron
+```
+
+Verify the result:
+
+```
+systemctl is-active cron
+```
+
+You should see:
+
+```
+active
+```
+
+**Important:** The start and stop commands change system state and generally require `sudo`. If no suitable optional service is available, skip Task 7. Completing the inspection tasks is enough.
+
+### **Practical exercise checklist**
+
+- Checked whether systemd is running as PID 1.
+- Inspected an available service.
+- Checked its active state.
+- Checked its enablement state.
+- Listed loaded service units.
+- Inspected another service.
+- Optionally practiced starting and stopping a safe service.
+
+## **J. Knowledge Check**
+
+Test your understanding before moving to the next module.
+
+**Questions 1–4: Select the correct answer.**
+
+**1. Which command displays detailed information about a service?**
+
+systemctl status cron
+
+systemctl enable cron
+
+ps aux
+
+chmod cron
+
+
+
+**2. What does systemctl enable cron do?**
+
+Immediately stops cron
+
+Configures cron for automatic startup at boot
+
+Deletes the cron service
+
+Displays cron's process ID
+
+
+
+**3. Which command checks whether a service is currently active?**
+
+systemctl is-enabled cron
+
+systemctl is-active cron
+
+systemctl list-unit-files
+
+sudo systemctl disable cron
+
+
+
+**4. Which command asks systemd to restart a service?**
+
+systemctl reload service-name
+
+systemctl enable service-name
+
+sudo systemctl restart service-name
+
+systemctl list-units
+
+
+
+Check answers
+
+### **Question 5 — Practical command identification**
+
+You want to check whether the `ssh` service is currently running.
+
+Which command would you use?
+
+```
+# Write the correct command:
+```
+
+Hint: Use the command that checks whether a service is active, not whether it is enabled at boot.
+
+Reveal answer
+
+## **K. Answer Key**
+
+| Question | Correct answer                                |
+| -------- | --------------------------------------------- |
+| 1        | `systemctl status cron`                       |
+| 2        | Configures cron for automatic startup at boot |
+| 3        | `systemctl is-active cron`                    |
+| 4        | `sudo systemctl restart service-name`         |
+| 5        | `systemctl is-active ssh`                     |
+
+If you made mistakes, revisit Sections D, E, and F before continuing.
+
+## **Module Recap**
+
+In this module, you learned how Linux manages background services and how to inspect and control them using systemd.
+
+Key takeaways:
+
+- **Services** perform background system functions.
+- **systemd** is a widely used Linux initialization and service-management system.
+- **systemctl** is the primary command-line tool for interacting with systemd.
+- `systemctl status` displays detailed service information.
+- `systemctl is-active` checks a service's current state.
+- `systemctl start`, `stop`, and `restart` control a service's running state.
+- `enable` and `disable` control automatic startup at boot.
+- **Active** and **enabled** describe different things.
+- Unnecessary or improperly exposed services can increase a system's attack surface.
+
+You can now inspect basic Linux services and understand how they are managed.
+
+## **Next Module: Linux Networking Fundamentals and Commands**
+
+Your Linux machine does not operate in isolation. It communicates with other computers, servers, and networks.
+
+In Module 09, you will learn how to:
+
+- Inspect network interfaces.
+- Find IP addresses.
+- Understand basic routing information.
+- Check DNS resolution.
+- Test network connectivity.
+- Identify listening network ports.
+
+These skills will help you understand how Linux communicates with other systems and prepare you for practical cybersecurity and networking exercises.

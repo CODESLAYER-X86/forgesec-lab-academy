@@ -1,0 +1,168 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@layer base {
+  :root {
+    --bg-canvas: #101418;
+    --bg-surface: #171d23;
+    --bg-elevated: #202831;
+    --border-subtle: #303a44;
+    --text-primary: #f3f4f6;
+    --text-secondary: #aab4be;
+    --accent-primary: #a3e635;
+    --accent-muted: #173d35;
+  }
+
+  html {
+    background-color: #101418;
+    color: #f3f4f6;
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #101418;
+    color: #f3f4f6;
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), system-ui, sans-serif;
+    text-wrap: balance;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shiki / rehype-pretty-code dark surface alignment */
+figure[data-rehype-pretty-code-figure] {
+  margin: 1.5rem 0;
+}
+
+figure[data-rehype-pretty-code-figure] pre {
+  background-color: #0c1014 !important;
+  border: 1px solid #303a44;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+figure[data-rehype-pretty-code-figure] code {
+  background: transparent;
+  padding: 0;
+  border: 0;
+}
+
+/* Prose typography for MDX technical lessons */
+.academy-prose {
+  color: #e5e7eb;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.academy-prose h2 {
+  color: #f3f4f6;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2.25rem;
+  margin-bottom: 0.875rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #303a44;
+  scroll-margin-top: 5.5rem;
+}
+
+.academy-prose h3 {
+  color: #f3f4f6;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 0.625rem;
+  scroll-margin-top: 5.5rem;
+}
+
+.academy-prose p {
+  margin: 1rem 0;
+  color: #d1d5db;
+}
+
+.academy-prose ul,
+.academy-prose ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+  color: #d1d5db;
+}
+
+.academy-prose ul {
+  list-style-type: disc;
+}
+
+.academy-prose ol {
+  list-style-type: decimal;
+}
+
+.academy-prose li {
+  margin: 0.4rem 0;
+}
+
+.academy-prose strong {
+  color: #f3f4f6;
+  font-weight: 600;
+}
+
+.academy-prose a {
+  color: #a3e635;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.academy-prose :not(pre) > code {
+  background-color: #202831;
+  color: #e5e7eb;
+  border: 1px solid #303a44;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.85em;
+}
+
+.academy-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.925rem;
+  border: 1px solid #303a44;
+}
+
+.academy-prose th {
+  background-color: #171d23;
+  color: #f3f4f6;
+  text-align: left;
+  padding: 0.65rem 0.875rem;
+  border-bottom: 1px solid #303a44;
+  font-weight: 600;
+}
+
+.academy-prose td {
+  padding: 0.65rem 0.875rem;
+  border-bottom: 1px solid #262f38;
+  color: #d1d5db;
+}
+
+.academy-prose hr {
+  border-color: #303a44;
+  margin: 2rem 0;
+}

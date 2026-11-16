@@ -1,0 +1,46 @@
+---
+id: web-001
+title: "HTTP Request Anatomy and Trust Boundaries"
+slug: http-request-anatomy-and-trust-boundaries
+description: "Inspect HTTP methods, headers, cookies, and why server-side validation must never rely on browser-supplied fields."
+category: web-security
+pathId: web-security-foundations
+moduleNumber: 1
+difficulty: intermediate
+estimatedMinutes: 25
+tags:
+  - http
+  - headers
+  - web-security
+status: published
+updatedAt: "2026-11-15"
+quizSlug: web-security-check
+---
+
+## What You Will Learn
+
+- Read raw HTTP/1.1 and HTTP/2 request lines, headers, and response status codes.
+- Understand why cookies require `HttpOnly`, `Secure`, and `SameSite` attributes.
+- Recognize why every client-submitted identifier or role claim must be verified server-side.
+
+## Inspecting Response Headers with curl
+
+Use `curl -I` against your own local development server to inspect HTTP response headers cleanly.
+
+```bash
+curl -I http://localhost:3000
+```
+
+## Security Attributes for Session Cookies
+
+- `HttpOnly`: Prevents client-side JavaScript (`document.cookie`) from reading session tokens.
+- `Secure`: Restricts cookie transmission strictly to HTTPS connections.
+- `SameSite=Lax` or `Strict`: Mitigates cross-site request forgery (CSRF).
+
+<Callout type="warning" title="Never Trust Client Claims">
+Hidden form fields, browser `localStorage` values, and custom request headers can all be modified by an attacker. Always derive user identity and role from a verified server session.
+</Callout>
+
+## Summary
+
+HTTP is stateless by design; secure web applications anchor identity in server-verified sessions and validate every payload at the API or Server Action boundary.

@@ -1,0 +1,6 @@
+{
+  "name": "FORGESEC ACADEMY",
+  "description": "Free, self-paced cybersecurity and Linux fundamentals learning platform with structured learning paths, interactive assessments, practical assignments, and student progress tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,43 @@
+---
+id: net-003
+title: "DNS Resolution and Diagnostic Queries"
+slug: dns-resolution-and-diagnostics
+description: "Trace how hostnames resolve to IP addresses using recursive resolvers, A/AAAA/MX/TXT records, and dig."
+category: networking
+pathId: networking-fundamentals
+moduleNumber: 3
+difficulty: beginner
+estimatedMinutes: 25
+tags:
+  - dns
+  - dig
+  - diagnostics
+status: published
+updatedAt: "2026-11-15"
+quizSlug: networking-basics-check
+---
+
+## What You Will Learn
+
+- Explain the difference between `/etc/hosts`, local stub resolvers, recursive resolvers, and authoritative nameservers.
+- Query `A`, `AAAA`, `MX`, and `TXT` records using `dig`.
+- Spot DNS caching TTLs and resolution mismatches.
+
+## Querying DNS Records Safely
+
+Use `dig` with `+short` for concise answers or omit it to inspect authoritative flags and TTL counters.
+
+```bash
+dig example.com A +noall +answer
+dig example.com TXT +short
+```
+
+## Expected Output
+
+```text
+example.com.    300    IN    A    93.184.215.14
+```
+
+## Summary
+
+DNS diagnostics help verify connectivity failures, mail-authentication `TXT` records (SPF/DMARC), and unexpected host overrides before blaming higher-layer applications.

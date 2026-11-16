@@ -1,0 +1,41 @@
+---
+id: web-002
+title: "Security Headers, CSP and Same-Origin Policy"
+slug: security-headers-csp-and-same-origin
+description: "Understand how browsers isolate origins and how Content-Security-Policy and X-Frame-Options defend against XSS and clickjacking."
+category: web-security
+pathId: web-security-foundations
+moduleNumber: 2
+difficulty: intermediate
+estimatedMinutes: 25
+tags:
+  - csp
+  - sop
+  - xss
+status: published
+updatedAt: "2026-11-15"
+quizSlug: web-security-check
+---
+
+## What You Will Learn
+
+- Define an origin (`scheme + host + port`) under the browser Same-Origin Policy.
+- Configure `Content-Security-Policy` to constrain script execution and framing.
+- Test header policies safely on local test endpoints.
+
+## Core Browser Defenses
+
+| Header | Primary Protection |
+| --- | --- |
+| `Content-Security-Policy` | Restricts allowed script, style, and frame sources |
+| `X-Content-Type-Options: nosniff` | Prevents MIME-type confusion attacks |
+| `Referrer-Policy` | Controls referrer URL leakage across origins |
+| `Strict-Transport-Security` | Enforces HTTPS on subsequent visits |
+
+```text
+Content-Security-Policy: default-src 'self'; frame-ancestors 'none'; object-src 'none';
+```
+
+## Summary
+
+Defense in depth pairs strict server-side input sanitization with browser-enforced policies like `Content-Security-Policy` and `SameSite` cookies.

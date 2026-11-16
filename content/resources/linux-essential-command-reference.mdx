@@ -1,0 +1,44 @@
+---
+id: resource-001
+title: "Linux Essential Command Reference"
+slug: linux-essential-command-reference
+description: "Quick-reference command table covering filesystem navigation, text processing, permissions, processes, and networking."
+category: linux
+difficulty: beginner
+estimatedMinutes: 8
+tags:
+  - reference
+  - linux
+  - cheatsheet
+status: published
+updatedAt: "2026-11-15"
+resourceType: reference
+---
+
+## Navigation & File Operations
+
+```bash
+pwd                 # Print current working directory
+ls -la              # List all files including hidden entries with permissions
+cd /var/log         # Change directory
+cp -r src/ dest/    # Copy directory recursively
+mv old.txt new.txt  # Move or rename file
+```
+
+## Text Search & Log Inspection
+
+```bash
+grep -rn "Failed" auth.log      # Search recursively with line numbers
+head -n 20 app.log              # Show first 20 lines
+tail -f /var/log/syslog         # Stream new log lines live
+sort access.log | uniq -c       # Count unique lines
+```
+
+## Permissions, Processes & Sockets
+
+```bash
+chmod 640 config.env            # Owner rw-, group r--, others ---
+ps aux | grep sshd              # Inspect running processes
+systemctl status ssh            # Check systemd service status
+ss -tulnp                       # List listening TCP/UDP sockets
+```

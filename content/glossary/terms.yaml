@@ -1,0 +1,38 @@
+id: glossary-terms
+items:
+  - term: Kernel
+    slug: kernel
+    category: linux
+    shortDefinition: The core layer of an operating system that manages CPU scheduling, memory, hardware devices, and system calls.
+    details: In Linux, the kernel mediates every interaction between user-space programs (such as Bash or Python) and physical or virtual hardware.
+    relatedLessonSlug: introduction-to-linux-and-the-terminal
+  - term: Shell
+    slug: shell
+    category: linux
+    shortDefinition: A command-line interpreter that reads user commands and executes programs or built-in utilities.
+    details: Bash (Bourne Again Shell) is the default interactive shell on most Linux distributions, supporting pipelines, redirection, and scripting.
+    relatedLessonSlug: introduction-to-linux-and-the-terminal
+  - term: Principle of Least Privilege
+    slug: principle-of-least-privilege
+    category: security
+    shortDefinition: Granting users, processes, and accounts only the minimum permissions necessary to perform their intended task.
+    details: Enforced in Linux via user/group ownership and chmod permission modes, and in databases via Row Level Security policies.
+    relatedLessonSlug: users-groups-and-file-permissions
+  - term: Socket
+    slug: socket
+    category: networking
+    shortDefinition: An endpoint for network or inter-process communication identified by an IP address, transport protocol, and port number.
+    details: Inspecting listening sockets with ss -tulnp reveals which local services are reachable on localhost or external interfaces.
+    relatedLessonSlug: tcp-udp-and-service-ports
+  - term: SSH
+    slug: ssh
+    category: networking
+    shortDefinition: Secure Shell—an encrypted network protocol used for remote terminal login, command execution, and secure file transfer.
+    details: Typically listens on TCP port 22 and supports cryptographic public-key authentication (such as Ed25519).
+    relatedLessonSlug: ssh-and-remote-access
+  - term: Row Level Security (RLS)
+    slug: row-level-security
+    category: web-security
+    shortDefinition: A PostgreSQL access-control mechanism that enforces per-row read and write policies directly inside the database engine.
+    details: Prevents authenticated users from reading or modifying rows belonging to other students even if an application endpoint is probed directly.
+    relatedLessonSlug: http-request-anatomy-and-trust-boundaries

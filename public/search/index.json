@@ -1,0 +1,438 @@
+[
+  {
+    "id": "linux-001",
+    "title": "Introduction to Linux and the Terminal",
+    "slug": "introduction-to-linux-and-the-terminal",
+    "description": "Understand what Linux is, how the kernel and shell interact, and execute essential foundational terminal commands.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "terminal",
+      "bash"
+    ],
+    "searchableText": "Introduction to Linux and the Terminal Understand what Linux is, how the kernel and shell interact, and execute essential foundational terminal commands. linux terminal bash Module 01: Introduction to Linux and the Terminal Module Information Details --- --- Level Beginner / Essential Estimated Duration 15–20 minutes Course Linux Fundamentals Organization FORGESEC LABS Prerequisites None --- Learning Objectives By the end of this module, you will be able to: - Understand what Linux is and why it matters in cybersecurity. - Recognize the difference between Linux, a distribution, and a kernel. - Understand the purpose of a terminal, shell, and Bash. - Execute eight essential Linux commands. - Read basic command syntax. - Find help and documentation using manual pages. - Identify basic information about your Linux machine. You do not need previous Linux experience. We will start with the basics and learn by doing. --- A. Welcome to Linux Welcome to FORGESEC Academy! Before exploring cybersecurity tools, analyzing systems, or investigating networks, you need to understand the environment in which many of these activities take place. That environment is often Linux . Linux is an operating system family widely used in servers, cloud infrastructure, networking, embedded devices, and cybersecurity. You will encounter Linux throughout your cybersecurity journey. Security professionals use it to investigate systems, analyze network activity, run security tools, and understand how computers work. In this module, we will take your first steps into Linux. You w",
+    "url": "/learn/lessons/introduction-to-linux-and-the-terminal"
+  },
+  {
+    "id": "linux-002",
+    "title": "Linux Filesystem and Navigation",
+    "slug": "linux-filesystem-and-navigation",
+    "description": "Navigate the Linux directory hierarchy, understand system paths like /etc and /var, and move confidently from the CLI.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "filesystem",
+      "navigation"
+    ],
+    "searchableText": "Linux Filesystem and Navigation Navigate the Linux directory hierarchy, understand system paths like /etc and /var, and move confidently from the CLI. linux filesystem navigation Module 02 — Linux Filesystem and Navigation A. Welcome to the Linux Filesystem Every operating system needs a way to organize and store information. Linux uses a filesystem to organize files and directories. A filesystem is the structure Linux uses to store, arrange, and access information. Think of it like a filing cabinet: - The cabinet represents the entire filesystem. - Drawers represent directories. - Folders inside drawers represent subdirectories. - Documents inside folders represent files. Linux organizes its files and directories in a hierarchical structure, meaning directories can contain other directories and files. Understanding this structure is important in cybersecurity because you will regularly need to: - Navigate through system directories. - Locate configuration files. - Explore application files. - Find system logs. - Identify files that may be relevant during security investigations. Let's start exploring. B. Understanding the Linux Directory Structure 1. The Root Directory& x20; / Linux organizes its entire filesystem under one main directory called the root directory . It is represented by: Think of / as the starting point of the Linux filesystem. Unlike Windows, where you might see separate drives such as C:\\ or D:\\ , Linux presents its filesystem through a single directory hierarchy. Directories, files, and other storage locations are organized under / ",
+    "url": "/learn/lessons/linux-filesystem-and-navigation"
+  },
+  {
+    "id": "linux-003",
+    "title": "File and Directory Management",
+    "slug": "file-and-directory-management",
+    "description": "Create, copy, move, rename, inspect, and safely remove files and directories from the Linux command line.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "files",
+      "cli"
+    ],
+    "searchableText": "File and Directory Management Create, copy, move, rename, inspect, and safely remove files and directories from the Linux command line. linux files cli Module 03 — File and Directory Management A. Welcome to File and Directory Management In the previous module, you learned how to navigate the Linux filesystem and explore directories. Now it's time to learn how to manage files and directories directly from the terminal. Think about your computer as an office: - Directories are filing cabinets. - Files are documents stored inside those cabinets. - Copying creates another version of a document. - Moving places a document somewhere else. - Renaming changes its name. - Deleting removes documents you no longer need. Linux provides simple commands for performing these operations. File management is particularly important in cybersecurity because you will frequently work with: - Scripts and tools. - Configuration files. - System logs. - Downloaded files. - Security reports. - Challenge files during CTF competitions. By the end of this module, you will be able to create, organize, edit, copy, move, and remove files using the Linux terminal. Let's get started. B. Creating Files and Directories Linux provides several commands for creating files and directories. Let's begin with three essential commands. 1.& x20; touch & x20;— Create Files The touch command creates an empty file if it doesn't already exist. Syntax: Example: This creates an empty file named notes.txt in your current directory. You can check whether the file exists using: P",
+    "url": "/learn/lessons/file-and-directory-management"
+  },
+  {
+    "id": "linux-004",
+    "title": "Reading, Searching and Processing Text",
+    "slug": "reading-searching-and-processing-text",
+    "description": "Inspect log files and extract patterns using cat, less, head, tail, grep, sort, uniq, wc, and output redirection.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "grep",
+      "logs"
+    ],
+    "searchableText": "Reading, Searching and Processing Text Inspect log files and extract patterns using cat, less, head, tail, grep, sort, uniq, wc, and output redirection. linux grep logs Module 04 — Reading, Searching and Processing Text A. Welcome to Reading and Processing Text Linux systems generate and store a lot of information in text files. These files may contain application activity, login attempts, system events, configuration settings, and other useful information. In cybersecurity, examining this information is an important everyday activity. For example, imagine you are investigating a suspicious login attempt. You might need to: - Read an application log. - Find failed login attempts. - Identify timestamps and IP addresses. - Count how many times an event occurred. - Extract useful information into another file. Reading every line manually would take too much time. Think of a large notebook containing thousands of entries. Instead of reading every page, you want to search for a particular word, count matching entries, and organize the results. Linux provides commands that make this possible. In this module, you will learn how to read, search, count, sort, and extract information from text files. Let's start practicing. B. Reading Text Files Linux provides several commands for displaying text file contents. You already learned cat in Module 03. Now let's explore some additional commands that make reading files easier. 1.& x20; cat & x20;— Display File Contents The cat command displays the contents of a text file directly in the terminal. Syntax: Exa",
+    "url": "/learn/lessons/reading-searching-and-processing-text"
+  },
+  {
+    "id": "linux-005",
+    "title": "Users, Groups and File Permissions",
+    "slug": "users-groups-and-file-permissions",
+    "description": "Understand Linux user accounts, groups, ownership with chown, and permission modes using chmod and octal notation.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "permissions",
+      "chmod"
+    ],
+    "searchableText": "Users, Groups and File Permissions Understand Linux user accounts, groups, ownership with chown, and permission modes using chmod and octal notation. linux permissions chmod Module 05 — Users, Groups and File Permissions A. Welcome to Linux Users and Permissions Linux is designed to support multiple users. Each user may have different levels of access to files, directories, and system resources. Not everyone should be able to read, modify, or execute every file. Linux uses users, groups, ownership, and permissions to control access. Think of a building with different keys: - The owner has access to their private office. - Members of a department can access shared rooms. - Visitors have limited access to public areas. Linux permissions work in a similar way. In cybersecurity, understanding permissions is essential because incorrectly assigned permissions can expose private information or allow unwanted changes to files. In this module, you will learn how Linux identifies users, assigns ownership, and controls access to files and directories. B. Understanding Linux Users What is a user account? A user account represents an individual or service that interacts with a Linux system. Each user has an identity that Linux uses to determine what they can access. There are two important types of users to understand: 1. Regular user A regular user is intended for everyday activities, such as: - Running applications. - Creating and editing personal files. - Browsing directories they have permission to access. - Executing commands available to them. Most of you",
+    "url": "/learn/lessons/users-groups-and-file-permissions"
+  },
+  {
+    "id": "linux-006",
+    "title": "Software and Package Management",
+    "slug": "software-and-package-management",
+    "description": "Manage software repositories, search packages, install updates, and inspect installed tools safely with APT.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "apt",
+      "packages"
+    ],
+    "searchableText": "Software and Package Management Manage software repositories, search packages, install updates, and inspect installed tools safely with APT. linux apt packages Module 06 — Software and Package Management A. Welcome to Software and Package Management Linux applications are commonly distributed as software packages . Instead of manually downloading and installing every application, Linux provides tools that manage software installation, updates, and removal. A package manager works like a trusted software store. It helps you find applications, install them, check for updates, and remove software you no longer need. Package management is important because Linux users and cybersecurity practitioners regularly need to install tools, apply security updates, and inspect the software available on a system. In this module, you will learn how to manage software using APT on Debian- and Ubuntu-based Linux distributions. B. Understanding Packages and APT What is a software package? A software package is a collection of files and information prepared for installation on a Linux system. A package may contain: - Application files. - Configuration files or templates. - Information about the package. - Instructions used during installation and removal. A package and an application are related, but they are not exactly the same thing. An application is the software you use; a package is the organized unit used to distribute and install that software. What is a package manager? A package manager is a tool that manages software on your system. It helps y",
+    "url": "/learn/lessons/software-and-package-management"
+  },
+  {
+    "id": "linux-007",
+    "title": "Process Management",
+    "slug": "process-management",
+    "description": "Inspect active PIDs, monitor CPU and memory usage with ps and top, manage background jobs, and handle signals safely.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "processes",
+      "signals"
+    ],
+    "searchableText": "Process Management Inspect active PIDs, monitor CPU and memory usage with ps and top, manage background jobs, and handle signals safely. linux processes signals Module 07 — Process Management A. Welcome to Process Management Whenever you open a terminal, launch a browser, run a script, or start an application, Linux creates and manages running tasks. A process is a running instance of a program. Think of a computer as a workplace: - Programs are instructions for completing tasks. - Processes are workers carrying out those tasks. - The operating system manages the workers and distributes available resources. Linux needs process management to keep applications running, share CPU and memory resources, and respond when programs finish or need to stop. Process management is also useful in cybersecurity. Inspecting running processes helps you understand what is active on a system and investigate unusual resource usage or unfamiliar programs. In this module, you will learn how to view processes, monitor their resource usage, run commands in the background, and safely stop a test process. B. Understanding Processes and PIDs What is a process? A program is a set of instructions stored on a computer. When you execute that program, Linux creates a running instance called a process. For example: The sleep program waits for 30 seconds. When you execute it, Linux creates a process that remains active during that time. A single program can have multiple running processes. What is a PID? Every running process has a numerical identifier called a Proces",
+    "url": "/learn/lessons/process-management"
+  },
+  {
+    "id": "linux-008",
+    "title": "Services and Basic System Administration",
+    "slug": "services-and-basic-system-administration",
+    "description": "Inspect systemd units, verify service health, check system logs, and understand attack-surface implications of open services.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "systemd",
+      "services"
+    ],
+    "searchableText": "Services and Basic System Administration Inspect systemd units, verify service health, check system logs, and understand attack-surface implications of open services. linux systemd services Module 08 — Services and Basic System Administration 15–20 minutes A. Welcome to Linux Services When you use Linux, many tasks happen in the background without requiring you to open a terminal or launch an application manually. For example: - An SSH service allows authorized users to connect remotely. - A networking service helps manage network connectivity. - A web server responds to requests from web browsers. - A scheduling service runs tasks at specified times. These background functions are commonly handled by services . Think of a Linux computer as an organization. Different departments have ongoing responsibilities: one handles communication, another manages records, and another maintains security. Services perform similar responsibilities in the background while the system is running. Why do services matter? Services make Linux useful and manageable, but they also matter in cybersecurity. Every running service provides some functionality. If a service listens for network connections, for example, it may create an entry point that other devices can reach. Understanding services helps you: - Identify what is running on your system. - Understand which background functions are necessary. - Recognize services that may expose network functionality. - Avoid disabling something your system depends on. In this module, you will learn how to inspect and manage services using simpl",
+    "url": "/learn/lessons/services-and-basic-system-administration"
+  },
+  {
+    "id": "linux-009",
+    "title": "Linux Networking Fundamentals and Commands",
+    "slug": "linux-networking-fundamentals-and-commands",
+    "description": "Inspect network interfaces, IP addresses, routing tables, DNS resolution, and listening sockets using ip, ss, and dig.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "networking",
+      "sockets"
+    ],
+    "searchableText": "Linux Networking Fundamentals and Commands Inspect network interfaces, IP addresses, routing tables, DNS resolution, and listening sockets using ip, ss, and dig. linux networking sockets Module 09 — Linux Networking Fundamentals and Commands 15–20 minutes A. Welcome to Linux Networking A computer network allows two or more devices to communicate and exchange information. For example, when you open a website, your computer communicates with other systems over a network to request and receive information. Think of networking like a road system: - An IP address is like a destination address. - A network interface is like a connection to a road. - A router directs traffic between networks. - DNS works like a contact directory that helps you find the address associated with a name. - A port identifies a particular communication endpoint on a device. Linux networking is especially important in cybersecurity. Security professionals inspect network interfaces, addresses, routes, and connections to understand how a machine communicates. In this module, you will learn practical commands for inspecting your Linux network from the terminal. B. Essential Networking Concepts Before using networking commands, understand these basic terms. Concept Basic explanation ----------------- ------------------------------------------------------------------------ IP address Identifies a device or network interface on an IP network IPv4 A widely used IP addressing format Private IP An address used inside private networks Public IP An address used for communication across the public inte",
+    "url": "/learn/lessons/linux-networking-fundamentals-and-commands"
+  },
+  {
+    "id": "linux-010",
+    "title": "SSH and Remote Access",
+    "slug": "ssh-and-remote-access",
+    "description": "Connect securely to authorized remote Linux hosts, understand SSH keys and configuration, and verify listener settings.",
+    "type": "tutorial",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "ssh",
+      "remote-access"
+    ],
+    "searchableText": "SSH and Remote Access Connect securely to authorized remote Linux hosts, understand SSH keys and configuration, and verify listener settings. linux ssh remote-access Module 10 — SSH and Remote Access Level: Beginner / Essential Estimated time: 15–20 minutes Primary reference: Linux Basics for Hackers , Second Edition, by OccupyTheWeb Previous module: Module 09 — Linux Networking Fundamentals and Commands --- A. Welcome to SSH and Remote Access Imagine that you need to manage a Linux server located in another building. You do not need to travel there and sit in front of it. Instead, you can connect to it from your own computer and control it through a terminal. This is called remote access . Remote access is useful for: - Managing Linux servers. - Accessing university or cybersecurity lab machines. - Running commands on another computer. - Troubleshooting remote systems. - Working with cloud-based Linux environments. One of the most widely used tools for secure remote access is SSH . SSH allows you to communicate with another machine through an encrypted connection. Think of it as securely entering a remote office: you identify yourself, verify that you are entering the correct place, and then access the resources you are authorized to use. In this module, you will learn how to connect to a remote Linux machine, execute commands, and disconnect safely. --- B. Understanding SSH SSH stands for Secure Shell . It is a protocol that allows users to securely access and control another computer over a network. SSH provides encrypted communication b",
+    "url": "/learn/lessons/ssh-and-remote-access"
+  },
+  {
+    "id": "net-001",
+    "title": "IP Addressing, Subnets and Routing Basics",
+    "slug": "ip-addressing-subnets-and-routing",
+    "description": "Understand IPv4 addresses, CIDR subnet masks, default gateways, and how Linux decides where to send packets.",
+    "type": "tutorial",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "networking",
+      "ipv4",
+      "routing"
+    ],
+    "searchableText": "IP Addressing, Subnets and Routing Basics Understand IPv4 addresses, CIDR subnet masks, default gateways, and how Linux decides where to send packets. networking ipv4 routing What You Will Learn - Distinguish private RFC 1918 IPv4 ranges from public routable addresses. - Read CIDR notation such as /24 and /16 without guessing. - Inspect local interfaces and routing tables using ip addr and ip route . Understanding IP Addresses and Subnets Every host on an IPv4 network is assigned a 32-bit address written as four octets, paired with a subnet mask that separates the network prefix from the host identifier . When two hosts share the same subnet prefix, frames travel directly over Layer 2 ARP + MAC addresses . When a destination lies outside the local subnet, the kernel forwards the packet to the default gateway . Expected Output Only inspect interfaces, routes, and ARP caches on machines and local networks you own or are explicitly authorized to administer. Summary Understanding prefix lengths and route tables lets you verify whether traffic stays local, exits through a VPN tunnel, or traverses a default gateway.",
+    "url": "/learn/lessons/ip-addressing-subnets-and-routing"
+  },
+  {
+    "id": "net-002",
+    "title": "TCP, UDP and Service Ports in Practice",
+    "slug": "tcp-udp-and-service-ports",
+    "description": "Compare reliable TCP connections with stateless UDP datagrams and inspect listening sockets with ss.",
+    "type": "tutorial",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "tcp",
+      "udp",
+      "ports"
+    ],
+    "searchableText": "TCP, UDP and Service Ports in Practice Compare reliable TCP connections with stateless UDP datagrams and inspect listening sockets with ss. tcp udp ports What You Will Learn - Contrast connection-oriented TCP SYN , SYN-ACK , ACK against connectionless UDP. - Interpret listening ports 22 , 53 , 80 , 443 and socket states LISTEN , ESTABLISHED . - Audit open local ports safely using ss . Inspecting Active Sockets On modern Linux distributions, ss replaces legacy netstat for fast kernel socket inspection. Flag Meaning --- --- -t Show TCP sockets -u Show UDP sockets -l Show listening sockets only -n Display numeric ports instead of service names -p Show the owning process requires elevated privileges for other users Expected Output Binding internal services like PostgreSQL 5432 strictly to 127.0.0.1 prevents external network exposure. Summary Every listening socket represents reachable code. Auditing ss -tulnp is one of the fastest ways to verify what your machine exposes.",
+    "url": "/learn/lessons/tcp-udp-and-service-ports"
+  },
+  {
+    "id": "net-003",
+    "title": "DNS Resolution and Diagnostic Queries",
+    "slug": "dns-resolution-and-diagnostics",
+    "description": "Trace how hostnames resolve to IP addresses using recursive resolvers, A/AAAA/MX/TXT records, and dig.",
+    "type": "tutorial",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "dns",
+      "dig",
+      "diagnostics"
+    ],
+    "searchableText": "DNS Resolution and Diagnostic Queries Trace how hostnames resolve to IP addresses using recursive resolvers, A/AAAA/MX/TXT records, and dig. dns dig diagnostics What You Will Learn - Explain the difference between /etc/hosts , local stub resolvers, recursive resolvers, and authoritative nameservers. - Query A , AAAA , MX , and TXT records using dig . - Spot DNS caching TTLs and resolution mismatches. Querying DNS Records Safely Use dig with +short for concise answers or omit it to inspect authoritative flags and TTL counters. Expected Output Summary DNS diagnostics help verify connectivity failures, mail-authentication TXT records SPF/DMARC , and unexpected host overrides before blaming higher-layer applications.",
+    "url": "/learn/lessons/dns-resolution-and-diagnostics"
+  },
+  {
+    "id": "web-001",
+    "title": "HTTP Request Anatomy and Trust Boundaries",
+    "slug": "http-request-anatomy-and-trust-boundaries",
+    "description": "Inspect HTTP methods, headers, cookies, and why server-side validation must never rely on browser-supplied fields.",
+    "type": "tutorial",
+    "category": "web-security",
+    "difficulty": "intermediate",
+    "tags": [
+      "http",
+      "headers",
+      "web-security"
+    ],
+    "searchableText": "HTTP Request Anatomy and Trust Boundaries Inspect HTTP methods, headers, cookies, and why server-side validation must never rely on browser-supplied fields. http headers web-security What You Will Learn - Read raw HTTP/1.1 and HTTP/2 request lines, headers, and response status codes. - Understand why cookies require HttpOnly , Secure , and SameSite attributes. - Recognize why every client-submitted identifier or role claim must be verified server-side. Inspecting Response Headers with curl Use curl -I against your own local development server to inspect HTTP response headers cleanly. Security Attributes for Session Cookies - HttpOnly : Prevents client-side JavaScript document.cookie from reading session tokens. - Secure : Restricts cookie transmission strictly to HTTPS connections. - SameSite=Lax or Strict : Mitigates cross-site request forgery CSRF . Hidden form fields, browser localStorage values, and custom request headers can all be modified by an attacker. Always derive user identity and role from a verified server session. Summary HTTP is stateless by design; secure web applications anchor identity in server-verified sessions and validate every payload at the API or Server Action boundary.",
+    "url": "/learn/lessons/http-request-anatomy-and-trust-boundaries"
+  },
+  {
+    "id": "web-002",
+    "title": "Security Headers, CSP and Same-Origin Policy",
+    "slug": "security-headers-csp-and-same-origin",
+    "description": "Understand how browsers isolate origins and how Content-Security-Policy and X-Frame-Options defend against XSS and clickjacking.",
+    "type": "tutorial",
+    "category": "web-security",
+    "difficulty": "intermediate",
+    "tags": [
+      "csp",
+      "sop",
+      "xss"
+    ],
+    "searchableText": "Security Headers, CSP and Same-Origin Policy Understand how browsers isolate origins and how Content-Security-Policy and X-Frame-Options defend against XSS and clickjacking. csp sop xss What You Will Learn - Define an origin scheme + host + port under the browser Same-Origin Policy. - Configure Content-Security-Policy to constrain script execution and framing. - Test header policies safely on local test endpoints. Core Browser Defenses Header Primary Protection --- --- Content-Security-Policy Restricts allowed script, style, and frame sources X-Content-Type-Options: nosniff Prevents MIME-type confusion attacks Referrer-Policy Controls referrer URL leakage across origins Strict-Transport-Security Enforces HTTPS on subsequent visits Summary Defense in depth pairs strict server-side input sanitization with browser-enforced policies like Content-Security-Policy and SameSite cookies.",
+    "url": "/learn/lessons/security-headers-csp-and-same-origin"
+  },
+  {
+    "id": "path:linux-fundamentals",
+    "title": "Linux Fundamentals",
+    "slug": "linux-fundamentals",
+    "description": "Master the Linux command line, filesystem hierarchy, text processing, permissions, services, networking, and SSH remote access from zero to practical confidence.",
+    "type": "learning_path",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "beginner",
+      "learning-path"
+    ],
+    "searchableText": "Linux Fundamentals Master the Linux command line, filesystem hierarchy, text processing, permissions, services, networking, and SSH remote access from zero to practical confidence. Navigate the Linux filesystem hierarchy and manage files safely from the terminal. Search and transform log files using grep, sort, uniq, wc, and redirection. Control access using Linux users, groups, ownership, and octal permission modes. Inspect running processes, systemd services, network sockets, and SSH connections.",
+    "url": "/learn/paths/linux-fundamentals"
+  },
+  {
+    "id": "path:networking-fundamentals",
+    "title": "Networking Fundamentals",
+    "slug": "networking-fundamentals",
+    "description": "Build a rigorous foundation in IP addressing, subnetting, DNS resolution, TCP/UDP transport behavior, and local packet inspection.",
+    "type": "learning_path",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "networking",
+      "beginner",
+      "learning-path"
+    ],
+    "searchableText": "Networking Fundamentals Build a rigorous foundation in IP addressing, subnetting, DNS resolution, TCP/UDP transport behavior, and local packet inspection. Trace how IP packets move across local subnets and default gateways. Understand TCP three-way handshakes, UDP datagrams, and well-known service ports. Diagnose DNS resolution chains and inspect active socket states from the command line.",
+    "url": "/learn/paths/networking-fundamentals"
+  },
+  {
+    "id": "path:web-security-foundations",
+    "title": "Web Security Foundations",
+    "slug": "web-security-foundations",
+    "description": "Understand HTTP request-response mechanics, browser security boundaries, security headers, and safe local testing principles.",
+    "type": "learning_path",
+    "category": "web-security",
+    "difficulty": "intermediate",
+    "tags": [
+      "web-security",
+      "intermediate",
+      "learning-path"
+    ],
+    "searchableText": "Web Security Foundations Understand HTTP request-response mechanics, browser security boundaries, security headers, and safe local testing principles. Read raw HTTP requests, status codes, cookies, and response headers accurately. Understand how Same-Origin Policy, CORS, and CSP protect web applications. Identify common client/server trust boundaries without relying on destructive scanners.",
+    "url": "/learn/paths/web-security-foundations"
+  },
+  {
+    "id": "writeup-001",
+    "title": "Analyzing Over-Permissive File Modes on Shared Linux Hosts",
+    "slug": "analyzing-over-permissive-file-modes",
+    "description": "A defensive walkthrough showing how world-writable files and Misconfigured SUID bits create local privilege escalation risks.",
+    "type": "writeup",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "linux",
+      "permissions",
+      "hardening"
+    ],
+    "searchableText": "Analyzing Over-Permissive File Modes on Shared Linux Hosts A defensive walkthrough showing how world-writable files and Misconfigured SUID bits create local privilege escalation risks. Context During routine host audits on multi-user Linux systems, overly broad file permissions 777 or 666 on scripts or configuration files remain one of the most common misconfigurations. Detection Commands To inspect world-writable files safely inside a specific test directory without scanning restricted paths: Remediation Apply the principle of least privilege using explicit owner and group permissions: Key Takeaway Never use chmod 777 as a shortcut to fix permission errors. Identify which user or service group genuinely requires access and grant only the minimum required mode bits.",
+    "url": "/writeups/analyzing-over-permissive-file-modes"
+  },
+  {
+    "id": "writeup-002",
+    "title": "Row Level Security Bypass Pitfalls in Multi-Tenant Apps",
+    "slug": "row-level-security-pitfalls",
+    "description": "Why hiding UI controls never secures API data, and how separated answer-key tables protect assessment integrity.",
+    "type": "writeup",
+    "category": "web-security",
+    "difficulty": "intermediate",
+    "tags": [
+      "rls",
+      "postgresql",
+      "authorization"
+    ],
+    "searchableText": "Row Level Security Bypass Pitfalls in Multi-Tenant Apps Why hiding UI controls never secures API data, and how separated answer-key tables protect assessment integrity. Context In modern client-connected databases, relying on frontend visibility toggles leaves underlying tables exposed to direct API queries. Secure Separation Pattern 1. Enable Row Level Security ALTER TABLE ... ENABLE ROW LEVEL SECURITY on every exposed user table. 2. Separate sensitive grading secrets such as quiz answer keys from readable question/option tables. 3. Revoke anon and authenticated privileges on sensitive tables and evaluate grades strictly inside server-side functions or Server Actions. Key Takeaway Authorization must be enforced at both the application server boundary and the database policy layer.",
+    "url": "/writeups/row-level-security-pitfalls"
+  },
+  {
+    "id": "resource-001",
+    "title": "Linux Essential Command Reference",
+    "slug": "linux-essential-command-reference",
+    "description": "Quick-reference command table covering filesystem navigation, text processing, permissions, processes, and networking.",
+    "type": "reference",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "reference",
+      "linux",
+      "cheatsheet"
+    ],
+    "searchableText": "Linux Essential Command Reference Quick-reference command table covering filesystem navigation, text processing, permissions, processes, and networking. Navigation & File Operations Text Search & Log Inspection Permissions, Processes & Sockets",
+    "url": "/resources/linux-essential-command-reference"
+  },
+  {
+    "id": "resource-002",
+    "title": "SSH Client & Hardening Guide",
+    "slug": "ssh-client-and-hardening-guide",
+    "description": "Practical reference for generating Ed25519 SSH keys, configuring ~/.ssh/config safely, and verifying daemon settings.",
+    "type": "guide",
+    "category": "linux",
+    "difficulty": "beginner",
+    "tags": [
+      "ssh",
+      "guide",
+      "hardening"
+    ],
+    "searchableText": "SSH Client & Hardening Guide Practical reference for generating Ed25519 SSH keys, configuring ~/.ssh/config safely, and verifying daemon settings. Generating an Ed25519 Key Pair Verify key directory permissions strictly: Recommended Server Hardening Checks - PermitRootLogin no - PasswordAuthentication no once key-based access is verified - AllowUsers restricted to authorized accounts Always verify a new SSH key login in a second terminal window before closing an active administrative session or disabling password authentication.",
+    "url": "/resources/ssh-client-and-hardening-guide"
+  },
+  {
+    "id": "glossary:kernel",
+    "title": "Kernel",
+    "slug": "kernel",
+    "description": "The core layer of an operating system that manages CPU scheduling, memory, hardware devices, and system calls.",
+    "type": "glossary",
+    "category": "linux",
+    "tags": [
+      "linux",
+      "glossary"
+    ],
+    "searchableText": "Kernel The core layer of an operating system that manages CPU scheduling, memory, hardware devices, and system calls. In Linux, the kernel mediates every interaction between user-space programs (such as Bash or Python) and physical or virtual hardware.",
+    "url": "/glossary/kernel"
+  },
+  {
+    "id": "glossary:shell",
+    "title": "Shell",
+    "slug": "shell",
+    "description": "A command-line interpreter that reads user commands and executes programs or built-in utilities.",
+    "type": "glossary",
+    "category": "linux",
+    "tags": [
+      "linux",
+      "glossary"
+    ],
+    "searchableText": "Shell A command-line interpreter that reads user commands and executes programs or built-in utilities. Bash (Bourne Again Shell) is the default interactive shell on most Linux distributions, supporting pipelines, redirection, and scripting.",
+    "url": "/glossary/shell"
+  },
+  {
+    "id": "glossary:principle-of-least-privilege",
+    "title": "Principle of Least Privilege",
+    "slug": "principle-of-least-privilege",
+    "description": "Granting users, processes, and accounts only the minimum permissions necessary to perform their intended task.",
+    "type": "glossary",
+    "category": "security",
+    "tags": [
+      "security",
+      "glossary"
+    ],
+    "searchableText": "Principle of Least Privilege Granting users, processes, and accounts only the minimum permissions necessary to perform their intended task. Enforced in Linux via user/group ownership and chmod permission modes, and in databases via Row Level Security policies.",
+    "url": "/glossary/principle-of-least-privilege"
+  },
+  {
+    "id": "glossary:socket",
+    "title": "Socket",
+    "slug": "socket",
+    "description": "An endpoint for network or inter-process communication identified by an IP address, transport protocol, and port number.",
+    "type": "glossary",
+    "category": "networking",
+    "tags": [
+      "networking",
+      "glossary"
+    ],
+    "searchableText": "Socket An endpoint for network or inter-process communication identified by an IP address, transport protocol, and port number. Inspecting listening sockets with ss -tulnp reveals which local services are reachable on localhost or external interfaces.",
+    "url": "/glossary/socket"
+  },
+  {
+    "id": "glossary:ssh",
+    "title": "SSH",
+    "slug": "ssh",
+    "description": "Secure Shell—an encrypted network protocol used for remote terminal login, command execution, and secure file transfer.",
+    "type": "glossary",
+    "category": "networking",
+    "tags": [
+      "networking",
+      "glossary"
+    ],
+    "searchableText": "SSH Secure Shell—an encrypted network protocol used for remote terminal login, command execution, and secure file transfer. Typically listens on TCP port 22 and supports cryptographic public-key authentication (such as Ed25519).",
+    "url": "/glossary/ssh"
+  },
+  {
+    "id": "glossary:row-level-security",
+    "title": "Row Level Security (RLS)",
+    "slug": "row-level-security",
+    "description": "A PostgreSQL access-control mechanism that enforces per-row read and write policies directly inside the database engine.",
+    "type": "glossary",
+    "category": "web-security",
+    "tags": [
+      "web-security",
+      "glossary"
+    ],
+    "searchableText": "Row Level Security (RLS) A PostgreSQL access-control mechanism that enforces per-row read and write policies directly inside the database engine. Prevents authenticated users from reading or modifying rows belonging to other students even if an application endpoint is probed directly.",
+    "url": "/glossary/row-level-security"
+  }
+]

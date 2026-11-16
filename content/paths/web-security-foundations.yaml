@@ -1,0 +1,18 @@
+id: web-security-foundations
+slug: web-security-foundations
+title: Web Security Foundations
+description: Understand HTTP request-response mechanics, browser security boundaries, security headers, and safe local testing principles.
+category: web-security
+difficulty: intermediate
+estimatedMinutes: 50
+status: published
+instructor: FORGESEC LABS Curriculum Team
+objectives:
+  - Read raw HTTP requests, status codes, cookies, and response headers accurately.
+  - Understand how Same-Origin Policy, CORS, and CSP protect web applications.
+  - Identify common client/server trust boundaries without relying on destructive scanners.
+prerequisites:
+  - Basic familiarity with HTTP URLs, DNS, and browser developer tools.
+lessons:
+  - web-001
+  - web-002

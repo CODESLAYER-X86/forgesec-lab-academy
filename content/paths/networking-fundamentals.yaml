@@ -1,0 +1,19 @@
+id: networking-fundamentals
+slug: networking-fundamentals
+title: Networking Fundamentals
+description: Build a rigorous foundation in IP addressing, subnetting, DNS resolution, TCP/UDP transport behavior, and local packet inspection.
+category: networking
+difficulty: beginner
+estimatedMinutes: 75
+status: published
+instructor: FORGESEC LABS Curriculum Team
+objectives:
+  - Trace how IP packets move across local subnets and default gateways.
+  - Understand TCP three-way handshakes, UDP datagrams, and well-known service ports.
+  - Diagnose DNS resolution chains and inspect active socket states from the command line.
+prerequisites:
+  - Basic familiarity with terminal commands (Linux Fundamentals Module 01–02 recommended).
+lessons:
+  - net-001
+  - net-002
+  - net-003

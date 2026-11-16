@@ -1,0 +1,30 @@
+---
+id: writeup-002
+title: "Row Level Security Bypass Pitfalls in Multi-Tenant Apps"
+slug: row-level-security-pitfalls
+description: "Why hiding UI controls never secures API data, and how separated answer-key tables protect assessment integrity."
+category: web-security
+difficulty: intermediate
+estimatedMinutes: 12
+tags:
+  - rls
+  - postgresql
+  - authorization
+status: published
+updatedAt: "2026-11-15"
+author: FORGESEC LABS
+---
+
+## Context
+
+In modern client-connected databases, relying on frontend visibility toggles leaves underlying tables exposed to direct API queries.
+
+## Secure Separation Pattern
+
+1. Enable Row Level Security (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY`) on every exposed user table.
+2. Separate sensitive grading secrets (such as `quiz_answer_keys`) from readable question/option tables.
+3. Revoke `anon` and `authenticated` privileges on sensitive tables and evaluate grades strictly inside server-side functions or Server Actions.
+
+## Key Takeaway
+
+Authorization must be enforced at both the application server boundary and the database policy layer.

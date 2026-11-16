@@ -1,0 +1,27 @@
+id: linux-fundamentals
+slug: linux-fundamentals
+title: Linux Fundamentals
+description: Master the Linux command line, filesystem hierarchy, text processing, permissions, services, networking, and SSH remote access from zero to practical confidence.
+category: linux
+difficulty: beginner
+estimatedMinutes: 200
+status: published
+instructor: FORGESEC LABS Curriculum Team
+objectives:
+  - Navigate the Linux filesystem hierarchy and manage files safely from the terminal.
+  - Search and transform log files using grep, sort, uniq, wc, and redirection.
+  - Control access using Linux users, groups, ownership, and octal permission modes.
+  - Inspect running processes, systemd services, network sockets, and SSH connections.
+prerequisites:
+  - Access to a local Linux environment, WSL2, or authorized virtual machine.
+lessons:
+  - linux-001
+  - linux-002
+  - linux-003
+  - linux-004
+  - linux-005
+  - linux-006
+  - linux-007
+  - linux-008
+  - linux-009
+  - linux-010
