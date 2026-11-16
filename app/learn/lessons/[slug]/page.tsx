@@ -29,7 +29,7 @@ import {
   getUserLessonProgress,
   recordContentView,
 } from "@/modules/learning/service";
-import { getPublicQuizBySlug } from "@/modules/quizzes/service";
+import { getPublicQuizBySlug, getUserQuizAttempts } from "@/modules/quizzes/service";
 
 export async function generateStaticParams() {
   return getPublishedLessons().map((l) => ({ slug: l.meta.slug }));
@@ -81,18 +81,29 @@ export default async function LessonPage({
     });
   }
 
-  const [progress, bookmarks, quiz, assignment] = await Promise.all([
+  const [progress, bookmarks, quiz, assignment, userAttempts] = await Promise.all([
     user ? getUserLessonProgress(user.id) : Promise.resolve([]),
     user ? getUserBookmarks(user.id) : Promise.resolve([]),
     lesson.meta.quizSlug ? getPublicQuizBySlug(lesson.meta.quizSlug) : Promise.resolve(null),
     lesson.meta.assignmentSlug
       ? getAssignmentBySlug(lesson.meta.assignmentSlug)
       : Promise.resolve(null),
+    user && lesson.meta.quizSlug ? getUserQuizAttempts(user.id) : Promise.resolve([]),
   ]);
 
   const completedSet = new Set(progress.filter((p) => p.completed).map((p) => p.lessonId));
   const isCompleted = completedSet.has(lesson.meta.id);
   const isBookmarked = bookmarks.some((b) => b.contentId === lesson.meta.id);
+
+  const matchingAttempts = quiz
+    ? userAttempts.filter((a) => a.quizSlug === quiz.slug || a.quizId === quiz.id)
+    : [];
+  const previousBest =
+    matchingAttempts.length > 0
+      ? matchingAttempts.reduce((best, cur) =>
+          cur.percentage > best.percentage ? cur : best
+        )
+      : null;
 
   const pathItems = pathLessons.map((item) => ({
     id: item.meta.id,
@@ -275,7 +286,29 @@ export default async function LessonPage({
             </div>
 
             {quiz ? (
-              <QuizRunner quiz={quiz} isAuthenticated={Boolean(user)} />
+              <QuizRunner
+                quiz={quiz}
+                isAuthenticated={Boolean(user)}
+                lessonContext={{
+                  lessonId: lesson.meta.id,
+                  pathId: lesson.meta.pathId,
+                  slug: lesson.meta.slug,
+                  title: lesson.meta.title,
+                  isCompleted,
+                  nextLesson: next
+                    ? { slug: next.meta.slug, title: next.meta.title }
+                    : null,
+                }}
+                previousBest={
+                  previousBest
+                    ? {
+                        percentage: previousBest.percentage,
+                        passed: previousBest.passed,
+                        submittedAt: previousBest.submittedAt,
+                      }
+                    : null
+                }
+              />
             ) : (
               <div className="rounded-xl border border-[#303A44] bg-[#171D23] p-6 text-sm text-[#AAB4BE]">
                 Practice assessments are available in the{" "}
@@ -318,6 +351,7 @@ export default async function LessonPage({
             className="scroll-mt-24 rounded-xl border border-[#303A44] bg-[#171D23] p-6"
           >
             <LessonActions
+              key={`${lesson.meta.id}-${String(isCompleted)}-${String(isBookmarked)}`}
               lessonId={lesson.meta.id}
               pathId={lesson.meta.pathId}
               slug={lesson.meta.slug}

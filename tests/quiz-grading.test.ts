@@ -92,4 +92,37 @@ describe("Quiz public sanitization & server-side grading", () => {
     expect(result.reviews[1].isCorrect).toBe(false);
     expect(result.reviews[1].explanation).toContain("ps aux");
   });
+
+  it("grades command_input answers with whitespace and $ prompt normalization without leaking acceptedAnswers", () => {
+    const cmdQuiz: ServerQuiz = {
+      ...SAMPLE_QUIZ,
+      questions: [
+        ...SAMPLE_QUIZ.questions,
+        {
+          id: "q4",
+          prompt: "Type the command to inspect listening TCP/UDP ports.",
+          questionType: "command_input",
+          sortOrder: 4,
+          placeholder: "e.g. ss ...",
+          explanation: "ss -tulnp inspects active listening TCP and UDP sockets.",
+          correctOptionIds: [],
+          acceptedAnswers: ["ss -tulnp", "ss -tulpn"],
+          options: [],
+        },
+      ],
+    };
+
+    const publicCmdQuiz = toPublicQuiz(cmdQuiz);
+    expect("acceptedAnswers" in publicCmdQuiz.questions[3]).toBe(false);
+
+    const passed = gradeQuizSubmission(cmdQuiz, {
+      q1: ["q1-b"],
+      q2: ["q2-a", "q2-c"],
+      q3: ["q3-false"],
+      q4: ["$   ss   -tulnp "],
+    });
+    expect(passed.score).toBe(4);
+    expect(passed.percentage).toBe(100);
+    expect(passed.reviews[3].isCorrect).toBe(true);
+  });
 });

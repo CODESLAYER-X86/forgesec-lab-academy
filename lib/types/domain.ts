@@ -1,7 +1,11 @@
 export type AppRole = "student" | "instructor" | "admin";
 export type ContentType = "tutorial" | "learning_path" | "writeup" | "guide" | "reference" | "glossary";
 export type QuizStatus = "draft" | "published" | "archived";
-export type QuestionType = "single_choice" | "multiple_select" | "true_false";
+export type QuestionType =
+  | "single_choice"
+  | "multiple_select"
+  | "true_false"
+  | "command_input";
 export type AssignmentStatus = "draft" | "published" | "archived";
 export type AssignmentProgressStatus = "not_started" | "in_progress" | "completed";
 export type AccountStatus = "active" | "deactivated" | "deletion_requested";
@@ -65,6 +69,7 @@ export interface QuizQuestionPublic {
   questionType: QuestionType;
   sortOrder: number;
   options: QuizOptionPublic[];
+  placeholder?: string;
 }
 
 export interface PublicQuiz {
@@ -83,6 +88,7 @@ export interface PublicQuiz {
 export interface QuizQuestionServer extends QuizQuestionPublic {
   explanation: string;
   correctOptionIds: string[];
+  acceptedAnswers?: string[];
 }
 
 export interface ServerQuiz extends Omit<PublicQuiz, "questions"> {
@@ -94,8 +100,11 @@ export interface ServerQuiz extends Omit<PublicQuiz, "questions"> {
 export interface QuizQuestionReview {
   questionId: string;
   prompt: string;
+  questionType?: QuestionType;
   selectedOptionIds: string[];
   correctOptionIds: string[];
+  submittedText?: string;
+  expectedAnswer?: string;
   isCorrect: boolean;
   explanation: string;
 }

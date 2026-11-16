@@ -28,11 +28,15 @@ describe("Lesson section-aware pagination & static quiz cleanup", () => {
     }
   });
 
-  it("maps every published lesson quizSlug to a published interactive quiz", () => {
+  it("maps every published lesson quizSlug 1:1 to a unique published interactive quiz", () => {
+    const seen = new Set<string>();
     for (const lesson of lessons) {
       expect(lesson.meta.quizSlug).toBeTruthy();
       expect(quizSlugs.has(lesson.meta.quizSlug!)).toBe(true);
+      expect(seen.has(lesson.meta.quizSlug!)).toBe(false);
+      seen.add(lesson.meta.quizSlug!);
     }
+    expect(seen.size).toBe(15);
   });
 
   it("splits Linux modules into balanced multi-page reading steps ending with an assessment page", () => {

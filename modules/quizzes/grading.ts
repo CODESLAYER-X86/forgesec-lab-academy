@@ -4,6 +4,13 @@ import type {
   ServerQuiz,
 } from "@/lib/types/domain";
 
+export function normalizeCommandAnswer(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^\$\s+/, "")
+    .replace(/\s+/g, " ");
+}
+
 export function toPublicQuiz(quiz: ServerQuiz): PublicQuiz {
   return {
     id: quiz.id,
@@ -22,6 +29,7 @@ export function toPublicQuiz(quiz: ServerQuiz): PublicQuiz {
         prompt: q.prompt,
         questionType: q.questionType,
         sortOrder: q.sortOrder,
+        placeholder: q.placeholder,
         options: [...q.options].sort((a, b) => a.sortOrder - b.sortOrder),
       })),
   };
@@ -41,6 +49,35 @@ export function gradeQuizSubmission(
   let score = 0;
 
   const reviews: QuizQuestionReview[] = orderedQuestions.map((question) => {
+    if (question.questionType === "command_input") {
+      const rawSubmitted = submittedAnswers[question.id]?.[0] ?? "";
+      const normalizedSubmitted = normalizeCommandAnswer(rawSubmitted);
+      const acceptedPool =
+        question.acceptedAnswers && question.acceptedAnswers.length > 0
+          ? question.acceptedAnswers
+          : question.correctOptionIds;
+      const normalizedAccepted = acceptedPool.map(normalizeCommandAnswer).filter(Boolean);
+      const isCorrect =
+        normalizedSubmitted.length > 0 &&
+        normalizedAccepted.includes(normalizedSubmitted);
+
+      if (isCorrect) {
+        score += 1;
+      }
+
+      return {
+        questionId: question.id,
+        prompt: question.prompt,
+        questionType: question.questionType,
+        selectedOptionIds: [],
+        correctOptionIds: [],
+        submittedText: rawSubmitted.trim(),
+        expectedAnswer: acceptedPool[0] ?? "",
+        isCorrect,
+        explanation: question.explanation,
+      };
+    }
+
     const selected = Array.from(new Set(submittedAnswers[question.id] ?? [])).sort();
     const expected = Array.from(new Set(question.correctOptionIds)).sort();
 
@@ -55,6 +92,7 @@ export function gradeQuizSubmission(
     return {
       questionId: question.id,
       prompt: question.prompt,
+      questionType: question.questionType,
       selectedOptionIds: selected,
       correctOptionIds: expected,
       isCorrect,

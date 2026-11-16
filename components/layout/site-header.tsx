@@ -52,6 +52,12 @@ export function SiteHeader({ user }: { user: SessionUser | null }) {
               Learn
             </Link>
             <Link
+              href="/quizzes"
+              className="hover:text-[#F3F4F6] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0"
+            >
+              Quizzes
+            </Link>
+            <Link
               href="/writeups"
               className="hover:text-[#F3F4F6] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0"
             >
