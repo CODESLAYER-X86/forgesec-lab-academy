@@ -37,7 +37,23 @@ async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false):
       ? await admin.from("quiz_answer_keys").select("*").in("question_id", questionIds)
       : { data: [] };
 
-  const keyMap = new Map((keyRows ?? []).map((k) => [k.question_id, k.correct_option_ids as string[]]));
+  const keyMap = new Map<
+    string,
+    { correctOptionIds: string[]; acceptedAnswers?: string[] }
+  >(
+    (keyRows ?? []).map((k) => [
+      k.question_id,
+      {
+        correctOptionIds: Array.isArray(k.correct_option_ids)
+          ? (k.correct_option_ids as string[])
+          : [],
+        acceptedAnswers: Array.isArray(k.accepted_answers)
+          ? (k.accepted_answers as string[])
+          : undefined,
+      },
+    ])
+  );
+
   return {
     id: quizRow.id,
     slug: quizRow.slug,
@@ -50,22 +66,27 @@ async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false):
     status: quizRow.status,
     createdAt: quizRow.created_at,
     updatedAt: quizRow.updated_at,
-    questions: (qRows ?? []).map((q) => ({
-      id: q.id,
-      prompt: q.prompt,
-      questionType: q.question_type,
-      sortOrder: q.sort_order,
-      explanation: q.explanation,
-      correctOptionIds: keyMap.get(q.id) ?? [],
-      options: (optRows ?? [])
-        .filter((o) => o.question_id === q.id)
-        .map((o) => ({
-          id: o.id,
-          label: o.label,
-          optionText: o.option_text,
-          sortOrder: o.sort_order,
-        })),
-    })),
+    questions: (qRows ?? []).map((q) => {
+      const answerKey = keyMap.get(q.id);
+      return {
+        id: q.id,
+        prompt: q.prompt,
+        questionType: q.question_type,
+        sortOrder: q.sort_order,
+        placeholder: q.placeholder ?? undefined,
+        explanation: q.explanation,
+        correctOptionIds: answerKey?.correctOptionIds ?? [],
+        acceptedAnswers: answerKey?.acceptedAnswers,
+        options: (optRows ?? [])
+          .filter((o) => o.question_id === q.id)
+          .map((o) => ({
+            id: o.id,
+            label: o.label,
+            optionText: o.option_text,
+            sortOrder: o.sort_order,
+          })),
+      };
+    }),
   };
 }
 
@@ -93,6 +114,7 @@ export async function getPublishedQuizzes(): Promise<PublicQuiz[]> {
         prompt: String(q.prompt),
         questionType: q.question_type as QuestionType,
         sortOrder: Number(q.sort_order ?? 0),
+        placeholder: q.placeholder ? String(q.placeholder) : undefined,
         options: ((q.quiz_options as Array<Record<string, unknown>>) ?? []).map((o) => ({
           id: String(o.id),
           label: String(o.label),
@@ -152,6 +174,7 @@ export async function submitQuizAttempt(params: {
               attempt_id: attempt.id,
               question_id: r.questionId,
               selected_option_ids: r.selectedOptionIds,
+              submitted_text: r.submittedText ?? null,
               is_correct: r.isCorrect,
             }))
           );
@@ -207,6 +230,7 @@ export async function submitQuizAttempt(params: {
       passed: record.passed,
       submittedAt: record.submittedAt,
     });
+    db.quizAttempts = db.quizAttempts.slice(0, 200);
     writePreviewDb(db);
   }
 
@@ -328,6 +352,9 @@ export async function adminCreateQuiz(input: {
   }
 
   const db = readPreviewDb();
+  if (db.quizzes.some((q) => q.slug === input.slug)) {
+    throw new Error("A quiz with that slug already exists.");
+  }
   const qid = `q-${Date.now()}`;
   const labels = ["A", "B", "C", "D"];
   const options = input.options.map((text, idx) => ({

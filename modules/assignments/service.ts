@@ -194,6 +194,9 @@ export async function adminCreateAssignment(input: {
   }
 
   const db = readPreviewDb();
+  if (db.assignments.some((a) => a.slug === input.slug)) {
+    throw new Error("An assignment with that slug already exists.");
+  }
   const created: PracticalAssignment = {
     id: `assign-${Date.now()}`,
     ...input,

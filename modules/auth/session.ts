@@ -1,6 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAdminEmails, isSupabaseConfigured } from "@/lib/env";
+import {
+  getAdminEmails,
+  getPreviewAuthSecret,
+  isPreviewAuthEnabled,
+  isSupabaseConfigured,
+} from "@/lib/env";
 import { readPreviewDb, writePreviewDb } from "@/lib/store/preview-store";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -10,8 +15,10 @@ import {
   canManageAssignments,
   canManageQuizzes,
   canManageUsers,
+  isAccountActive,
   resolveEffectiveRole,
 } from "@/modules/auth/guards";
+import { verifyPreviewSessionToken } from "@/modules/auth/preview-token";
 
 export const PREVIEW_SESSION_COOKIE = "forgesec_preview_uid";
 
@@ -29,7 +36,6 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     const adminClient = createSupabaseAdminClient();
     const dbClient = adminClient ?? supabase;
 
-    // Ensure profile exists for first-login provisioning
     const { data: existingProfile } = await dbClient
       .from("profiles")
       .select("*")
@@ -37,12 +43,12 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       .maybeSingle();
 
     let profile = existingProfile;
-    if (!profile) {
+    if (!profile && adminClient) {
       const displayName =
         (user.user_metadata?.full_name as string | undefined) ||
         (user.user_metadata?.name as string | undefined) ||
         email.split("@")[0];
-      const { data: created } = await dbClient
+      const { data: created } = await adminClient
         .from("profiles")
         .upsert({
           id: user.id,
@@ -94,9 +100,14 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     };
   }
 
-  // Local Preview Mode
+  if (!isPreviewAuthEnabled()) {
+    return null;
+  }
+
+  // Local Preview Mode (only active in non-production or explicit opt-in)
   const cookieStore = await cookies();
-  const uid = cookieStore.get(PREVIEW_SESSION_COOKIE)?.value;
+  const rawToken = cookieStore.get(PREVIEW_SESSION_COOKIE)?.value;
+  const uid = verifyPreviewSessionToken(rawToken, getPreviewAuthSecret());
   if (!uid) return null;
 
   const db = readPreviewDb();
@@ -123,6 +134,9 @@ export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) {
     redirect("/login");
+  }
+  if (!isAccountActive(user)) {
+    redirect("/login?error=account_inactive");
   }
   return user;
 }
@@ -160,6 +174,9 @@ export async function requireAssignmentManager(): Promise<SessionUser> {
 }
 
 export async function getPreviewDemoUsers(): Promise<SessionUser[]> {
+  if (!isPreviewAuthEnabled()) {
+    return [];
+  }
   const db = readPreviewDb();
   return db.users;
 }
@@ -182,6 +199,10 @@ export async function updateCurrentUserProfile(
     return;
   }
 
+  if (!isPreviewAuthEnabled()) {
+    throw new Error("Preview mode is disabled.");
+  }
+
   const db = readPreviewDb();
   const idx = db.users.findIndex((u) => u.id === userId);
   if (idx !== -1) {
@@ -198,16 +219,28 @@ export async function updateCurrentUserProfile(
 export async function requestAccountDeletion(userId: string): Promise<void> {
   const now = new Date().toISOString();
   if (isSupabaseConfigured()) {
+    const admin = createSupabaseAdminClient();
+    if (admin) {
+      await admin
+        .from("profiles")
+        .update({
+          account_status: "deletion_requested",
+          deletion_requested_at: now,
+        })
+        .eq("id", userId)
+        .eq("account_status", "active");
+      return;
+    }
+
     const supabase = await createSupabaseServerClient();
     if (!supabase) throw new Error("Supabase unavailable");
-    await supabase
-      .from("profiles")
-      .update({
-        account_status: "deletion_requested",
-        deletion_requested_at: now,
-      })
-      .eq("id", userId);
+    const { error } = await supabase.rpc("request_own_account_deletion");
+    if (error) throw new Error(error.message);
     return;
+  }
+
+  if (!isPreviewAuthEnabled()) {
+    throw new Error("Preview mode is disabled.");
   }
 
   const db = readPreviewDb();

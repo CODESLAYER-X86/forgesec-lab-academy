@@ -16,6 +16,7 @@ import { LessonReaderShell } from "@/components/learning/lesson-reader-shell";
 import { mdxComponents } from "@/components/learning/mdx-components";
 import { QuizRunner } from "@/components/learning/quiz-runner";
 import { getAssignmentBySlug } from "@/modules/assignments/service";
+import { isAccountActive } from "@/modules/auth/guards";
 import { getCurrentUser } from "@/modules/auth/session";
 import {
   clampPageNumber,
@@ -71,9 +72,10 @@ export default async function LessonPage({
 
   const { path: learningPath, pathLessons, previous, next } = getLessonNeighbors(lesson);
   const user = await getCurrentUser();
+  const activeUser = isAccountActive(user) ? user : null;
 
-  if (user) {
-    await recordContentView(user.id, {
+  if (activeUser) {
+    await recordContentView(activeUser.id, {
       contentId: lesson.meta.id,
       contentType: "tutorial",
       title: lesson.meta.title,
@@ -82,13 +84,15 @@ export default async function LessonPage({
   }
 
   const [progress, bookmarks, quiz, assignment, userAttempts] = await Promise.all([
-    user ? getUserLessonProgress(user.id) : Promise.resolve([]),
-    user ? getUserBookmarks(user.id) : Promise.resolve([]),
+    activeUser ? getUserLessonProgress(activeUser.id) : Promise.resolve([]),
+    activeUser ? getUserBookmarks(activeUser.id) : Promise.resolve([]),
     lesson.meta.quizSlug ? getPublicQuizBySlug(lesson.meta.quizSlug) : Promise.resolve(null),
     lesson.meta.assignmentSlug
       ? getAssignmentBySlug(lesson.meta.assignmentSlug)
       : Promise.resolve(null),
-    user && lesson.meta.quizSlug ? getUserQuizAttempts(user.id) : Promise.resolve([]),
+    activeUser && lesson.meta.quizSlug
+      ? getUserQuizAttempts(activeUser.id)
+      : Promise.resolve([]),
   ]);
 
   const completedSet = new Set(progress.filter((p) => p.completed).map((p) => p.lessonId));
@@ -288,7 +292,7 @@ export default async function LessonPage({
             {quiz ? (
               <QuizRunner
                 quiz={quiz}
-                isAuthenticated={Boolean(user)}
+                isAuthenticated={Boolean(activeUser)}
                 lessonContext={{
                   lessonId: lesson.meta.id,
                   pathId: lesson.meta.pathId,
@@ -358,7 +362,7 @@ export default async function LessonPage({
               title={lesson.meta.title}
               initialCompleted={isCompleted}
               initialBookmarked={isBookmarked}
-              isAuthenticated={Boolean(user)}
+              isAuthenticated={Boolean(activeUser)}
             />
           </section>
 
@@ -418,57 +422,85 @@ export default async function LessonPage({
         </div>
       ) : (
         /* Intermediate Reading Page Stepper Footer */
-        <nav
-          aria-label="Page navigation"
-          className="mt-10 grid grid-cols-1 gap-4 border-t border-[#303A44] pt-6 sm:grid-cols-2"
-        >
-          {prevPage ? (
-            <Link
-              href={`/learn/lessons/${lesson.meta.slug}?page=${prevPage.pageNumber}`}
-              className="flex min-h-14 items-center gap-3 rounded-xl border border-[#303A44] bg-[#171D23] p-4 hover:border-[#4B5866] transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 shrink-0 text-[#AAB4BE]" aria-hidden="true" />
-              <div className="min-w-0">
-                <div className="text-xs text-[#7B8794] tabular-nums">
-                  Previous · Page {prevPage.pageNumber} of {pages.length}
+        <div className="mt-10 space-y-4 border-t border-[#303A44] pt-6">
+          <nav
+            aria-label="Page navigation"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+          >
+            {prevPage ? (
+              <Link
+                href={`/learn/lessons/${lesson.meta.slug}?page=${prevPage.pageNumber}`}
+                className="flex min-h-14 items-center gap-3 rounded-xl border border-[#303A44] bg-[#171D23] p-4 hover:border-[#4B5866] transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4 shrink-0 text-[#AAB4BE]" aria-hidden="true" />
+                <div className="min-w-0">
+                  <div className="text-xs text-[#7B8794] tabular-nums">
+                    Previous · Page {prevPage.pageNumber} of {pages.length}
+                  </div>
+                  <div className="text-sm font-semibold text-[#F3F4F6] truncate">
+                    {prevPage.title}
+                  </div>
                 </div>
-                <div className="text-sm font-semibold text-[#F3F4F6] truncate">
-                  {prevPage.title}
-                </div>
-              </div>
-            </Link>
-          ) : (
-            <div />
-          )}
+              </Link>
+            ) : (
+              <div />
+            )}
 
-          {nextPage ? (
+            {nextPage ? (
+              <Link
+                href={`/learn/lessons/${lesson.meta.slug}?page=${nextPage.pageNumber}`}
+                className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border p-4 transition-colors ${
+                  nextPage.isAssessmentPage
+                    ? "border-[#A3E635]/60 bg-[#173D35]/40 hover:border-[#A3E635]"
+                    : "border-[#303A44] bg-[#171D23] hover:border-[#A3E635]"
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-xs text-[#A3E635] tabular-nums">
+                    {nextPage.isAssessmentPage ? (
+                      <ClipboardCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    ) : null}
+                    <span>
+                      {nextPage.isAssessmentPage
+                        ? `Final Step · Page ${nextPage.pageNumber} of ${pages.length}`
+                        : `Next · Page ${nextPage.pageNumber} of ${pages.length} (~${nextPage.estimatedMinutes} min)`}
+                    </span>
+                  </div>
+                  <div className="text-sm font-semibold text-[#F3F4F6] truncate">
+                    {nextPage.title}
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 shrink-0 text-[#A3E635]" aria-hidden="true" />
+              </Link>
+            ) : null}
+          </nav>
+
+          {quiz && !nextPage?.isAssessmentPage ? (
             <Link
-              href={`/learn/lessons/${lesson.meta.slug}?page=${nextPage.pageNumber}`}
-              className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border p-4 transition-colors ${
-                nextPage.isAssessmentPage
-                  ? "border-[#A3E635]/60 bg-[#173D35]/40 hover:border-[#A3E635]"
-                  : "border-[#303A44] bg-[#171D23] hover:border-[#A3E635]"
-              }`}
+              href={`/learn/lessons/${lesson.meta.slug}?page=${pages.length}#knowledge-check`}
+              className="flex items-center justify-between gap-4 rounded-xl border border-[#303A44] bg-[#171D23] p-4 hover:border-[#A3E635] transition-colors"
             >
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5 text-xs text-[#A3E635] tabular-nums">
-                  {nextPage.isAssessmentPage ? (
-                    <ClipboardCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  ) : null}
-                  <span>
-                    {nextPage.isAssessmentPage
-                      ? `Final Step · Page ${nextPage.pageNumber} of ${pages.length}`
-                      : `Next · Page ${nextPage.pageNumber} of ${pages.length} (~${nextPage.estimatedMinutes} min)`}
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#A3E635]">
+                  <ClipboardCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span className="tabular-nums">
+                    End-of-Module Quiz · Page {pages.length} of {pages.length}
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-[#F3F4F6] truncate">
-                  {nextPage.title}
+                <div className="mt-0.5 text-sm font-semibold text-[#F3F4F6] truncate">
+                  {quiz.title}
+                </div>
+                <div className="mt-0.5 text-xs text-[#AAB4BE] tabular-nums">
+                  {quiz.questions.length} questions · Pass score {quiz.passPercentage}%
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 shrink-0 text-[#A3E635]" aria-hidden="true" />
+              <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#A3E635] whitespace-nowrap">
+                <span>Go to Quiz</span>
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </span>
             </Link>
           ) : null}
-        </nav>
+        </div>
       )}
     </LessonReaderShell>
   );

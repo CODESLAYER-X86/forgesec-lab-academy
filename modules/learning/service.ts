@@ -185,9 +185,13 @@ export async function recordContentView(
   }
 
   const db = readPreviewDb();
-  // Deduplicate immediate back-to-back refresh of same item
+  // Deduplicate immediate back-to-back refresh of same item within 5 minutes
   const latest = db.contentActivity.find((a) => a.userId === userId);
   if (latest && latest.contentId === item.contentId) {
+    const elapsedMs = Date.now() - Date.parse(latest.viewedAt);
+    if (Number.isFinite(elapsedMs) && elapsedMs < 5 * 60 * 1000) {
+      return;
+    }
     latest.viewedAt = now;
   } else {
     db.contentActivity.unshift({

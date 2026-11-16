@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { AssignmentProgressStatus, ContentType, QuizAttemptRecord } from "@/lib/types/domain";
+import { isAccountActive } from "@/modules/auth/guards";
 import {
   getCurrentUser,
   requestAccountDeletion,
@@ -10,6 +11,7 @@ import {
   updateCurrentUserProfile,
 } from "@/modules/auth/session";
 import { updateAssignmentStatus } from "@/modules/assignments/service";
+import { getLessonById } from "@/modules/content/loader";
 import {
   toggleBookmark,
   toggleLessonCompletion,
@@ -17,9 +19,9 @@ import {
 import { submitQuizAttempt } from "@/modules/quizzes/service";
 
 const LessonCompletionSchema = z.object({
-  lessonId: z.string().min(2),
-  pathId: z.string().min(2),
-  slug: z.string().min(2),
+  lessonId: z.string().min(2).max(128),
+  pathId: z.string().min(2).max(128),
+  slug: z.string().min(2).max(160),
   completed: z.boolean(),
 });
 
@@ -31,25 +33,31 @@ export async function toggleLessonCompletionAction(
 
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Sign in to record lesson completion." };
+  if (!isAccountActive(user)) return { ok: false, error: "Account is inactive." };
+
+  const lesson = getLessonById(parsed.data.lessonId);
+  if (!lesson || lesson.meta.slug !== parsed.data.slug) {
+    return { ok: false, error: "Lesson not found." };
+  }
 
   await toggleLessonCompletion(
     user.id,
-    parsed.data.lessonId,
-    parsed.data.pathId,
+    lesson.meta.id,
+    lesson.meta.pathId,
     parsed.data.completed
   );
-  revalidatePath(`/learn/lessons/${parsed.data.slug}`);
-  revalidatePath(`/learn/paths/${parsed.data.pathId}`);
+  revalidatePath(`/learn/lessons/${lesson.meta.slug}`);
+  revalidatePath(`/learn/paths/${lesson.meta.pathId}`);
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/learning");
   return { ok: true };
 }
 
 const BookmarkSchema = z.object({
-  contentId: z.string().min(2),
+  contentId: z.string().min(2).max(128),
   contentType: z.enum(["tutorial", "learning_path", "writeup", "guide", "reference", "glossary"]),
-  title: z.string().min(2),
-  slug: z.string().min(2),
+  title: z.string().min(2).max(200),
+  slug: z.string().min(2).max(160),
 });
 
 export async function toggleBookmarkAction(input: {
@@ -63,6 +71,7 @@ export async function toggleBookmarkAction(input: {
 
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Sign in to save bookmarks." };
+  if (!isAccountActive(user)) return { ok: false, error: "Account is inactive." };
 
   const res = await toggleBookmark(user.id, parsed.data);
   revalidatePath("/dashboard");
@@ -72,8 +81,8 @@ export async function toggleBookmarkAction(input: {
 }
 
 const QuizSubmitSchema = z.object({
-  slug: z.string().min(2),
-  answers: z.record(z.string(), z.array(z.string())),
+  slug: z.string().min(2).max(160),
+  answers: z.record(z.string().max(128), z.array(z.string().max(500)).max(20)),
 });
 
 export async function submitQuizAction(
@@ -83,6 +92,10 @@ export async function submitQuizAction(
   if (!parsed.success) return { ok: false, error: "Invalid quiz submission." };
 
   const user = await getCurrentUser();
+  if (user && !isAccountActive(user)) {
+    return { ok: false, error: "Your account is currently inactive." };
+  }
+
   try {
     const result = await submitQuizAttempt({
       slug: parsed.data.slug,
@@ -100,8 +113,8 @@ export async function submitQuizAction(
 }
 
 const AssignmentStatusSchema = z.object({
-  assignmentId: z.string().min(2),
-  slug: z.string().min(2),
+  assignmentId: z.string().min(2).max(128),
+  slug: z.string().min(2).max(160),
   status: z.enum(["not_started", "in_progress", "completed"]),
   notes: z.string().max(1000).optional(),
 });
@@ -117,6 +130,7 @@ export async function updateAssignmentStatusAction(input: {
 
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Sign in to track assignment progress." };
+  if (!isAccountActive(user)) return { ok: false, error: "Account is inactive." };
 
   await updateAssignmentStatus(
     user.id,

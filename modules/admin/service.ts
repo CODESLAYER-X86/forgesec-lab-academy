@@ -39,6 +39,7 @@ export async function recordAuditLog(entry: {
     details: entry.details ?? {},
     createdAt: now,
   });
+  db.auditLogs = db.auditLogs.slice(0, 500);
   writePreviewDb(db);
 }
 

@@ -8,18 +8,28 @@ import type { SessionUser } from "@/lib/types/domain";
 
 export function LoginPanel({
   supabaseEnabled,
+  previewEnabled,
   demoUsers,
   currentUser,
   nextPath,
+  initialError,
 }: {
   supabaseEnabled: boolean;
+  previewEnabled: boolean;
   demoUsers: SessionUser[];
   currentUser: SessionUser | null;
   nextPath: string;
+  initialError?: string | null;
 }) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    initialError === "account_inactive"
+      ? "This account is deactivated or pending deletion and cannot access member tools."
+      : initialError === "auth_callback_failed"
+      ? "Authentication callback failed. Please try signing in again."
+      : null
+  );
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -54,8 +64,7 @@ export function LoginPanel({
       setLoadingId(null);
       return;
     }
-    router.push(nextPath);
-    router.refresh();
+    window.location.assign(nextPath);
   };
 
   const handleLogout = async () => {
@@ -65,8 +74,7 @@ export function LoginPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "logout" }),
     });
-    router.push("/");
-    router.refresh();
+    window.location.assign("/");
   };
 
   return (
@@ -89,15 +97,23 @@ export function LoginPanel({
           </div>
           <div className="text-xs text-[#AAB4BE]">
             {currentUser.email} · Role: <span className="capitalize">{currentUser.role}</span>
+            {currentUser.accountStatus !== "active" ? (
+              <span className="text-[#F59E0B]">
+                {" "}
+                · Status: {currentUser.accountStatus.replace("_", " ")}
+              </span>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-3 pt-1">
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard")}
-              className="h-9 rounded-lg bg-[#A3E635] px-4 text-xs font-semibold text-[#101418]"
-            >
-              Open Dashboard
-            </button>
+            {currentUser.accountStatus === "active" ? (
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
+                className="h-9 rounded-lg bg-[#A3E635] px-4 text-xs font-semibold text-[#101418]"
+              >
+                Open Dashboard
+              </button>
+            ) : null}
             <button
               type="button"
               disabled={loadingId === "logout"}
@@ -119,7 +135,7 @@ export function LoginPanel({
         >
           <span>{loadingId === "google" ? "Redirecting to Google..." : "Continue with Google"}</span>
         </button>
-      ) : (
+      ) : previewEnabled ? (
         <div className="space-y-4">
           <div className="rounded-lg border border-[#2B4358] bg-[#131C26] p-4 text-xs leading-relaxed text-[#BAE6FD]">
             <div className="flex items-center gap-2 font-semibold">
@@ -155,6 +171,11 @@ export function LoginPanel({
               </button>
             ))}
           </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-[#F59E0B]/40 bg-[#211A11] p-4 text-xs leading-relaxed text-[#FDE68A]">
+          Authentication is unavailable because Supabase credentials are not configured for this
+          production deployment. Public learning paths and lessons remain accessible without login.
         </div>
       )}
 
