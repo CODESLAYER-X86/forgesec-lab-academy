@@ -6,6 +6,8 @@ import {
   getPublishedLessons,
 } from "@/modules/content/loader";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Learning Catalog",
   description:

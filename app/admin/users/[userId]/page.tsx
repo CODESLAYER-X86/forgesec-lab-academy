@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { UserRoleForm } from "@/components/admin/user-role-form";
-import { getAllUsersForAdmin } from "@/modules/admin/service";
+import { getAdminUserById } from "@/modules/admin/service";
 import { requireFullAdmin } from "@/modules/auth/session";
 
 export const metadata = {
@@ -16,8 +16,7 @@ export default async function AdminUserDetailPage({
 }) {
   await requireFullAdmin();
   const { userId } = await params;
-  const users = await getAllUsersForAdmin();
-  const target = users.find((u) => u.id === userId);
+  const target = await getAdminUserById(userId);
   if (!target) {
     notFound();
   }

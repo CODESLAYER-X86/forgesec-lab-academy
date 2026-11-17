@@ -170,11 +170,14 @@ export async function updateAssignmentStatus(
   writePreviewDb(db);
 }
 
-export async function getAllAssignmentsForAdmin(): Promise<PracticalAssignment[]> {
+export const getAllAssignmentsForAdmin = cache(async (): Promise<PracticalAssignment[]> => {
   if (isSupabaseConfigured()) {
     const admin = createSupabaseAdminClient();
     if (!admin) return [];
-    const { data } = await admin.from("assignments").select("*").order("updated_at", { ascending: false });
+    const { data } = await admin
+      .from("assignments")
+      .select("id, slug, title, objective, category, difficulty, lesson_id, prerequisites, instructions, expected_outcome, safety_warning, status, created_at, updated_at")
+      .order("updated_at", { ascending: false });
     return (data ?? []).map((row) => ({
       id: row.id,
       slug: row.slug,
@@ -193,7 +196,7 @@ export async function getAllAssignmentsForAdmin(): Promise<PracticalAssignment[]
     }));
   }
   return readPreviewDb().assignments;
-}
+});
 
 export async function adminCreateAssignment(input: {
   title: string;
@@ -263,12 +266,17 @@ export async function adminCreateAssignment(input: {
 export async function adminUpdateAssignmentStatus(
   assignmentId: string,
   status: AssignmentStatus
-): Promise<void> {
+): Promise<{ slug: string | null }> {
   if (isSupabaseConfigured()) {
     const admin = createSupabaseAdminClient();
     if (!admin) throw new Error("Service role required");
-    await admin.from("assignments").update({ status }).eq("id", assignmentId);
-    return;
+    const { data } = await admin
+      .from("assignments")
+      .update({ status })
+      .eq("id", assignmentId)
+      .select("slug")
+      .maybeSingle();
+    return { slug: data?.slug ?? null };
   }
   const db = readPreviewDb();
   const found = db.assignments.find((a) => a.id === assignmentId);
@@ -276,5 +284,7 @@ export async function adminUpdateAssignmentStatus(
     found.status = status;
     found.updatedAt = new Date().toISOString();
     writePreviewDb(db);
+    return { slug: found.slug };
   }
+  return { slug: null };
 }

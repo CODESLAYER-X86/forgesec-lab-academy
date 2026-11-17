@@ -1,7 +1,7 @@
 export default function DashboardLoading() {
   return (
     <div
-      className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 space-y-8 animate-pulse"
+      className="space-y-8 animate-pulse"
       aria-busy="true"
       aria-label="Loading dashboard"
     >

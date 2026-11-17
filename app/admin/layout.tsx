@@ -1,15 +1,8 @@
-import Link from "next/link";
+import { Shield } from "lucide-react";
 import {
-  Activity,
-  BarChart3,
-  CheckSquare,
-  ClipboardCheck,
-  KeyRound,
-  LayoutDashboard,
-  Settings,
-  Shield,
-  Users,
-} from "lucide-react";
+  AdminSidebarNav,
+  type AdminNavItem,
+} from "@/components/admin/admin-sidebar-nav";
 import { LogoutButton } from "@/components/auth/logout-button";
 import {
   canManageAssignments,
@@ -28,21 +21,23 @@ export default async function AdminLayout({
   const showQuizzes = canManageQuizzes(user);
   const showAssignments = canManageAssignments(user);
 
-  const navItems = [
-    { href: "/admin", label: "Overview", icon: LayoutDashboard, visible: true },
-    { href: "/admin/users", label: "Users", icon: Users, visible: isFullAdmin },
-    { href: "/admin/permissions", label: "Permissions", icon: KeyRound, visible: isFullAdmin },
-    { href: "/admin/quizzes", label: "Quizzes", icon: CheckSquare, visible: showQuizzes },
+  const navItems: AdminNavItem[] = [
+    { href: "/admin", label: "Overview", icon: "overview" as const, visible: true },
+    { href: "/admin/users", label: "Users", icon: "users" as const, visible: isFullAdmin },
+    { href: "/admin/permissions", label: "Permissions", icon: "permissions" as const, visible: isFullAdmin },
+    { href: "/admin/quizzes", label: "Quizzes", icon: "quizzes" as const, visible: showQuizzes },
     {
       href: "/admin/assignments",
       label: "Assignments",
-      icon: ClipboardCheck,
+      icon: "assignments" as const,
       visible: showAssignments,
     },
-    { href: "/admin/analytics", label: "Analytics", icon: BarChart3, visible: isFullAdmin },
-    { href: "/admin/audit-logs", label: "Audit Logs", icon: Activity, visible: isFullAdmin },
-    { href: "/admin/settings", label: "Settings", icon: Settings, visible: isFullAdmin },
-  ].filter((item) => item.visible);
+    { href: "/admin/analytics", label: "Analytics", icon: "analytics" as const, visible: isFullAdmin },
+    { href: "/admin/audit-logs", label: "Audit Logs", icon: "audit-logs" as const, visible: isFullAdmin },
+    { href: "/admin/settings", label: "Settings", icon: "settings" as const, visible: isFullAdmin },
+  ]
+    .filter((item) => item.visible)
+    .map(({ href, label, icon }) => ({ href, label, icon }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -64,27 +59,7 @@ export default async function AdminLayout({
               </div>
             </div>
 
-            <nav aria-label="Admin console navigation" className="space-y-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium text-[#AAB4BE] hover:bg-[#202831] hover:text-[#F3F4F6] transition-colors"
-                  >
-                    <Icon className="h-3.5 w-3.5 text-[#7B8794]" aria-hidden="true" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium text-[#A3E635] hover:bg-[#202831] transition-colors"
-              >
-                <span>Student View</span>
-              </Link>
-            </nav>
+            <AdminSidebarNav items={navItems} />
 
             <div className="border-t border-[#262F38] pt-3">
               <LogoutButton />

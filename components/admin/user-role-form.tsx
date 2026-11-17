@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, Save } from "lucide-react";
 import { updateUserRoleAction } from "@/app/actions/admin";
@@ -24,6 +24,7 @@ export function UserRoleForm({
   initialCanManageAssignments,
 }: UserRoleFormProps) {
   const router = useRouter();
+  const [isRefreshing, startTransition] = useTransition();
   const [role, setRole] = useState<AppRole>(initialRole);
   const [canManageQuizzes, setCanManageQuizzes] = useState(initialCanManageQuizzes);
   const [canManageAssignments, setCanManageAssignments] = useState(initialCanManageAssignments);
@@ -51,7 +52,9 @@ export function UserRoleForm({
     }
 
     setMessage("Permissions saved and recorded in the audit log.");
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   return (
@@ -132,11 +135,11 @@ export function UserRoleForm({
 
       <button
         type="submit"
-        disabled={saving || isPermanentAdmin}
+        disabled={saving || isRefreshing || isPermanentAdmin}
         className="inline-flex items-center gap-2 rounded-lg bg-[#A3E635] px-4 py-2 text-xs font-semibold text-[#101418] hover:bg-[#bef264] disabled:opacity-50 transition-colors"
       >
         <Save className="h-3.5 w-3.5" aria-hidden="true" />
-        <span>{saving ? "Saving..." : "Save Role & Permissions"}</span>
+        <span>{saving || isRefreshing ? "Saving..." : "Save Role & Permissions"}</span>
       </button>
     </form>
   );

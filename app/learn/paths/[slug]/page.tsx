@@ -8,6 +8,8 @@ import {
   getPublishedLearningPaths,
 } from "@/modules/content/loader";
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   return getPublishedLearningPaths().map((p) => ({ slug: p.slug }));
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import {
@@ -15,9 +15,18 @@ interface AssignmentManagerProps {
 
 export function AssignmentManager({ assignments }: AssignmentManagerProps) {
   const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [optimisticStatuses, setOptimisticStatuses] = useState<
+    Record<string, { status: AssignmentStatus; baseStatus: AssignmentStatus }>
+  >({});
   const [showCreate, setShowCreate] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const displayAssignments = assignments.map((a) => {
+    const ov = optimisticStatuses[a.id];
+    return ov && ov.baseStatus === a.status ? { ...a, status: ov.status } : a;
+  });
 
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -34,15 +43,29 @@ export function AssignmentManager({ assignments }: AssignmentManagerProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const handleStatusChange = async (assignmentId: string, nextStatus: AssignmentStatus) => {
+    const serverAssignment = assignments.find((a) => a.id === assignmentId);
+    const baseStatus = serverAssignment?.status ?? nextStatus;
     setBusyId(assignmentId);
     setError(null);
+    setOptimisticStatuses((prev) => ({
+      ...prev,
+      [assignmentId]: { status: nextStatus, baseStatus },
+    }));
+
     const res = await toggleAssignmentStatusAction(assignmentId, nextStatus);
     setBusyId(null);
     if (!res.ok) {
+      setOptimisticStatuses((prev) => {
+        const next = { ...prev };
+        delete next[assignmentId];
+        return next;
+      });
       setError(res.error ?? "Unable to update assignment status.");
       return;
     }
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -76,14 +99,16 @@ export function AssignmentManager({ assignments }: AssignmentManagerProps) {
     setInstructions("");
     setExpectedOutcome("");
     setShowCreate(false);
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-xs text-[#AAB4BE] tabular-nums">
-          {assignments.length} practical assignments configured
+          {displayAssignments.length} practical assignments configured
         </div>
         <button
           type="button"
@@ -307,7 +332,7 @@ export function AssignmentManager({ assignments }: AssignmentManagerProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#262F38]">
-            {assignments.map((item) => (
+            {displayAssignments.map((item) => (
               <tr key={item.id} className="hover:bg-[#202831]/60 transition-colors">
                 <td className="px-4 py-3">
                   <div className="font-medium text-[#F3F4F6]">{item.title}</div>

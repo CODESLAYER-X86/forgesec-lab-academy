@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import { createQuizAction, toggleQuizStatusAction } from "@/app/actions/admin";
@@ -12,16 +12,25 @@ interface QuizManagerProps {
 
 export function QuizManager({ quizzes }: QuizManagerProps) {
   const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [optimisticStatuses, setOptimisticStatuses] = useState<
+    Record<string, { status: QuizStatus; baseStatus: QuizStatus }>
+  >({});
   const [showCreate, setShowCreate] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const displayQuizzes = quizzes.map((q) => {
+    const ov = optimisticStatuses[q.id];
+    return ov && ov.baseStatus === q.status ? { ...q, status: ov.status } : q;
+  });
 
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("linux");
   const [difficulty, setDifficulty] = useState<"beginner" | "intermediate" | "advanced">("beginner");
-  const [passPercentage, setPassPercentage] = useState(70);
+  const [passPercentage, setPassPercentage] = useState(100);
   const [status, setStatus] = useState<QuizStatus>("published");
   const [questionPrompt, setQuestionPrompt] = useState("");
   const [optionA, setOptionA] = useState("");
@@ -32,15 +41,30 @@ export function QuizManager({ quizzes }: QuizManagerProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const handleStatusChange = async (quizId: string, nextStatus: QuizStatus) => {
+    const serverQuiz = quizzes.find((q) => q.id === quizId);
+    const baseStatus = serverQuiz?.status ?? nextStatus;
+
     setBusyId(quizId);
     setError(null);
+    setOptimisticStatuses((prev) => ({
+      ...prev,
+      [quizId]: { status: nextStatus, baseStatus },
+    }));
+
     const res = await toggleQuizStatusAction(quizId, nextStatus);
     setBusyId(null);
     if (!res.ok) {
+      setOptimisticStatuses((prev) => {
+        const next = { ...prev };
+        delete next[quizId];
+        return next;
+      });
       setError(res.error ?? "Failed to update quiz status.");
       return;
     }
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -72,20 +96,23 @@ export function QuizManager({ quizzes }: QuizManagerProps) {
     setTitle("");
     setSlug("");
     setDescription("");
+    setPassPercentage(100);
     setQuestionPrompt("");
     setOptionA("");
     setOptionB("");
     setOptionC("");
     setExplanation("");
     setShowCreate(false);
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-xs text-[#AAB4BE] tabular-nums">
-          {quizzes.length} assessments configured
+          {displayQuizzes.length} assessments configured
         </div>
         <button
           type="button"
@@ -317,7 +344,7 @@ export function QuizManager({ quizzes }: QuizManagerProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#262F38]">
-            {quizzes.map((quiz) => (
+            {displayQuizzes.map((quiz) => (
               <tr key={quiz.id} className="hover:bg-[#202831]/60 transition-colors">
                 <td className="px-4 py-3">
                   <div className="font-medium text-[#F3F4F6]">{quiz.title}</div>

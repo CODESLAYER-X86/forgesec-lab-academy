@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getGlossaryItems } from "@/modules/content/loader";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Security & Linux Glossary",
   description:

@@ -347,20 +347,61 @@ export const getUserQuizAttempts = cache(async (userId: string): Promise<QuizAtt
     .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
 });
 
-export async function getAllQuizzesForAdmin(): Promise<ServerQuiz[]> {
+export const getAllQuizzesForAdmin = cache(async (): Promise<ServerQuiz[]> => {
   if (isSupabaseConfigured()) {
     const admin = createSupabaseAdminClient();
     if (!admin) return [];
-    const { data: rows } = await admin.from("quizzes").select("*").order("updated_at", { ascending: false });
-    const out: ServerQuiz[] = [];
-    for (const r of rows ?? []) {
-      const full = await loadSupabaseQuizBySlug(r.slug, true);
-      if (full) out.push(full);
-    }
-    return out;
+    const { data: rows } = await admin
+      .from("quizzes")
+      .select("*, quiz_questions(id, prompt, question_type, sort_order, placeholder, explanation, quiz_options(id, label, option_text, sort_order))")
+      .order("updated_at", { ascending: false });
+
+    return (rows ?? []).map((quizRow) => {
+      const rawQuestions =
+        (quizRow.quiz_questions as Array<Record<string, unknown>> | null) ?? [];
+      const sortedQuestions = [...rawQuestions].sort(
+        (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)
+      );
+
+      return {
+        id: quizRow.id,
+        slug: quizRow.slug,
+        title: quizRow.title,
+        description: quizRow.description,
+        category: quizRow.category,
+        difficulty: quizRow.difficulty,
+        lessonId: quizRow.lesson_id ?? undefined,
+        passPercentage: Number(quizRow.pass_percentage ?? 100),
+        status: quizRow.status,
+        createdAt: quizRow.created_at,
+        updatedAt: quizRow.updated_at,
+        questions: sortedQuestions.map((q) => {
+          const rawOptions =
+            (q.quiz_options as Array<Record<string, unknown>> | null) ?? [];
+          const sortedOptions = [...rawOptions].sort(
+            (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)
+          );
+          return {
+            id: String(q.id),
+            prompt: String(q.prompt),
+            questionType: q.question_type as QuestionType,
+            sortOrder: Number(q.sort_order ?? 0),
+            placeholder: q.placeholder ? String(q.placeholder) : undefined,
+            explanation: String(q.explanation ?? ""),
+            correctOptionIds: [],
+            options: sortedOptions.map((o) => ({
+              id: String(o.id),
+              label: String(o.label),
+              optionText: String(o.option_text),
+              sortOrder: Number(o.sort_order ?? 0),
+            })),
+          };
+        }),
+      };
+    });
   }
   return readPreviewDb().quizzes;
-}
+});
 
 export async function adminCreateQuiz(input: {
   title: string;
@@ -472,12 +513,20 @@ export async function adminCreateQuiz(input: {
   return newQuiz;
 }
 
-export async function adminUpdateQuizStatus(quizId: string, status: QuizStatus): Promise<void> {
+export async function adminUpdateQuizStatus(
+  quizId: string,
+  status: QuizStatus
+): Promise<{ slug: string | null }> {
   if (isSupabaseConfigured()) {
     const admin = createSupabaseAdminClient();
     if (!admin) throw new Error("Service role required");
-    await admin.from("quizzes").update({ status }).eq("id", quizId);
-    return;
+    const { data } = await admin
+      .from("quizzes")
+      .update({ status })
+      .eq("id", quizId)
+      .select("slug")
+      .maybeSingle();
+    return { slug: data?.slug ?? null };
   }
   const db = readPreviewDb();
   const target = db.quizzes.find((q) => q.id === quizId);
@@ -485,5 +534,7 @@ export async function adminUpdateQuizStatus(quizId: string, status: QuizStatus):
     target.status = status;
     target.updatedAt = new Date().toISOString();
     writePreviewDb(db);
+    return { slug: target.slug };
   }
+  return { slug: null };
 }

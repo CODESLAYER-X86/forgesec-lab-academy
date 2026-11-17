@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getPublishedWriteups } from "@/modules/content/loader";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Technical Write-ups",
   description:

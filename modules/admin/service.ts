@@ -51,15 +51,15 @@ export async function recordAuditLog(entry: {
   writePreviewDb(db);
 }
 
-export async function getAdminAuditLogs(): Promise<AuditLogEntry[]> {
+export const getAdminAuditLogs = cache(async (limit = 100): Promise<AuditLogEntry[]> => {
   if (isSupabaseConfigured()) {
     const admin = createSupabaseAdminClient();
     if (!admin) return [];
     const { data } = await admin
       .from("admin_audit_logs")
-      .select("*")
+      .select("id, actor_id, actor_email, action, target_type, target_id, details, created_at")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(limit);
     return (data ?? []).map((row) => ({
       id: row.id,
       actorId: row.actor_id ?? "",
@@ -72,10 +72,10 @@ export async function getAdminAuditLogs(): Promise<AuditLogEntry[]> {
     }));
   }
 
-  return [...readPreviewDb().auditLogs].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt)
-  );
-}
+  return [...readPreviewDb().auditLogs]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit);
+});
 
 export const getAllUsersForAdmin = cache(async (): Promise<SessionUser[]> => {
   const admins = getAdminEmails();
@@ -92,8 +92,13 @@ export const getAllUsersForAdmin = cache(async (): Promise<SessionUser[]> => {
       { data: roleRows, error: rolesError },
       authUsersRes,
     ] = await Promise.all([
-      admin.from("profiles").select("*").order("created_at", { ascending: false }),
-      admin.from("user_roles").select("*"),
+      admin
+        .from("profiles")
+        .select("id, email, display_name, avatar_url, bio, interests, account_status, deletion_requested_at, created_at")
+        .order("created_at", { ascending: false }),
+      admin
+        .from("user_roles")
+        .select("user_id, role, can_manage_quizzes, can_manage_assignments"),
       admin.auth.admin.listUsers({ page: 1, perPage: 200 }).catch(() => ({
         data: { users: [] as RawAuthUser[] },
         error: null,
@@ -148,6 +153,57 @@ export const getAllUsersForAdmin = cache(async (): Promise<SessionUser[]> => {
   });
 });
 
+export const getAdminUserById = cache(async (userId: string): Promise<SessionUser | null> => {
+  const admins = getAdminEmails();
+
+  if (isSupabaseConfigured()) {
+    const admin = createSupabaseAdminClient();
+    if (!admin) {
+      const current = await getCurrentUser();
+      return current?.id === userId ? current : null;
+    }
+
+    const [{ data: profile }, { data: roleRow }, authRes] = await Promise.all([
+      admin
+        .from("profiles")
+        .select("id, email, display_name, avatar_url, bio, interests, account_status, deletion_requested_at, created_at")
+        .eq("id", userId)
+        .maybeSingle(),
+      admin
+        .from("user_roles")
+        .select("user_id, role, can_manage_quizzes, can_manage_assignments")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      admin.auth.admin.getUserById(userId).catch(() => ({
+        data: { user: null as RawAuthUser | null },
+        error: null,
+      })),
+    ]);
+
+    const authUser = authRes?.data?.user as RawAuthUser | null;
+    if (!profile && !authUser) return null;
+
+    const merged = mergeSupabaseUsers({
+      profiles: profile ? [profile] : [],
+      roles: roleRow ? [roleRow] : [],
+      authUsers: authUser ? [authUser] : [],
+      adminEmails: admins,
+    });
+    return merged[0] ?? null;
+  }
+
+  const found = readPreviewDb().users.find((u) => u.id === userId);
+  if (!found) return null;
+  const resolved = resolveEffectiveRole(found.email, found.role, admins);
+  return {
+    ...found,
+    role: resolved.role,
+    isPermanentAdmin: resolved.isPermanentAdmin,
+    canManageQuizzes: resolved.role === "admin" ? true : found.canManageQuizzes,
+    canManageAssignments: resolved.role === "admin" ? true : found.canManageAssignments,
+  };
+});
+
 export function getAdminDirectoryStatus(): {
   supabaseMode: boolean;
   serviceRoleConfigured: boolean;
@@ -165,8 +221,7 @@ export async function adminUpdateUserRole(params: {
   canManageQuizzes: boolean;
   canManageAssignments: boolean;
 }): Promise<{ ok: boolean; error?: string }> {
-  const users = await getAllUsersForAdmin();
-  const target = users.find((u) => u.id === params.targetUserId);
+  const target = await getAdminUserById(params.targetUserId);
   if (!target) {
     return { ok: false, error: "User not found." };
   }

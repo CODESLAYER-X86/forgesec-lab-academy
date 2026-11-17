@@ -1,8 +1,11 @@
-import Link from "next/link";
 import { requireUser } from "@/modules/auth/session";
 import { LogoutButton } from "@/components/auth/logout-button";
+import {
+  DashboardSidebarNav,
+  type DashboardNavItem,
+} from "@/components/dashboard/dashboard-sidebar-nav";
 
-const NAV_ITEMS = [
+const NAV_ITEMS: DashboardNavItem[] = [
   { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/learning", label: "Learning Paths" },
   { href: "/dashboard/bookmarks", label: "Bookmarks" },
@@ -19,6 +22,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+  const showAdmin = user.role === "admin" || user.role === "instructor";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -35,25 +39,7 @@ export default async function DashboardLayout({
               </div>
             </div>
 
-            <nav aria-label="Student dashboard navigation" className="space-y-1">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="block rounded-md px-3 py-2 text-xs font-medium text-[#AAB4BE] hover:bg-[#202831] hover:text-[#F3F4F6] transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              {(user.role === "admin" || user.role === "instructor") ? (
-                <Link
-                  href="/admin"
-                  className="block rounded-md px-3 py-2 text-xs font-semibold text-[#A3E635] hover:bg-[#202831] transition-colors"
-                >
-                  Admin Console
-                </Link>
-              ) : null}
-            </nav>
+            <DashboardSidebarNav items={NAV_ITEMS} showAdmin={showAdmin} />
 
             <div className="border-t border-[#262F38] pt-3">
               <LogoutButton />

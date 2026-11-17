@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { getGlossaryItemBySlug, getGlossaryItems } from "@/modules/content/loader";
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   return getGlossaryItems().map((item) => ({ term: item.slug }));
 }

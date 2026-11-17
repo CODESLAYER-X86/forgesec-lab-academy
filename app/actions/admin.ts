@@ -13,7 +13,24 @@ import {
   requireFullAdmin,
   requireQuizManager,
 } from "@/modules/auth/session";
+import { getPublishedLessons } from "@/modules/content/loader";
 import { adminCreateQuiz, adminUpdateQuizStatus } from "@/modules/quizzes/service";
+
+function revalidateLinkedLessonForQuiz(quizSlug: string) {
+  for (const lesson of getPublishedLessons()) {
+    if (lesson.meta.quizSlug === quizSlug) {
+      revalidatePath(`/learn/lessons/${lesson.meta.slug}`);
+    }
+  }
+}
+
+function revalidateLinkedLessonForAssignment(assignmentSlug: string) {
+  for (const lesson of getPublishedLessons()) {
+    if (lesson.meta.assignmentSlug === assignmentSlug) {
+      revalidatePath(`/learn/lessons/${lesson.meta.slug}`);
+    }
+  }
+}
 
 const UpdateRoleSchema = z.object({
   targetUserId: z.string().min(2).max(128),
@@ -39,6 +56,7 @@ export async function updateUserRoleAction(
     revalidatePath("/admin/users");
     revalidatePath(`/admin/users/${parsed.data.targetUserId}`);
     revalidatePath("/admin/permissions");
+    revalidatePath("/admin/analytics");
     revalidatePath("/admin/audit-logs");
   }
   return result;
@@ -91,9 +109,13 @@ export async function createQuizAction(
       details: { slug: created.slug, status: created.status },
     });
 
+    revalidatePath("/admin");
     revalidatePath("/admin/quizzes");
-    revalidatePath("/quizzes");
+    revalidatePath("/admin/analytics");
     revalidatePath("/admin/audit-logs");
+    revalidatePath("/quizzes");
+    revalidatePath(`/quizzes/${created.slug}`);
+    revalidateLinkedLessonForQuiz(created.slug);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Failed to create quiz." };
@@ -113,7 +135,7 @@ export async function toggleQuizStatusAction(
   if (!parsed.success) return { ok: false, error: "Invalid quiz status update." };
 
   const actor = await requireQuizManager();
-  await adminUpdateQuizStatus(parsed.data.quizId, parsed.data.status);
+  const updated = await adminUpdateQuizStatus(parsed.data.quizId, parsed.data.status);
   await recordAuditLog({
     actorId: actor.id,
     actorEmail: actor.email,
@@ -122,9 +144,15 @@ export async function toggleQuizStatusAction(
     targetId: parsed.data.quizId,
     details: { status: parsed.data.status },
   });
+  revalidatePath("/admin");
   revalidatePath("/admin/quizzes");
-  revalidatePath("/quizzes");
+  revalidatePath("/admin/analytics");
   revalidatePath("/admin/audit-logs");
+  revalidatePath("/quizzes");
+  if (updated.slug) {
+    revalidatePath(`/quizzes/${updated.slug}`);
+    revalidateLinkedLessonForQuiz(updated.slug);
+  }
   return { ok: true };
 }
 
@@ -177,9 +205,13 @@ export async function createAssignmentAction(
       details: { slug: created.slug, status: created.status },
     });
 
+    revalidatePath("/admin");
     revalidatePath("/admin/assignments");
-    revalidatePath("/assignments");
+    revalidatePath("/admin/analytics");
     revalidatePath("/admin/audit-logs");
+    revalidatePath("/assignments");
+    revalidatePath(`/assignments/${created.slug}`);
+    revalidateLinkedLessonForAssignment(created.slug);
     return { ok: true };
   } catch (err) {
     return {
@@ -202,7 +234,7 @@ export async function toggleAssignmentStatusAction(
   if (!parsed.success) return { ok: false, error: "Invalid assignment status update." };
 
   const actor = await requireAssignmentManager();
-  await adminUpdateAssignmentStatus(parsed.data.assignmentId, parsed.data.status);
+  const updated = await adminUpdateAssignmentStatus(parsed.data.assignmentId, parsed.data.status);
   await recordAuditLog({
     actorId: actor.id,
     actorEmail: actor.email,
@@ -211,8 +243,14 @@ export async function toggleAssignmentStatusAction(
     targetId: parsed.data.assignmentId,
     details: { status: parsed.data.status },
   });
+  revalidatePath("/admin");
   revalidatePath("/admin/assignments");
-  revalidatePath("/assignments");
+  revalidatePath("/admin/analytics");
   revalidatePath("/admin/audit-logs");
+  revalidatePath("/assignments");
+  if (updated.slug) {
+    revalidatePath(`/assignments/${updated.slug}`);
+    revalidateLinkedLessonForAssignment(updated.slug);
+  }
   return { ok: true };
 }

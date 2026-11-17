@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { PathsIndexClient } from "@/components/learning/path-progress-clients";
 import { getPublishedLearningPaths } from "@/modules/content/loader";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Learning Paths",
   description:

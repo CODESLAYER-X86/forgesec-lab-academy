@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { getAdminAuditLogs, getAllUsersForAdmin } from "@/modules/admin/service";
+import { getAdminAuditLogs } from "@/modules/admin/service";
 import { getPlatformAnalytics } from "@/modules/analytics/service";
-import { getAllAssignmentsForAdmin } from "@/modules/assignments/service";
 import {
   canManageAssignments,
   canManageQuizzes,
@@ -10,7 +9,6 @@ import {
 } from "@/modules/auth/guards";
 import { requireAdminConsoleAccess } from "@/modules/auth/session";
 import { getPublishedLessons } from "@/modules/content/loader";
-import { getAllQuizzesForAdmin } from "@/modules/quizzes/service";
 
 export const metadata = {
   title: "Admin Overview | FORGESEC ACADEMY",
@@ -20,17 +18,14 @@ export default async function AdminOverviewPage() {
   const user = await requireAdminConsoleAccess();
   const isFullAdmin = canManageUsers(user);
 
-  const [analytics, users, quizzes, assignments, auditLogs] = await Promise.all([
+  const [analytics, auditLogs] = await Promise.all([
     getPlatformAnalytics(),
-    isFullAdmin ? getAllUsersForAdmin() : Promise.resolve([]),
-    canManageQuizzes(user) ? getAllQuizzesForAdmin() : Promise.resolve([]),
-    canManageAssignments(user) ? getAllAssignmentsForAdmin() : Promise.resolve([]),
-    isFullAdmin ? getAdminAuditLogs() : Promise.resolve([]),
+    isFullAdmin ? getAdminAuditLogs(6) : Promise.resolve([]),
   ]);
 
   const lessons = getPublishedLessons();
-  const publishedQuizzes = quizzes.filter((q) => q.status === "published").length;
-  const publishedAssignments = assignments.filter((a) => a.status === "published").length;
+  const publishedQuizzes = analytics.publishedQuizCount;
+  const publishedAssignments = analytics.publishedAssignmentCount;
 
   return (
     <div className="space-y-8">
@@ -50,7 +45,7 @@ export default async function AdminOverviewPage() {
         <div className="rounded-xl border border-[#303A44] bg-[#171D23] p-5">
           <div className="text-xs text-[#7B8794]">Total Accounts</div>
           <div className="mt-2 text-2xl font-bold tabular-nums text-[#F3F4F6]">
-            {isFullAdmin ? users.length : analytics.totalUsers}
+            {analytics.totalUsers}
           </div>
           <div className="mt-1 text-xs text-[#AAB4BE] tabular-nums">
             {analytics.activeLearners} active learners
@@ -70,7 +65,7 @@ export default async function AdminOverviewPage() {
         <div className="rounded-xl border border-[#303A44] bg-[#171D23] p-5">
           <div className="text-xs text-[#7B8794]">Assessments</div>
           <div className="mt-2 text-2xl font-bold tabular-nums text-[#F3F4F6]">
-            {canManageQuizzes(user) ? publishedQuizzes : analytics.quizPerformance.length}
+            {publishedQuizzes}
           </div>
           <div className="mt-1 text-xs text-[#AAB4BE] tabular-nums">
             {analytics.averageQuizPassRate}% average pass rate
@@ -80,7 +75,7 @@ export default async function AdminOverviewPage() {
         <div className="rounded-xl border border-[#303A44] bg-[#171D23] p-5">
           <div className="text-xs text-[#7B8794]">Practical Labs</div>
           <div className="mt-2 text-2xl font-bold tabular-nums text-[#F3F4F6]">
-            {canManageAssignments(user) ? publishedAssignments : "—"}
+            {publishedAssignments}
           </div>
           <div className="mt-1 text-xs text-[#AAB4BE] tabular-nums">
             {analytics.assignmentCompletionRate}% completion rate

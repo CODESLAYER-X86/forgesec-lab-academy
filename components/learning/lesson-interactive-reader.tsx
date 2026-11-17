@@ -4,6 +4,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -76,6 +77,9 @@ function isPlainLeftClick(e: MouseEvent<HTMLAnchorElement>): boolean {
   return !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0);
 }
 
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 function SearchParamPageSync({
   totalPages,
   onSyncPage,
@@ -86,7 +90,7 @@ function SearchParamPageSync({
   const searchParams = useSearchParams();
   const pageParam = searchParams.get("page");
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const target = clampClientPage(pageParam, totalPages);
     onSyncPage(target);
   }, [pageParam, totalPages, onSyncPage]);
@@ -129,11 +133,21 @@ export function LessonInteractiveReader({
     return () => window.removeEventListener("popstate", handlePopState);
   }, [pages.length]);
 
-  // Background activity tracking off the critical render path
+  // Background activity tracking off the critical render path, deduped per browser session
   useEffect(() => {
     if (!loaded || !user) return;
     const key = `${user.id}:${lesson.id}`;
     if (activityLoggedRef.current === key) return;
+    const storageKey = `forgesec:activity:${key}`;
+    try {
+      if (window.sessionStorage.getItem(storageKey) === "1") {
+        activityLoggedRef.current = key;
+        return;
+      }
+      window.sessionStorage.setItem(storageKey, "1");
+    } catch {
+      // Ignore storage access errors in restricted environments
+    }
     activityLoggedRef.current = key;
     void fetch("/api/learning/activity", {
       method: "POST",
@@ -547,7 +561,7 @@ export function LessonInteractiveReader({
                   {quiz.title}
                 </div>
                 <div className="mt-0.5 text-xs text-[#AAB4BE] tabular-nums">
-                  {quiz.questions.length} questions · Pass score {quiz.passPercentage}%
+                  {quiz.questions.length} questions · Pass score 100%
                 </div>
               </div>
               <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#A3E635] whitespace-nowrap">

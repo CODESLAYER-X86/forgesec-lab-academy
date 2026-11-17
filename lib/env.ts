@@ -34,6 +34,18 @@ export function getPreviewAuthSecret(): string {
   return globalForSecret.__forgesecPreviewSecret;
 }
 
+export function getVerifiedHeaderSecret(): string {
+  const previewSecret = process.env.PREVIEW_AUTH_SECRET?.trim();
+  if (previewSecret && previewSecret.length >= 16) {
+    return previewSecret;
+  }
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (serviceKey && serviceKey.length >= 16) {
+    return `forgesec-verified-header:${serviceKey}`;
+  }
+  return getPreviewAuthSecret();
+}
+
 export function getAdminEmails(): string[] {
   const fallback = isPreviewAuthEnabled() ? "admin@forgesec.academy" : "";
   const raw = process.env.ADMIN_EMAILS ?? fallback;

@@ -7,6 +7,8 @@ import remarkGfm from "remark-gfm";
 import { mdxComponents } from "@/components/learning/mdx-components";
 import { getPublishedResources, getResourceBySlug } from "@/modules/content/loader";
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   return getPublishedResources().map((r) => ({ slug: r.meta.slug }));
 }

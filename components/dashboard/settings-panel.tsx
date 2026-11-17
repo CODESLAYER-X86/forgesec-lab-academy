@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { requestAccountDeletionAction } from "@/app/actions/learning";
+import { useAuthSession } from "@/components/auth/auth-session-provider";
 
 export function SettingsPanel({
   accountStatus,
@@ -12,6 +14,8 @@ export function SettingsPanel({
   deletionRequestedAt?: string;
   isPermanentAdmin: boolean;
 }) {
+  const router = useRouter();
+  const { refreshSession } = useAuthSession();
   const [status, setStatus] = useState(accountStatus);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -26,6 +30,8 @@ export function SettingsPanel({
       }
       setStatus("deletion_requested");
       setMessage("Account deletion request recorded.");
+      await refreshSession();
+      router.refresh();
     });
   };
 

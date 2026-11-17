@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import MiniSearch from "minisearch";
 import { ArrowRight, Search } from "lucide-react";
 
@@ -18,8 +19,12 @@ interface SearchDoc {
   url: string;
 }
 
-export function SearchPageClient({ initialQuery }: { initialQuery: string }) {
-  const [query, setQuery] = useState(initialQuery);
+export function SearchPageClient({ initialQuery = "" }: { initialQuery?: string }) {
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") ?? initialQuery;
+  const [editedQuery, setEditedQuery] = useState<{ base: string; value: string } | null>(null);
+  const query = editedQuery && editedQuery.base === urlQuery ? editedQuery.value : urlQuery;
+  const setQuery = (value: string) => setEditedQuery({ base: urlQuery, value });
   const [typeFilter, setTypeFilter] = useState("all");
   const [docs, setDocs] = useState<SearchDoc[]>([]);
   const [loaded, setLoaded] = useState(false);

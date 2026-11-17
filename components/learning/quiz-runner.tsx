@@ -151,6 +151,18 @@ export function QuizRunner({
     setAutoCompletedModule(false);
   };
 
+  const requiredPass = lessonContext ? 100 : quiz.passPercentage;
+  const didPass = result
+    ? lessonContext
+      ? result.percentage === 100 && result.passed
+      : result.passed
+    : false;
+  const previousDidPass = resolvedPreviousBest
+    ? lessonContext
+      ? resolvedPreviousBest.percentage === 100
+      : resolvedPreviousBest.passed
+    : false;
+
   return (
     <div className="space-y-6">
       {/* Progress & Previous Best Status Bar */}
@@ -163,15 +175,23 @@ export function QuizRunner({
             {resolvedPreviousBest ? (
               <span
                 className={`tabular-nums font-medium ${
-                  resolvedPreviousBest.percentage === 100 ? "text-[#22C55E]" : "text-[#F59E0B]"
+                  previousDidPass ? "text-[#22C55E]" : "text-[#F59E0B]"
                 }`}
               >
                 Previous best: {resolvedPreviousBest.percentage}% ·{" "}
-                {resolvedPreviousBest.percentage === 100 ? "Completed (100%)" : "100% required to complete"}
+                {previousDidPass
+                  ? lessonContext
+                    ? "Completed (100%)"
+                    : "Passed"
+                  : lessonContext
+                  ? "100% required to complete"
+                  : `${requiredPass}% required to pass`}
               </span>
             ) : (
               <span className="text-[#7B8794] tabular-nums">
-                Required score to complete module: 100%
+                {lessonContext
+                  ? "Required score to complete module: 100%"
+                  : `Required score to pass: ${requiredPass}%`}
               </span>
             )}
           </div>
@@ -187,7 +207,7 @@ export function QuizRunner({
       {result ? (
         <div
           className={`rounded-xl border p-6 ${
-            result.percentage === 100
+            didPass
               ? "border-[#22C55E]/40 bg-[#12221B]"
               : "border-[#F59E0B]/40 bg-[#211A11]"
           }`}
@@ -195,11 +215,13 @@ export function QuizRunner({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-sm font-semibold">
-                {result.percentage === 100 ? (
+                {didPass ? (
                   <>
                     <CheckCircle2 className="h-5 w-5 text-[#22C55E]" />
                     <span className="text-[#BBF7D0]">
-                      Perfect Score (100%)
+                      {result.percentage === 100
+                        ? "Perfect Score (100%)"
+                        : `Passed (${result.percentage}%)`}
                       {autoCompletedModule || lessonContext?.isCompleted
                         ? " · Module Marked Complete"
                         : ""}
@@ -209,7 +231,9 @@ export function QuizRunner({
                   <>
                     <XCircle className="h-5 w-5 text-[#F59E0B]" />
                     <span className="text-[#FDE68A]">
-                      100% Required to Complete Module — Review &amp; Retake
+                      {lessonContext
+                        ? "100% Required to Complete Module — Review & Retake"
+                        : `${requiredPass}% Required to Pass — Review & Retake`}
                     </span>
                   </>
                 )}
@@ -217,7 +241,7 @@ export function QuizRunner({
               <p className="text-sm text-[#AAB4BE] tabular-nums">
                 Score: {result.score} of {result.totalQuestions} correct ({result.percentage}%) ·{" "}
                 <span className="whitespace-nowrap">
-                  Required score: 100%
+                  Required score: {requiredPass}%
                 </span>
               </p>
               {!resolvedAuth ? (

@@ -1,9 +1,10 @@
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   getAdminEmails,
   getPreviewAuthSecret,
+  getVerifiedHeaderSecret,
   isPreviewAuthEnabled,
   isSupabaseConfigured,
 } from "@/lib/env";
@@ -20,45 +21,68 @@ import {
   resolveEffectiveRole,
 } from "@/modules/auth/guards";
 import { verifyPreviewSessionToken } from "@/modules/auth/preview-token";
+import { verifyVerifiedUserHeader } from "@/modules/auth/verified-header";
 
 export const PREVIEW_SESSION_COOKIE = "forgesec_preview_uid";
 
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   if (isSupabaseConfigured()) {
-    const cookieStore = await cookies();
+    const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
     const hasAuthCookie = cookieStore.getAll().some((c) => c.name.startsWith("sb-"));
     if (!hasAuthCookie) return null;
 
-    const supabase = await createSupabaseServerClient();
-    if (!supabase) return null;
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-    if (error || !user || !user.email) return null;
+    const verifiedFromMiddleware = await verifyVerifiedUserHeader(
+      headerStore.get("x-forgesec-verified-user"),
+      getVerifiedHeaderSecret()
+    );
 
-    const email = user.email.toLowerCase();
     const adminClient = createSupabaseAdminClient();
-    const dbClient = adminClient ?? supabase;
+    let userId = verifiedFromMiddleware?.id ?? "";
+    let email = verifiedFromMiddleware?.email ?? "";
+    let createdAtFallback = verifiedFromMiddleware?.createdAt ?? "";
+    let metadataDisplayName = verifiedFromMiddleware?.displayName;
+    let metadataAvatarUrl = verifiedFromMiddleware?.avatarUrl;
+    let dbClient = adminClient;
+
+    if (!verifiedFromMiddleware) {
+      const supabase = await createSupabaseServerClient();
+      if (!supabase) return null;
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (error || !user || !user.email) return null;
+      userId = user.id;
+      email = user.email.toLowerCase();
+      createdAtFallback = user.created_at;
+      metadataDisplayName =
+        (user.user_metadata?.full_name as string | undefined) ||
+        (user.user_metadata?.name as string | undefined);
+      metadataAvatarUrl = user.user_metadata?.avatar_url as string | undefined;
+      if (!dbClient) {
+        dbClient = supabase;
+      }
+    } else if (!dbClient) {
+      dbClient = await createSupabaseServerClient();
+    }
+
+    if (!dbClient || !userId || !email) return null;
 
     const [{ data: existingProfile }, { data: roleRow }] = await Promise.all([
-      dbClient.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-      dbClient.from("user_roles").select("*").eq("user_id", user.id).maybeSingle(),
+      dbClient.from("profiles").select("*").eq("id", userId).maybeSingle(),
+      dbClient.from("user_roles").select("*").eq("user_id", userId).maybeSingle(),
     ]);
 
     let profile = existingProfile;
     if (!profile && adminClient) {
-      const displayName =
-        (user.user_metadata?.full_name as string | undefined) ||
-        (user.user_metadata?.name as string | undefined) ||
-        email.split("@")[0];
+      const displayName = metadataDisplayName || email.split("@")[0];
       const { data: created } = await adminClient
         .from("profiles")
         .upsert({
-          id: user.id,
+          id: userId,
           email,
           display_name: displayName,
-          avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
+          avatar_url: metadataAvatarUrl ?? null,
         })
         .select("*")
         .single();
@@ -73,7 +97,7 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
 
     if (!roleRow && adminClient) {
       await adminClient.from("user_roles").upsert({
-        user_id: user.id,
+        user_id: userId,
         role,
         can_manage_quizzes: role === "admin",
         can_manage_assignments: role === "admin",
@@ -81,10 +105,10 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
     }
 
     return {
-      id: user.id,
+      id: userId,
       email,
-      displayName: profile?.display_name || email.split("@")[0],
-      avatarUrl: profile?.avatar_url || undefined,
+      displayName: profile?.display_name || metadataDisplayName || email.split("@")[0],
+      avatarUrl: profile?.avatar_url || metadataAvatarUrl || undefined,
       bio: profile?.bio || "",
       interests: Array.isArray(profile?.interests) ? profile.interests : [],
       role,
@@ -93,7 +117,7 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
       canManageAssignments: role === "admin" || Boolean(roleRow?.can_manage_assignments),
       accountStatus: profile?.account_status || "active",
       deletionRequestedAt: profile?.deletion_requested_at || undefined,
-      createdAt: profile?.created_at || user.created_at,
+      createdAt: profile?.created_at || createdAtFallback,
       authMode: "supabase",
     };
   }

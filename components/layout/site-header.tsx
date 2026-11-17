@@ -99,12 +99,10 @@ export function SiteHeader() {
             </button>
 
             {!loaded ? (
-              <Link
-                href="/login"
-                className="hidden md:inline-flex h-9 min-w-[72px] items-center justify-center rounded-lg bg-[#A3E635] px-4 text-xs font-semibold text-[#101418] hover:bg-[#B4F04E] transition-colors whitespace-nowrap shrink-0"
-              >
-                Login
-              </Link>
+              <span
+                aria-hidden="true"
+                className="hidden md:inline-flex h-9 w-[96px] rounded-lg border border-[#303A44] bg-[#171D23] animate-pulse shrink-0"
+              />
             ) : user ? (
               <div className="hidden md:flex items-center gap-3 shrink-0">
                 {showAdmin ? (

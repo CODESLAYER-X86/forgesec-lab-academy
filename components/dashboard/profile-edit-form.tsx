@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfileAction } from "@/app/actions/learning";
+import { useAuthSession } from "@/components/auth/auth-session-provider";
 
 export function ProfileEditForm({
   initialDisplayName,
@@ -14,6 +15,7 @@ export function ProfileEditForm({
   initialInterests: string[];
 }) {
   const router = useRouter();
+  const { refreshSession } = useAuthSession();
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [bio, setBio] = useState(initialBio);
   const [interests, setInterests] = useState(initialInterests.join(", "));
@@ -29,6 +31,7 @@ export function ProfileEditForm({
         setMessage(res.error ?? "Failed to update profile.");
         return;
       }
+      await refreshSession();
       router.push("/dashboard/profile");
       router.refresh();
     });
