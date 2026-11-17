@@ -1,0 +1,702 @@
+FORGESEC Academy — Networking Fundamentals
+Lesson 03
+Beginner / Essential
+Complete lesson package
+
+Topic: IP Addressing and Subnetting
+Estimated reading time: 20–25 minutes
+Learning objective: Understand how devices are identified on networks, how IPv4 and IPv6 work, the difference between public and private IP addresses, and how subnetting divides networks into smaller networks.
+
+I’ve used your uploaded Lesson 03 material and followed the same structure as the previous lessons: 10 lesson sections, practical Linux exploration, a 10-question knowledge assessment, and a practical assignment.
+1. Complete lesson content
+Lesson 03 — IP Addressing and Subnetting
+Course: Networking Fundamentals
+Level: Beginner / Essential
+Estimated reading time: 20–25 minutes
+Learning Objectives
+By the end of this lesson, students should be able to:
+- Explain what an IP address is and why networks need it.
+- Identify the differences between IPv4 and IPv6.
+- Distinguish between public and private IP addresses.
+- Explain static and dynamic IP assignment.
+- Understand subnet masks and CIDR notation.
+- Identify network addresses, broadcast addresses, and host addresses.
+- Perform basic IPv4 subnet calculations.
+- Inspect IP configuration using Linux commands.
+Central analogy: Think of a network as a country, IP addresses as postal addresses, and subnetting as dividing a large city into smaller neighborhoods.
+
+Section 01 — What Is an IP Address?
+An IP address (Internet Protocol address) is a logical address assigned to a network interface so that devices can communicate using the Internet Protocol.
+
+Imagine sending a parcel to someone.
+
+You need:
+- A destination address.
+- A way to identify where the parcel should go.
+- A delivery system to transport it.
+Networking works similarly. Devices use IP addresses to identify source and destination locations for network communication.
+Example
+192.168.1.10
+This is an example of an IPv4 address.
+
+A computer may have multiple IP addresses because it can have multiple network interfaces or address configurations.
+IP Address vs MAC Address
+These two addresses serve different purposes:
+- IP address: A logical network-layer address used to identify a network interface for IP communication.
+- MAC address: A link-layer address used for communication on a local network.
+Real-life analogy:
+
+Imagine sending a parcel to a building:
+- The IP address is like the postal address used to identify the destination.
+- The MAC address is like a local delivery identifier used to deliver something within a local delivery area.
+Remember: An IP address is like a postal address, not necessarily a permanent identity. It can change depending on network configuration.
+
+Section 02 — IPv4 and IPv6
+There are two major versions of the Internet Protocol: IPv4 and IPv6.
+IPv4
+IPv4 uses a 32-bit address.
+
+It is commonly written as four decimal numbers separated by dots.
+
+Example:
+192.168.1.10
+Each section is called an octet and represents 8 bits.
+
+An octet can have values from 0 to 255.
+
+IPv4 has approximately 4.3 billion possible addresses, although some are reserved for special purposes.
+
+Real-life analogy:
+
+IPv4 is like a city that has a limited number of house addresses. As the city grows, available addresses become insufficient.
+IPv6
+IPv6 was developed to provide a much larger address space.
+
+It uses 128-bit addresses and is written in hexadecimal notation.
+
+Example:
+2001:db8::1
+IPv6 addresses use colons instead of dots. Consecutive groups of zeros can be shortened using :: under IPv6 formatting rules.
+
+Real-life analogy:
+
+Imagine replacing an old address system with a vastly larger system capable of accommodating billions of new neighborhoods and homes.
+IPv4 vs IPv6
+Feature	IPv4	IPv6
+Address size	32 bits	128 bits
+Format	Decimal	Hexadecimal
+Separator	Dot (.)	Colon (:)
+Example	192.168.1.10	2001:db8::1
+Address space	Approximately 4.3 billion	Approximately 3.4 × 10³⁸Remember: IPv4 uses 32 bits; IPv6 uses 128 bits.
+
+Section 03 — Public and Private IP Addresses
+Not every IP address is directly reachable from the public Internet.
+
+There are two important IPv4 address categories: private IP addresses and public IP addresses.
+Private IP Addresses
+Private IP addresses are used inside local networks, such as homes, universities, and offices.
+
+The three private IPv4 ranges are:
+Range	CIDR
+10.0.0.0 – 10.255.255.255	10.0.0.0/8
+172.16.0.0 – 172.31.255.255	172.16.0.0/12
+192.168.0.0 – 192.168.255.255	192.168.0.0/16Example:
+192.168.1.10
+Real-life analogy:
+
+Your home has room numbers that help family members identify each other. Those room numbers do not need to be unique across the entire world.
+
+Private IP addresses can be reused in different private networks.
+Public IP Addresses
+Public IP addresses are globally routable addresses used for communication across the Internet.
+
+Your Internet Service Provider (ISP) typically provides public connectivity to your home network.
+
+Real-life analogy:
+
+Your home's postal address is used by external delivery services to find your house, while room numbers are only meaningful inside your home.
+Quick Comparison
+Private IP	Public IP
+Used inside private networks	Globally routable
+Can be reused in different networks	Must be globally coordinated
+Not directly routed across the public Internet	Used for Internet routingImportant: Private IP addresses are not directly routed across the public Internet. A router commonly uses NAT (Network Address Translation) to allow private-network devices to communicate externally.
+
+For example, several devices in a home may use private IP addresses while sharing one public IPv4 address through the router.
+
+Section 04 — Static and Dynamic IP Addresses
+An IP address can be assigned in different ways.
+Static IP Address
+A static IP address is configured to remain consistent rather than being automatically changed through ordinary dynamic assignment.
+
+Common uses include:
+- Servers.
+- Network infrastructure.
+- Printers.
+- Devices requiring predictable addressing.
+Real-life analogy:
+
+You always live at the same registered address. People know where to find you.
+Dynamic IP Address
+A dynamic IP address is assigned automatically, commonly through DHCP (Dynamic Host Configuration Protocol).
+
+The address may change over time depending on the network configuration and lease.
+
+Common uses include:
+- Home computers.
+- Smartphones.
+- University Wi-Fi networks.
+- Guest devices.
+Real-life analogy:
+
+A hotel gives you a room for your stay. You may receive a different room on another visit.
+Static vs Dynamic
+Static	Dynamic
+Manually or administratively configured	Commonly assigned through DHCP
+Predictable address	Can change
+Useful for stable services	Convenient for everyday devicesRemember: Static means predictable; dynamic means automatically assigned and potentially changing.
+
+Section 05 — Subnet Masks
+A subnet mask identifies which part of an IPv4 address represents the network and which part represents the host.
+
+Let's use this example:
+IP Address:  192.168.1.10
+Subnet Mask: 255.255.255.0
+The subnet mask tells the computer which devices belong to its local IP network.
+Real-Life Analogy
+Imagine a university address system:
+- City = Network.
+- Building = Subnetwork.
+- Room = Host.
+The address hierarchy helps identify where someone belongs.
+Understanding the Mask
+An IPv4 address contains 32 bits.
+
+A subnet mask uses:
+- 1 bits to identify the network portion.
+- 0 bits to identify the host portion.
+Example:
+IP Address:
+11000000.10101000.00000001.00001010
+
+Subnet Mask:
+11111111.11111111.11111111.00000000
+The first 24 bits represent the network portion, and the last 8 bits represent the host portion.
+
+This is why the address belongs to a /24 network.
+
+Remember: The subnet mask helps a device determine whether a destination is local or needs to be reached through a router.
+
+Section 06 — CIDR Notation
+CIDR stands for Classless Inter-Domain Routing.
+
+It provides a shorter way to represent an IP address and its network prefix.
+
+For example:
+192.168.1.10/24
+Here:
+- 192.168.1.10 = IP address.
+- /24 = 24 network bits.
+- Remaining 8 bits = host portion.
+Common CIDR Examples
+CIDR	Subnet mask	Total addresses
+/8	255.0.0.0	16,777,216
+/16	255.255.0.0	65,536
+/24	255.255.255.0	256
+/25	255.255.255.128	128
+/26	255.255.255.192	64
+/27	255.255.255.224	32
+/28	255.255.255.240	16
+/30	255.255.255.252	4For traditional IPv4 subnets, two addresses are normally unavailable for ordinary host assignment:
+- Network address: Identifies the subnet.
+- Broadcast address: Used to send traffic to all hosts on that IPv4 subnet.
+For example, a /24 subnet has 256 total addresses and normally 254 usable host addresses.
+
+There are special cases, such as /31 point-to-point networks and /32 host routes.
+
+Real-life analogy:
+
+CIDR is like specifying how many floors and rooms belong to a particular building instead of writing the entire building layout every time.
+
+Section 07 — Network Address, Broadcast Address and Host Addresses
+Let's examine this network:
+192.168.1.0/24
+It has three important address categories.
+1. Network Address
+192.168.1.0
+This identifies the network itself.
+
+Think of it as the name of a neighborhood.
+2. Broadcast Address
+192.168.1.255
+This is used to send traffic to all hosts on that IPv4 subnet.
+
+Think of it as making a public announcement to everyone in the neighborhood.
+3. Host Addresses
+192.168.1.1
+192.168.1.2
+192.168.1.3
+...
+192.168.1.254
+These addresses can normally be assigned to individual devices.
+
+Think of each host address as a separate house number.
+Important Distinction: Gateway vs Network Address
+Do not confuse the network address with the gateway address.
+
+A gateway is normally a host address configured on a router interface.
+
+For example:
+- Network address: 192.168.1.0
+- Possible gateway address: 192.168.1.1
+- Example device address: 192.168.1.10
+- Broadcast address: 192.168.1.255
+The gateway address is configured by the network administrator or network setup. It is not automatically required to be .1.
+
+Section 08 — Introduction to Subnetting
+Subnetting is the process of dividing a larger IP network into smaller networks called subnets.
+Why Do We Need Subnetting?
+- Organize large networks.
+- Separate departments.
+- Reduce unnecessary broadcast traffic.
+- Manage IP address allocation.
+- Improve network segmentation.
+Real-Life Analogy
+Imagine a large university campus.
+
+Instead of treating the entire campus as one giant building, you divide it into separate departments:
+- Computer Science.
+- Business Administration.
+- Electrical Engineering.
+- Library.
+Each department can have its own network.
+A Simple Subnetting Example
+Suppose we have:
+192.168.1.0/24
+We want to divide this network into four equal-sized subnets.
+
+We borrow 2 bits from the host portion.
+
+Why 2 bits?
+
+[
+2^2 = 4 \text{ subnets}
+]
+
+The new prefix becomes:
+
+[
+/24 + 2 = /26
+]
+
+Each /26 subnet contains:
+
+[
+2^{32-26}=64 \text{ addresses}
+]
+Four Resulting Subnets
+Subnet	Network address	Usable host range	Broadcast
+1	192.168.1.0	192.168.1.1 – 192.168.1.62	192.168.1.63
+2	192.168.1.64	192.168.1.65 – 192.168.1.126	192.168.1.127
+3	192.168.1.128	192.168.1.129 – 192.168.1.190	192.168.1.191
+4	192.168.1.192	192.168.1.193 – 192.168.1.254	192.168.1.255Each subnet has 64 total addresses, including 62 traditionally usable host addresses.
+The Three Formulas to Remember
+Number of subnets created by borrowing bits:
+
+[
+2^n
+]
+
+Total addresses per subnet:
+
+[
+2^h
+]
+
+Normally usable host addresses:
+
+[
+2^h-2
+]
+
+Where:
+- (n) = borrowed host bits.
+- (h) = remaining host bits.
+Try This Example
+You have a /24 network and borrow 3 bits.
+- Number of subnets: (2^3=8).
+- New prefix: /27.
+- Host bits remaining: 5.
+- Total addresses per subnet: (2^5=32).
+- Normally usable host addresses: (32-2=30).
+Memory trick: Borrowed bits determine how many neighborhoods you create. Remaining bits determine how many addresses fit inside each neighborhood.
+
+Section 09 — Practical Linux Exploration
+Now let's inspect your own network configuration.
+
+Open the Linux terminal.
+Task 1: Find Your IP Address
+ip addr
+Look for:
+- Interface name.
+- IPv4 address.
+- CIDR prefix.
+Example:
+inet 192.168.1.10/24
+Here, your interface has IP address 192.168.1.10 with a /24 prefix.
+Task 2: Identify Your Network Interfaces
+ip link
+This displays network interfaces and their link states.
+Task 3: Inspect the Routing Table
+ip route
+Look for:
+default via 192.168.1.1
+This indicates the default gateway.
+Task 4: Check Connectivity
+ping -c 4 192.168.1.1
+Replace the example address with your actual gateway.
+
+This tests whether your machine can communicate with its gateway using ICMP.
+Task 5: Check Your Public IP
+You can use a browser to visit:
+
+https://icanhazip.com
+
+Compare the result with your local IP address.
+
+They may differ because your router may use NAT.
+
+Safety note: Do not publish your public IP address, internal network details, or screenshots containing personal information.
+
+Section 10 — Lesson Recap and Memory Map
+IP Addressing
+An IP address identifies a network interface for IP communication.
+IPv4 vs IPv6
+- IPv4 = 32 bits.
+- IPv6 = 128 bits.
+Public vs Private
+- Private = Used inside private networks.
+- Public = Globally routable.
+Static vs Dynamic
+- Static = Predictable configuration.
+- Dynamic = Automatically assigned, commonly through DHCP.
+Subnet Mask and CIDR
+- Identify the network and host portions.
+- /24 means 24 network bits.
+Subnetting
+- Divides a network into smaller networks.
+- Borrowed bits determine subnet count.
+- Remaining host bits determine addresses per subnet.
+Final Memory Analogy
+Imagine a country with cities, neighborhoods, and houses.
+- Country = Large network.
+- City = Subnet.
+- House = Host.
+- Postal address = IP address.
+- Neighborhood boundary = Subnet mask.
+- Public postal address = Public IP.
+- Internal room number = Private IP.
+Before moving to the next lesson, make sure you can explain what /24 means and calculate the number of addresses in a /26 subnet.
+Next Lesson
+Lesson 04 — MAC Address, ARP and Switching
+
+This will connect the IP addressing concepts learned here with how devices actually communicate inside a local network.
+
+
+
+
+2. Knowledge assessment
+Lesson 03 — Knowledge Assessment
+Topic: IP Addressing and Subnetting
+Total questions: 10
+Suggested pass mark: 70%
+
+Instructions: Read each question carefully. Some questions have more than one correct answer. Review the explanations after answering.
+
+Question 1 — Single Choice
+How many bits are used in an IPv4 address?
+
+A. 128 bits
+B. 16 bits
+C. 32 bits
+D. 64 bits
+
+Correct answer: C — 32 bits.
+
+Feedback:
+- A: Incorrect. IPv6 uses 128 bits.
+- B: Incorrect. IPv4 uses more than 16 bits.
+- C: Correct. IPv4 addresses contain 32 bits.
+- D: Incorrect. IPv4 does not use 64 bits.
+Question 2 — Single Choice
+Which of the following is a valid example of an IPv6 address?
+
+A. 192.168.1.10
+B. 2001:db8::1
+C. 255.255.255.0
+D. 10.0.0.1
+
+Correct answer: B — 2001:db8::1.
+
+Feedback:
+- A: Incorrect. This is an IPv4 address.
+- B: Correct. IPv6 uses hexadecimal notation and colons.
+- C: Incorrect. This is a common IPv4 subnet mask.
+- D: Incorrect. This is an IPv4 private address.
+Question 3 — Single Choice
+Which of the following is a private IPv4 address?
+
+A. 8.8.8.8
+B. 172.20.5.10
+C. 1.1.1.1
+D. 203.0.113.10
+
+Correct answer: B — 172.20.5.10.
+
+Feedback:
+- A: Incorrect. This is a publicly routable address.
+- B: Correct. It belongs to the private 172.16.0.0/12 range.
+- C: Incorrect. This is a publicly routable address.
+- D: Incorrect. This address belongs to a documentation range, not the private ranges listed in this lesson.
+Question 4 — Single Choice
+Which protocol commonly assigns dynamic IP addresses automatically?
+
+A. HTTP
+B. FTP
+C. DHCP
+D. SSH
+
+Correct answer: C — DHCP.
+
+Feedback:
+- A: Incorrect. HTTP is used for web communication.
+- B: Incorrect. FTP is used for file transfer.
+- C: Correct. DHCP automatically provides network configuration, including IP addresses.
+- D: Incorrect. SSH provides secure remote access.
+Question 5 — Single Choice
+What does /24 mean in CIDR notation?
+
+A. 24 host bits
+B. 24 network bits
+C. 24 total addresses
+D. 24 network devices
+
+Correct answer: B — 24 network bits.
+
+Feedback:
+- A: Incorrect. /24 identifies the network portion, not the host portion.
+- B: Correct. An IPv4 /24 prefix uses 24 network bits.
+- C: Incorrect. A /24 contains 256 total IPv4 addresses.
+- D: Incorrect. The number of devices is not specified by the number 24.
+Question 6 — Single Choice
+What is the broadcast address of 192.168.1.0/24?
+
+A. 192.168.1.0
+B. 192.168.1.1
+C. 192.168.1.254
+D. 192.168.1.255
+
+Correct answer: D — 192.168.1.255.
+
+Feedback:
+- A: Incorrect. This is the network address.
+- B: Incorrect. This is a commonly used host or gateway address.
+- C: Incorrect. This is normally the last usable host address.
+- D: Correct. This is the broadcast address for the /24 subnet.
+Question 7 — Multiple Choice
+Which statements about private IP addresses are correct?
+
+A. They are commonly used inside home and office networks.
+B. They can be reused in different private networks.
+C. They are always directly reachable from the public Internet.
+D. A router commonly uses NAT to provide external connectivity to private-network devices.
+
+Correct answers: A, B and D.
+
+Feedback:
+- A: Correct. Private addresses are used inside private networks.
+- B: Correct. Different organizations can reuse the same private ranges.
+- C: Incorrect. Private IP addresses are not directly routed across the public Internet.
+- D: Correct. NAT is commonly used to enable external communication.
+Question 8 — Multiple Choice
+You have the network 192.168.1.0/24 and borrow 2 host bits to create equal-sized subnets.
+
+Which statements are correct?
+
+A. Four subnets are created.
+B. The new prefix is /26.
+C. Each subnet has 128 total addresses.
+D. Each subnet normally has 62 usable host addresses.
+
+Correct answers: A, B and D.
+
+Feedback:
+- A: Correct. (2^2=4) subnets.
+- B: Correct. /24 + 2 = /26.
+- C: Incorrect. A /26 has 64 total addresses.
+- D: Correct. A traditional /26 has 62 normally usable host addresses.
+Question 9 — True or False
+A computer can have multiple IP addresses if it has multiple network interfaces or address configurations.
+
+Correct answer: True.
+
+Feedback:
+- True: Correct. A computer can have multiple interfaces and multiple IP addresses.
+- False: Incorrect. A computer is not limited to one IP address.
+Question 10 — True or False
+A /27 IPv4 subnet contains 32 total addresses and normally 30 usable host addresses.
+
+Correct answer: True.
+
+Feedback:
+- True: Correct. There are (2^{32-27}=32) total addresses, with two normally reserved for network and broadcast.
+- False: Incorrect. The calculation gives 32 total and 30 normally usable addresses.
+
+Scoring Guide
+Score	Result
+9–10	Excellent
+7–8	Passed
+5–6	Needs more practice
+0–4	Review the lessonCompletion requirement: Students should achieve at least 7 out of 10 to pass the assessment.
+
+Review recommendation: If you answer incorrectly, revisit the relevant lesson section before attempting the assessment again.
+
+
+
+
+3. Practical assignment
+Practical Assignment — Understand Your IP Network
+Lesson: 03 — IP Addressing and Subnetting
+Level: Beginner
+Estimated completion time: 25–35 minutes
+Objective
+Explore your Linux network configuration and apply basic IP addressing and subnetting concepts.
+
+By completing this assignment, you will practice:
+- Identifying your IPv4 address.
+- Recognizing private and public IP addresses.
+- Finding your default gateway.
+- Understanding CIDR prefixes.
+- Calculating basic subnet information.
+
+Part 1 — Explore Your Network
+Open your Linux terminal.
+Task 1: Find Your IP Address
+Run:
+ip addr
+Identify:
+- Your active network interface.
+- Your IPv4 address.
+- The CIDR prefix displayed after the address.
+Example:
+inet 192.168.1.10/24
+Task 2: Identify Your Network Interfaces
+Run:
+ip link
+Identify the network interface that corresponds to your active connection.
+Task 3: Find Your Default Gateway
+Run:
+ip route
+Look for an entry similar to:
+default via 192.168.1.1
+Record the default gateway address.
+Task 4: Check Connectivity
+Use your actual gateway address:
+ping -c 4 192.168.1.1
+Record whether replies were received.
+
+Part 2 — Understand Your Address
+Answer the following questions using your terminal results.
+1. What is the name of your active network interface?
+2. What IPv4 address is assigned to it?
+3. Is the IPv4 address private or public?
+4. What CIDR prefix is shown?
+5. What is your default gateway?
+6. What subnet mask corresponds to your CIDR prefix?
+7. What is the difference between your local IP address and your public IP address?
+If you check your public IP using a browser, do not include the actual public IP in your submission.
+
+Part 3 — Subnetting Exercise
+Suppose a university network administrator has the following network:
+192.168.1.0/24
+The administrator wants to divide it into four equal-sized subnets.
+
+Answer these questions:
+1. How many bits must be borrowed?
+2. What is the new CIDR prefix?
+3. How many total addresses are available in each subnet?
+4. How many host addresses are normally usable in each subnet?
+5. What is the network address of the third subnet?
+6. What is the broadcast address of the third subnet?
+7. What is the usable host range of the third subnet?
+Hint:
+
+Use these formulas:
+
+[
+\text{Number of subnets}=2^n
+]
+
+[
+\text{Total addresses}=2^h
+]
+
+[
+\text{Normally usable hosts}=2^h-2
+]
+
+Where:
+- (n) = borrowed bits.
+- (h) = remaining host bits.
+
+Part 4 — Submission Requirements
+Submit:
+- Terminal screenshots or copied command outputs.
+- Your answers to the IP addressing questions.
+- Your answers to the subnetting exercise.
+- Short explanations written in your own words.
+Privacy and Safety
+Do not expose:
+- Your public IP address.
+- Sensitive internal network details.
+- Personal information visible in terminal screenshots.
+You may replace sensitive values with placeholders before submitting.
+
+Completion Checklist
+- [ ] Run ip addr and identify your IPv4 address and prefix.
+- [ ] Identify whether your IPv4 address is private or public.
+- [ ] Run ip route and identify your default gateway.
+- [ ] Determine the subnet mask from your CIDR prefix.
+- [ ] For a /26 network, calculate total and normally usable host addresses.
+- [ ] Explain the difference between your local IP and public IP.
+- [ ] Complete the /24 to /26 subnetting exercise.
+Completion Criteria
+Students should be able to:
+- Understand IPv4 and IPv6.
+- Distinguish public and private IP addresses.
+- Interpret CIDR notation.
+- Identify network and host portions.
+- Find basic network configuration using Linux.
+- Solve basic /24 to /26 subnetting exercises.
+Next lesson: Lesson 04 — MAC Address, ARP and Switching.
+
+This will connect the IP addressing concepts learned here with how devices actually communicate inside a local network.
+
+
+
+
+4. Content quality review
+Area	Review
+Beginner-friendly explanations	Ready
+Real-life analogies	Included
+IPv4 and IPv6	Included
+Public and private IP ranges	Included
+Static and dynamic addressing	Included
+CIDR and subnet masks	Included
+Subnetting calculations	Included
+Linux practical commands	Included
+10-question assessment	Included
+Practical assignment	Included
+
+LMS implementation note: The lesson content is ready to be transferred into your learning platform. The accordion sections, interactive quiz behavior (including answer feedback, scoring, and incorrect-answer review), and assignment submission interface should be implemented as platform features.
+
+One useful next step would be to build Lesson 04 — MAC Address, ARP and Switching — using this same standard.

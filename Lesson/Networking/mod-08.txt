@@ -1,0 +1,1493 @@
+# **FORGESEC Academy — Networking Fundamentals, Lesson 08**
+
+
+
+Final lesson
+
+Beginner
+
+25–35 min reading time
+
+
+
+This is the final lesson of the eight-lesson Networking Fundamentals course. The complete package includes 10 lesson sections, a 10-question assessment, and a practical packet-analysis assignment using `tcpdump` and Wireshark.
+
+## **1. Complete lesson content**
+
+# Lesson 08 — Network Traffic Analysis
+
+**Course:** Networking Fundamentals\
+**Level:** Beginner\
+**Estimated time:** 25–35 minutes\
+**Lesson type:** Final lesson
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Explain what network traffic analysis is and why it matters.
+- Understand the basic structure of network packets.
+- Capture network packets using `tcpdump`.
+- Open and inspect packet captures using Wireshark.
+- Recognize common network protocols such as ARP, DNS, TCP, ICMP, HTTP, and HTTPS.
+- Understand basic TCP flags and packet information.
+- Apply packet analysis to troubleshooting and cybersecurity investigations.
+
+**Central analogy:** Imagine a busy post office. Thousands of letters enter and leave every day. Each letter has a sender's address, a receiver's address, delivery information, and a message. A network works similarly. Instead of letters, computers exchange packets.
+
+---
+
+## Section 01 — What Is Network Traffic Analysis?
+
+Network traffic analysis is the process of capturing, inspecting, and interpreting network packets to understand what is happening inside a network.
+
+For example, suppose your computer cannot open a website. Traffic analysis can help you investigate:
+
+- Is your computer sending DNS queries?
+- Is the DNS server responding?
+- Is a TCP connection being established?
+- Is the server responding?
+- Is the connection being rejected or timing out?
+
+This skill is useful in:
+
+- Network administration.
+- Troubleshooting.
+- Security monitoring.
+- Incident response.
+- Protocol analysis.
+- Performance analysis.
+- Authorized penetration testing.
+
+### Why Do We Analyze Network Traffic?
+
+| Purpose              | Example                                  |
+| -------------------- | ---------------------------------------- |
+| Troubleshooting      | Finding why a website is not loading     |
+| Security monitoring  | Detecting unexpected network connections |
+| Incident response    | Investigating suspicious communication   |
+| Protocol analysis    | Understanding how DNS or TCP works       |
+| Performance analysis | Identifying retransmissions or delays    |
+
+**Remember:** Network troubleshooting tells you that something is wrong. Traffic analysis helps you investigate what is happening at the packet level.
+
+### Key Takeaways
+
+- Network traffic consists of data exchanged between devices.
+- Traffic analysis helps explain how that communication works.
+- Packet inspection can support both troubleshooting and security investigations.
+
+---
+
+## Section 02 — Understanding Network Packets
+
+Before analyzing traffic, you need to understand what you are looking at.
+
+In previous lessons, we learned about encapsulation. Data moves through different networking layers, and each layer adds its own information.
+
+Think of sending a parcel:
+
+1. You put an item inside a box.
+2. You attach a delivery address.
+3. The delivery company adds shipping information.
+4. The parcel travels through the delivery system.
+
+Network communication follows a similar process.
+
+### What Does a Packet Contain?
+
+A typical Ethernet-based communication can be represented as:
+
+```
+Ethernet Frame
+┌──────────────────────────────────────┐
+│ Destination MAC                      │
+│ Source MAC                           │
+│ Ethernet Type                        │
+│                                      │
+│   IP Packet                          │
+│   ┌────────────────────────────────┐ │
+│   │ Source IP                      │ │
+│   │ Destination IP                 │ │
+│   │ Protocol                       │ │
+│   │                                │ │
+│   │   TCP Segment / UDP Datagram   │ │
+│   │   ┌──────────────────────────┐ │ │
+│   │   │ Source Port              │ │ │
+│   │   │ Destination Port         │ │ │
+│   │   │ Application Data         │ │ │
+│   │   └──────────────────────────┘ │ │
+│   └────────────────────────────────┘ │
+└──────────────────────────────────────┘
+```
+
+This is a conceptual illustration. Actual frame and packet formats contain additional fields and vary by protocol.
+
+### Important Fields
+
+| Field            | Meaning                                                                |
+| ---------------- | ---------------------------------------------------------------------- |
+| Source MAC       | Sending network interface address                                      |
+| Destination MAC  | Receiving interface address on the local link                          |
+| Source IP        | Sending IP address                                                     |
+| Destination IP   | Receiving IP address                                                   |
+| Source port      | Sending application endpoint                                           |
+| Destination port | Receiving application endpoint                                         |
+| Protocol         | TCP, UDP, ICMP, and others                                             |
+| Length           | Size of the captured packet or frame, depending on the displayed field |
+
+**Real-life analogy:** IP addresses are like the sender's and receiver's postal addresses. Ports are like department or room numbers inside a building.
+
+### Example
+
+```
+Source IP:        192.168.1.10
+Source Port:      52144
+
+Destination IP:   93.184.216.34
+Destination Port: 443
+
+Protocol:         TCP
+```
+
+This tells us that a local application is communicating with a remote server using TCP port 443, commonly used for HTTPS.
+
+### An Important Detail About MAC and IP Addresses
+
+When traffic crosses a router, the Layer 2 frame is normally replaced for the next link. The IP source and destination addresses usually remain the same across ordinary routing, while the source and destination MAC addresses change for each Ethernet link.
+
+### Key Takeaways
+
+- Ethernet frames carry IP packets on Ethernet networks.
+- IP packets carry transport-layer information such as TCP or UDP.
+- Ports help identify application endpoints.
+- Packet information must be interpreted in the context of the network layer and capture location.
+
+---
+
+## Section 03 — Packet Capture Tools
+
+To analyze network traffic, we first need to capture it.
+
+Two popular tools are `Wireshark` and `tcpdump`.
+
+### Wireshark
+
+Wireshark is a graphical network protocol analyzer.
+
+It allows you to:
+
+- Capture packets.
+- Apply display filters.
+- Inspect protocol details.
+- View packet bytes.
+- Follow network conversations.
+- Investigate communication patterns.
+
+It is especially useful for beginners learning packet analysis.
+
+### tcpdump
+
+`tcpdump` is a command-line packet capture tool.
+
+It is lightweight and useful on:
+
+- Linux servers.
+- Remote systems.
+- Linux terminals.
+- Systems without a graphical desktop.
+
+It is especially useful for quick terminal-based inspection.
+
+### Install the Tools on Linux Mint or Ubuntu
+
+Refresh package information:
+
+```
+sudo apt update
+```
+
+Install both tools:
+
+```
+sudo apt install wireshark tcpdump
+```
+
+This downloads and installs the available packages from your configured software repositories.
+
+**Important:** Packet capture may require elevated permissions. For this lesson, use `sudo tcpdump` rather than changing system-wide capture permissions. Avoid routinely launching graphical applications as root.
+
+If Wireshark capture permissions are not configured, you can analyze a capture file created with `tcpdump` instead.
+
+### Key Takeaways
+
+- Wireshark provides graphical packet analysis.
+- `tcpdump` provides command-line packet capture.
+- Both tools can work with packet capture files.
+- Use appropriate permissions and capture only authorized traffic.
+
+---
+
+## Section 04 — Getting Started with tcpdump
+
+Let's begin with the command-line tool.
+
+### 4.1 Identify Available Interfaces
+
+Run:
+
+```
+sudo tcpdump -D
+```
+
+This displays available interfaces that can be used for packet capture.
+
+Example:
+
+```
+1. wlp2s0
+2. enp3s0
+3. lo
+4. any
+```
+
+Your interface names may be different.
+
+### 4.2 Capture Network Traffic
+
+Run:
+
+```
+sudo tcpdump -ni any
+```
+
+Explanation:
+
+| Option    | Meaning                                   |
+| --------- | ----------------------------------------- |
+| `sudo`    | Runs the command with elevated privileges |
+| `tcpdump` | Starts packet capture                     |
+| `-n`      | Prevents automatic name resolution        |
+| `-i any`  | Captures on available interfaces          |
+
+You should see packet information appearing in your terminal.
+
+Press `Ctrl+C` to stop.
+
+**Analogy:** Imagine standing at a post office and recording every parcel entering and leaving. That is essentially what packet capture does.
+
+### 4.3 Capture Only ICMP Traffic
+
+Run:
+
+```
+sudo tcpdump -ni any icmp
+```
+
+Now open another terminal and execute:
+
+```
+ping -c 4 1.1.1.1
+```
+
+You should see ICMP packets appearing in the capture terminal if the traffic is visible on the selected capture interface.
+
+This lets you observe ping requests and replies.
+
+### 4.4 Capture DNS Traffic
+
+DNS commonly uses UDP port 53.
+
+Run:
+
+```
+sudo tcpdump -ni any port 53
+```
+
+In another terminal:
+
+```
+dig example.com
+```
+
+You should see DNS traffic if your DNS query uses ordinary, unencrypted DNS on the captured interface.
+
+Some systems use encrypted DNS, such as DNS-over-HTTPS, so not every DNS lookup will appear as port 53 traffic.
+
+### 4.5 Capture Traffic for a Specific Host
+
+Suppose you want to inspect traffic involving `1.1.1.1`.
+
+Run:
+
+```
+sudo tcpdump -ni any host 1.1.1.1
+```
+
+This filters traffic where the specified IP address is either the source or destination.
+
+### 4.6 Limit the Number of Packets
+
+Run:
+
+```
+sudo tcpdump -ni any -c 10
+```
+
+This captures only ten packets and then stops automatically.
+
+### 4.7 Save Captured Traffic
+
+You can save captured packets for later analysis.
+
+Run:
+
+```
+sudo tcpdump -ni any -c 100 -w lesson8.pcap
+```
+
+This captures up to 100 packets and saves them in a packet capture file.
+
+To read the saved file:
+
+```
+tcpdump -nn -r lesson8.pcap
+```
+
+You can also open the file in Wireshark.
+
+**Remember:** A `.pcap` file is like a recording of network communication. You can inspect the captured packets without capturing the traffic again.
+
+### Key Takeaways
+
+- `tcpdump -D` lists capture interfaces.
+- `-i` selects the interface.
+- `-c` limits the number of packets.
+- `-w` saves captured packets.
+- `-r` reads a saved capture file.
+- Filters help capture only relevant traffic.
+
+---
+
+## Section 05 — Getting Started with Wireshark
+
+Wireshark provides a graphical interface, making packet analysis easier for beginners.
+
+### 5.1 Open Wireshark
+
+Run:
+
+```
+wireshark
+```
+
+If permissions prevent packet capture, use the saved `.pcap` file from the previous section instead.
+
+You can also configure authorized capture permissions through your distribution's Wireshark package configuration. Avoid routinely running Wireshark as root.
+
+### 5.2 Select a Network Interface
+
+Wireshark may display interfaces such as:
+
+- Wi-Fi.
+- Ethernet.
+- Loopback.
+
+Select the interface currently carrying your traffic.
+
+Start the capture. Packets should begin appearing in the packet list.
+
+### 5.3 Understand the Three Main Areas
+
+| Area           | Purpose                                            |
+| -------------- | -------------------------------------------------- |
+| Packet List    | Displays captured packets                          |
+| Packet Details | Shows the selected packet's protocol fields        |
+| Packet Bytes   | Shows the raw hexadecimal and ASCII representation |
+
+Select a packet to inspect its details.
+
+For example, selecting a DNS packet may reveal:
+
+- Source IP address.
+- Destination IP address.
+- DNS transaction information.
+- Requested domain name.
+- DNS response information.
+
+### 5.4 Understanding Wireshark Display Filters
+
+Imagine a library containing thousands of books. You only want books about networking.
+
+Instead of reading everything, you apply a filter.
+
+Wireshark uses display filters to show the traffic you want to inspect.
+
+Some useful display filters:
+
+| Filter                          | What it displays            |
+| ------------------------------- | --------------------------- |
+| `dns`                           | DNS packets                 |
+| `icmp`                          | ICMP packets                |
+| `tcp`                           | TCP packets                 |
+| `udp`                           | UDP packets                 |
+| `arp`                           | ARP packets                 |
+| `tcp.port == 443`               | TCP traffic using port 443  |
+| `ip.addr == 192.168.1.10`       | Packets involving this IP   |
+| `dns.qry.name == "example.com"` | DNS queries for this domain |
+
+Enter a filter in the display filter bar and press Enter.
+
+### 5.5 Capture Filters vs Display Filters
+
+This distinction is important.
+
+| Capture filter                   | Display filter                       |
+| -------------------------------- | ------------------------------------ |
+| Applied before or during capture | Applied to captured packets          |
+| Controls what gets captured      | Controls what gets displayed         |
+| Uses capture-filter syntax       | Uses Wireshark display-filter syntax |
+
+Example capture filters:
+
+```
+port 53
+host 192.168.1.10
+icmp
+```
+
+Example display filters:
+
+```
+dns
+ip.addr == 192.168.1.10
+icmp
+```
+
+**Analogy:** A capture filter is like telling a security camera to record only the main entrance. A display filter is like recording everything and later watching only the main entrance footage.
+
+### Key Takeaways
+
+- Wireshark displays packets in three main areas.
+- The packet details pane explains protocol fields.
+- Display filters help narrow down captured packets.
+- Capture filters and display filters use different syntax.
+
+---
+
+## Section 06 — Understanding Common Network Traffic
+
+Now let's connect traffic analysis with the protocols you learned in previous lessons.
+
+### 6.1 ARP Traffic
+
+ARP helps a device discover the MAC address associated with a local IPv4 address.
+
+When your computer needs to communicate with another local device, it may send an ARP request.
+
+Example:
+
+```
+Who has 192.168.1.1?
+Tell 192.168.1.10
+```
+
+The device with the requested address may respond:
+
+```
+192.168.1.1 is at AA:BB:CC:DD:EE:FF
+```
+
+In Wireshark, use:
+
+```
+arp
+```
+
+You can observe ARP requests and replies.
+
+### 6.2 DNS Traffic
+
+DNS translates domain names into records such as IP addresses.
+
+For example:
+
+```
+example.com → IP address
+```
+
+Use this Wireshark filter:
+
+```
+dns
+```
+
+Look for:
+
+- DNS query.
+- Requested domain name.
+- DNS response.
+- Returned IP address, if the response contains an address record.
+
+Remember that DNS can also use encrypted protocols, so not all DNS activity is necessarily visible as readable DNS packets.
+
+### 6.3 TCP Three-Way Handshake
+
+In Lesson 05, we learned about the TCP handshake.
+
+It consists of three steps:
+
+```
+Client                         Server
+  |                               |
+  | -------- SYN ---------------> |
+  |                               |
+  | <------ SYN-ACK ------------- |
+  |                               |
+  | -------- ACK ---------------> |
+  |                               |
+  |       Connection established  |
+```
+
+To find TCP SYN packets in Wireshark:
+
+```
+tcp.flags.syn == 1
+```
+
+To find SYN packets that do not have the ACK flag set:
+
+```
+tcp.flags.syn == 1 && tcp.flags.ack == 0
+```
+
+This helps identify initial TCP connection requests.
+
+### 6.4 ICMP Traffic
+
+ICMP is commonly used for network diagnostics.
+
+When you execute:
+
+```
+ping -c 4 1.1.1.1
+```
+
+Your computer sends ICMP Echo Requests and may receive Echo Replies.
+
+In Wireshark, use:
+
+```
+icmp
+```
+
+You can inspect the request and response packets.
+
+### 6.5 HTTP vs HTTPS
+
+HTTP and HTTPS are used for web communication. The important difference is encryption.
+
+| HTTP                                          | HTTPS                                                                                 |
+| --------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Commonly uses TCP port 80                     | Commonly uses TCP port 443                                                            |
+| HTTP itself does not encrypt application data | TLS protects application data                                                         |
+| Contents may be readable in a packet capture  | Protected application contents are generally unreadable without authorized decryption |
+
+For example, when you access a website using HTTPS, a packet capture can still reveal some information:
+
+- Source and destination IP addresses.
+- Port numbers.
+- Packet sizes and timing.
+- Some TLS handshake metadata.
+
+However, the actual encrypted application content is generally not readable from an ordinary capture.
+
+**Analogy:** HTTP is like sending a postcard. Anyone handling it may read the message. HTTPS is like sending a sealed, locked package.
+
+### Key Takeaways
+
+- ARP reveals local IPv4-to-MAC resolution activity.
+- DNS reveals hostname queries and responses when visible.
+- TCP flags help identify connection establishment.
+- ICMP is commonly used by diagnostic tools.
+- HTTPS encrypts application data, but some connection metadata remains visible.
+
+---
+
+## Section 07 — Reading Packet Information
+
+Let's examine a simplified example.
+
+```
+Source:       192.168.1.10
+Destination:  93.184.216.34
+
+Protocol:     TCP
+Source Port:  52144
+Destination:  443
+Length:       74 bytes
+```
+
+What can we understand?
+
+1. The local device is `192.168.1.10`.
+2. It is communicating with `93.184.216.34`.
+3. The communication uses TCP.
+4. The remote destination port is 443.
+5. The packet length is 74 bytes.
+
+This is a useful starting point, but one packet alone does not tell you the full story.
+
+You may need to inspect multiple packets to understand:
+
+- Whether a connection succeeded.
+- Whether data was transferred.
+- Whether retransmissions occurred.
+- Whether the connection was closed normally.
+
+### TCP Flags
+
+TCP flags help explain the state of communication.
+
+| Flag | Meaning                                                                |
+| ---- | ---------------------------------------------------------------------- |
+| SYN  | Starts a TCP connection                                                |
+| ACK  | Acknowledges received data or control information                      |
+| FIN  | Requests normal connection termination                                 |
+| RST  | Resets a connection                                                    |
+| PSH  | Requests prompt delivery of buffered data to the receiving application |
+| URG  | Indicates urgent data is present                                       |
+
+**Remember:** TCP flags are like signals used during a conversation. They help both sides understand whether to start, continue, or end communication.
+
+### Key Takeaways
+
+- Packet fields describe source, destination, protocol, ports, and size.
+- TCP flags help explain connection behavior.
+- A sequence of packets usually provides more useful information than a single packet.
+
+---
+
+## Section 08 — Practical Traffic Analysis Lab
+
+Now you will perform a basic packet analysis exercise on your own Linux system.
+
+**Safety requirement:** Capture only traffic on your own device or a network for which you have explicit authorization. Packet captures can contain sensitive information, including personal data and authentication material.
+
+### Task 1 — Start Packet Capture
+
+Open a terminal:
+
+```
+sudo tcpdump -ni any -c 100 -w lesson8.pcap
+```
+
+This records up to 100 packets.
+
+Wait for the command to finish after capturing 100 packets, or stop it with `Ctrl+C` after generating your test traffic.
+
+### Task 2 — Generate ICMP Traffic
+
+Open another terminal:
+
+```
+ping -c 4 1.1.1.1
+```
+
+This generates ICMP traffic.
+
+### Task 3 — Generate DNS Traffic
+
+Run:
+
+```
+dig example.com
+```
+
+This generates a DNS lookup, assuming your resolver uses ordinary DNS.
+
+### Task 4 — Generate HTTPS Traffic
+
+Run:
+
+```
+curl -I https://example.com
+```
+
+This sends an HTTPS request and displays response headers.
+
+### Task 5 — Open the Capture
+
+Open your saved capture:
+
+```
+wireshark lesson8.pcap
+```
+
+Now apply these display filters one by one:
+
+```
+icmp
+```
+
+```
+dns
+```
+
+```
+tcp
+```
+
+```
+tcp.port == 443
+```
+
+### Task 6 — Answer These Investigation Questions
+
+1. Can you find ICMP Echo Request packets?
+2. Can you find ICMP Echo Reply packets?
+3. Can you identify a DNS query?
+4. Can you identify the requested domain name?
+5. Can you find TCP traffic involving port 443?
+6. Can you read the actual HTTPS application content?
+
+For question 6, remember that HTTPS application data is encrypted.
+
+### Practical Submission Requirements
+
+- Screenshot of the packet capture.
+- Screenshot showing ICMP packets.
+- Screenshot showing DNS packets.
+- Screenshot showing TCP port 443 traffic.
+- Short explanation of the TCP handshake.
+- Answers to all six investigation questions.
+- Save the `.pcap` file for your own analysis, but do not publicly upload captures containing private traffic.
+
+### Key Takeaways
+
+- Generate known traffic before capturing.
+- Use filters to isolate protocols.
+- Compare packets with the commands that generated them.
+- Interpret the capture in context rather than assuming every packet represents a problem.
+
+---
+
+## Section 09 — How Network Traffic Analysis Helps Cybersecurity
+
+Traffic analysis is an important skill in cybersecurity because network communication can reveal unusual or suspicious behavior.
+
+### 9.1 Detecting Port Scanning
+
+Imagine someone walking through a building and trying every door to see which ones are open.
+
+A port scanner performs a similar process against network services.
+
+Traffic analysis can reveal repeated connection attempts to many ports or hosts.
+
+Example signs:
+
+- Many SYN packets.
+- Repeated connection attempts.
+- Attempts against sequential ports.
+- Connections to many devices in a short period.
+
+A single pattern does not automatically prove an attack. You must investigate the source, destination, timing, and context.
+
+### 9.2 Identifying Suspicious Communication
+
+Suppose a computer unexpectedly communicates with an unfamiliar external server.
+
+You can investigate:
+
+- Destination IP address.
+- Destination port.
+- Protocol.
+- Connection frequency.
+- Data transfer volume.
+- Whether the connection is expected.
+
+This may help identify malware communication or unauthorized applications.
+
+### 9.3 Detecting Plaintext Information
+
+Unencrypted protocols can expose sensitive information.
+
+For example, HTTP traffic may reveal readable application content.
+
+This is one reason modern systems use encryption such as HTTPS and SSH.
+
+### 9.4 Investigating Network Problems
+
+Traffic analysis can help identify:
+
+- DNS requests without responses.
+- Repeated TCP retransmissions.
+- Failed connection attempts.
+- Unexpected connection resets.
+- Large amounts of unnecessary traffic.
+
+### Important Limitations
+
+Traffic analysis is powerful, but it has limitations:
+
+- Encryption prevents ordinary inspection of protected application contents.
+- A normal switched network does not expose every other device's unicast traffic to your computer.
+- Packet loss can affect the capture itself.
+- Some traffic may use encrypted DNS or other protocols that require different analysis techniques.
+- One suspicious packet is not sufficient evidence of malicious activity.
+
+### Key Takeaways
+
+- Traffic analysis can support security monitoring and incident response.
+- Repeated connection attempts may indicate scanning activity.
+- Unexpected external connections deserve investigation.
+- Suspicious patterns require context and corroborating evidence.
+- Encryption and capture location limit what you can observe.
+
+---
+
+## Section 10 — Final Recap
+
+You have now completed the eight lessons of Networking Fundamentals.
+
+### Course Overview
+
+| Lesson | Topic                                | Main skill                     |
+| ------ | ------------------------------------ | ------------------------------ |
+| 01     | Introduction to Networking           | Understand networks            |
+| 02     | OSI and TCP/IP Models                | Understand network layers      |
+| 03     | IP Addressing and Subnetting         | Understand IP addressing       |
+| 04     | MAC, ARP and Switching               | Understand local communication |
+| 05     | TCP, UDP and Ports                   | Understand transport protocols |
+| 06     | DNS, DHCP and NAT                    | Understand network services    |
+| 07     | Linux Networking and Troubleshooting | Diagnose network problems      |
+| 08     | Network Traffic Analysis             | Capture and inspect packets    |
+
+### What You Should Now Be Able to Do
+
+By completing the lessons and practical tasks, you should be able to:
+
+- Explain how computers communicate over networks.
+- Understand IP and MAC addresses.
+- Explain TCP, UDP, DNS, DHCP, and NAT.
+- Inspect network interfaces and routing tables.
+- Troubleshoot basic network connectivity.
+- Capture packets using `tcpdump`.
+- Analyze packets using Wireshark.
+- Recognize common network protocols and connection patterns.
+
+### Final Takeaway
+
+Network traffic analysis turns network communication into something you can observe and investigate. By learning to capture packets, apply filters, and interpret protocol information, you gain an important foundation for network administration and cybersecurity.
+
+**Congratulations! You have completed Networking Fundamentals.**
+
+**Recommended next learning path:** Network Security Fundamentals.
+
+The next stage can introduce firewalls, network scanning, packet filtering, intrusion detection, and defensive monitoring—building on the networking knowledge you have developed here.
+
+## **2. Final knowledge assessment**
+
+# Lesson 08 — Final Knowledge Assessment
+
+**Course:** Networking Fundamentals\
+**Topic:** Network Traffic Analysis\
+**Total questions:** 10
+
+**Question types:**
+
+- 6 single-choice questions
+- 2 multiple-choice questions
+- 2 true/false questions
+
+**Instructions:** Read each question carefully. For multiple-choice questions, select every correct answer.
+
+---
+
+## Question 1 — Single Choice
+
+What is the primary purpose of network traffic analysis?
+
+A. To increase monitor brightness\
+B. To capture and understand network communication\
+C. To create IP addresses\
+D. To install network drivers
+
+**Correct answer:** B
+
+**Feedback:**
+
+- A — Incorrect. Monitor brightness is unrelated to network traffic.
+- B — Correct. Network traffic analysis captures and interprets packets to understand communication.
+- C — Incorrect. IP addresses are assigned or configured through network mechanisms, not created by traffic analysis.
+- D — Incorrect. Traffic analysis does not install network drivers.
+
+## Question 2 — Single Choice
+
+Which tool provides a graphical interface for packet analysis?
+
+A. Wireshark\
+B. `mkdir`\
+C. `chmod`\
+D. `systemctl`
+
+**Correct answer:** A
+
+**Feedback:**
+
+- A — Correct. Wireshark provides a graphical interface for capturing and inspecting network packets.
+- B — Incorrect. `mkdir` creates directories.
+- C — Incorrect. `chmod` changes file permissions.
+- D — Incorrect. `systemctl` manages systemd services and units.
+
+## Question 3 — Single Choice
+
+Which `tcpdump` command captures ICMP traffic?
+
+A. `sudo tcpdump -ni any dns`\
+B. `sudo tcpdump -ni any icmp`\
+C. `sudo tcpdump -ni any arp`\
+D. `sudo tcpdump -ni any port 443`
+
+**Correct answer:** B
+
+**Feedback:**
+
+- A — Incorrect. This filters traffic using the DNS keyword.
+- B — Correct. The `icmp` filter selects ICMP traffic.
+- C — Incorrect. This selects ARP traffic.
+- D — Incorrect. This selects traffic using port 443.
+
+## Question 4 — Single Choice
+
+Which Wireshark display filter shows DNS packets?
+
+A. `http`\
+B. `tcp`\
+C. `dns`\
+D. `arp`
+
+**Correct answer:** C
+
+**Feedback:**
+
+- A — Incorrect. `http` displays HTTP-related packets.
+- B — Incorrect. `tcp` displays TCP packets.
+- C — Correct. `dns` displays packets Wireshark identifies as DNS.
+- D — Incorrect. `arp` displays ARP packets.
+
+## Question 5 — Single Choice
+
+What does the TCP SYN flag normally indicate?
+
+A. A request to start a TCP connection\
+B. A DNS response\
+C. A normal connection termination\
+D. An encrypted DNS query
+
+**Correct answer:** A
+
+**Feedback:**
+
+- A — Correct. SYN is used to initiate a TCP connection.
+- B — Incorrect. DNS responses are not identified by the TCP SYN flag.
+- C — Incorrect. FIN is normally used for orderly TCP connection termination.
+- D — Incorrect. SYN is a TCP control flag, not an encrypted DNS indicator.
+
+## Question 6 — Single Choice
+
+Which statement about HTTPS traffic is correct?
+
+A. All packet information becomes invisible.\
+B. HTTPS encrypts application data, but some network metadata remains visible.\
+C. HTTPS does not use network ports.\
+D. HTTPS is the same as HTTP without encryption.
+
+**Correct answer:** B
+
+**Feedback:**
+
+- A — Incorrect. IP addresses, ports, packet sizes, timing, and some connection metadata may remain visible.
+- B — Correct. HTTPS uses TLS to protect application data, while some network-level information remains observable.
+- C — Incorrect. HTTPS commonly uses TCP port 443, although HTTP/3 uses QUIC over UDP.
+- D — Incorrect. HTTPS provides encryption and authentication protections that ordinary HTTP does not provide.
+
+## Question 7 — Multiple Choice
+
+Which fields can help identify a network connection? Select all correct answers.
+
+A. Source IP address\
+B. Destination IP address\
+C. Source and destination ports\
+D. Keyboard language
+
+**Correct answers:** A, B, C
+
+**Feedback:**
+
+- A — Correct. The source IP identifies the sending IP endpoint.
+- B — Correct. The destination IP identifies the receiving IP endpoint.
+- C — Correct. Transport ports help identify application endpoints.
+- D — Incorrect. Keyboard language is unrelated to network connection identification.
+
+## Question 8 — Multiple Choice
+
+Which are valid reasons to use network traffic analysis? Select all correct answers.
+
+A. Investigating suspicious connections\
+B. Troubleshooting DNS failures\
+C. Inspecting TCP handshakes\
+D. Increasing CPU clock speed
+
+**Correct answers:** A, B, C
+
+**Feedback:**
+
+- A — Correct. Packet inspection can help investigate unexpected or suspicious communication.
+- B — Correct. DNS queries and responses can be inspected to investigate resolution problems.
+- C — Correct. TCP flags and packet sequences help reveal connection establishment.
+- D — Incorrect. Traffic analysis does not increase CPU clock speed.
+
+## Question 9 — True or False
+
+A packet capture shows a DNS query but no visible DNS response. This proves the DNS server is offline.
+
+**Correct answer:** False
+
+**Feedback:**
+
+- True — Incorrect. The response may be missing from the capture, filtered, delayed, or using a different path or protocol.
+- False — Correct. The observation is a clue to investigate, not proof that the DNS server is offline.
+
+## Question 10 — True or False
+
+Capturing traffic from networks without authorization can violate privacy and security rules.
+
+**Correct answer:** True
+
+**Feedback:**
+
+- True — Correct. Packet captures can expose sensitive information. Only capture traffic on systems and networks you own or have explicit permission to inspect.
+- False — Incorrect. Authorization and privacy requirements apply to packet capture.
+
+---
+
+## Answer Key
+
+| Question | Correct answer | Type            |
+| -------- | -------------- | --------------- |
+| 1        | B              | Single choice   |
+| 2        | A              | Single choice   |
+| 3        | B              | Single choice   |
+| 4        | C              | Single choice   |
+| 5        | A              | Single choice   |
+| 6        | B              | Single choice   |
+| 7        | A, B, C        | Multiple choice |
+| 8        | A, B, C        | Multiple choice |
+| 9        | False          | True/False      |
+| 10       | True           | True/False      |
+
+## Scoring Guide
+
+| Score | Result          | Interpretation                                                |
+| ----- | --------------- | ------------------------------------------------------------- |
+| 9–10  | Excellent       | Strong understanding of packet analysis                       |
+| 7–8   | Good            | Good understanding; review a few concepts                     |
+| 5–6   | Needs practice  | Revisit packet structure, filters, and protocols              |
+| 0–4   | Review required | Revisit the lesson before attempting the practical assignment |
+
+**Suggested passing score:** 7 out of 10 (70%).
+
+### LMS Implementation Notes
+
+- Single-choice questions should allow one selection.
+- Multiple-choice questions should allow multiple selections.
+- True/false questions should provide two options.
+- Display feedback after submission.
+- Show the correct answer and explanation for every question.
+- Display the final score out of 10.
+- Allow students to review incorrect answers after submission.
+
+**Course completion recommendation:** Require students to pass this final assessment and submit the practical packet-analysis assignment.
+
+## **3. Final practical assignment**
+
+# Final Practical Assignment — Network Traffic Analysis Lab
+
+**Course:** Networking Fundamentals\
+**Lesson:** 08 — Network Traffic Analysis\
+**Level:** Beginner\
+**Assignment type:** Hands-on packet analysis
+
+## Assignment Objective
+
+Capture and analyze basic network traffic on your own Linux system using `tcpdump` and Wireshark.
+
+You will generate ICMP, DNS, and HTTPS traffic, inspect the captured packets, identify common protocols, and explain what the observations reveal.
+
+## Safety Requirements
+
+- Capture only traffic on your own device or a network for which you have explicit authorization.
+- Do not capture other people's private communications.
+- Do not publish packet captures containing credentials, personal information, session tokens, or other sensitive data.
+- Do not disable security controls or change system-wide permissions just to complete the exercise.
+
+---
+
+## Part 1 — Check Your Tools
+
+Check whether `tcpdump` is installed:
+
+```
+tcpdump --version
+```
+
+Check whether Wireshark is installed:
+
+```
+wireshark --version
+```
+
+If you are using Ubuntu or Linux Mint and need to install them:
+
+```
+sudo apt update
+sudo apt install wireshark tcpdump
+```
+
+**Tasks:**
+
+1. Confirm that both tools are available.
+2. Record their version information.
+3. Identify which tool you will use for packet capture and which tool you will use for graphical analysis.
+
+---
+
+## Part 2 — Identify Available Capture Interfaces
+
+Run:
+
+```
+sudo tcpdump -D
+```
+
+**Tasks:**
+
+1. List the available capture interfaces.
+2. Identify your active Wi-Fi or Ethernet interface.
+3. Explain what the `any` interface represents in this command.
+
+**Question:** Why is selecting the correct capture interface important?
+
+---
+
+## Part 3 — Capture Network Traffic
+
+Start a capture:
+
+```
+sudo tcpdump -ni any -c 100 -w lesson8.pcap
+```
+
+This captures up to 100 packets and saves them to `lesson8.pcap`.
+
+Generate test traffic from another terminal.
+
+### Generate ICMP traffic
+
+```
+ping -c 4 1.1.1.1
+```
+
+### Generate DNS traffic
+
+```
+dig example.com
+```
+
+### Generate HTTPS traffic
+
+```
+curl -I https://example.com
+```
+
+Wait for the capture to finish or stop it with `Ctrl+C`.
+
+**Tasks:**
+
+1. Confirm that `lesson8.pcap` was created.
+2. Record which test commands succeeded.
+3. Explain why some traffic might not appear in the capture.
+
+---
+
+## Part 4 — Inspect the Capture Using tcpdump
+
+Read the saved capture:
+
+```
+tcpdump -nn -r lesson8.pcap
+```
+
+**Tasks:**
+
+1. Identify any ICMP packets.
+2. Look for DNS-related traffic, if present.
+3. Look for TCP communication.
+4. Record one example of source and destination information.
+
+**Question:** What is the advantage of saving a capture file instead of inspecting all traffic only in the terminal?
+
+---
+
+## Part 5 — Open the Capture in Wireshark
+
+Run:
+
+```
+wireshark lesson8.pcap
+```
+
+If you prefer, open Wireshark from your desktop menu and use its file-opening option to load `lesson8.pcap`.
+
+Inspect the three main areas:
+
+1. Packet List.
+2. Packet Details.
+3. Packet Bytes.
+
+**Tasks:**
+
+1. Select one packet from the packet list.
+2. Expand its protocol details.
+3. Identify its source and destination addresses.
+4. Record the protocol shown by Wireshark.
+
+---
+
+## Part 6 — Apply Display Filters
+
+Apply these filters one at a time:
+
+### ICMP
+
+```
+icmp
+```
+
+### DNS
+
+```
+dns
+```
+
+### TCP
+
+```
+tcp
+```
+
+### HTTPS-related TCP traffic
+
+```
+tcp.port == 443
+```
+
+### ARP
+
+```
+arp
+```
+
+**Tasks:**
+
+1. Record whether each filter displays packets.
+2. Identify at least one packet for each protocol that appears.
+3. Explain why some filters might show no results.
+
+**Question:** What is the difference between a capture filter and a display filter?
+
+---
+
+## Part 7 — Investigate a TCP Handshake
+
+Use this display filter:
+
+```
+tcp.flags.syn == 1
+```
+
+Then use:
+
+```
+tcp.flags.syn == 1 && tcp.flags.ack == 0
+```
+
+**Tasks:**
+
+1. Find a TCP SYN packet, if present.
+2. Look for a corresponding SYN-ACK.
+3. Look for the final ACK.
+4. Explain the three stages of the TCP handshake.
+
+**Question:** Why is the TCP three-way handshake important before normal TCP data communication?
+
+If the capture does not contain a complete handshake, explain what evidence is missing rather than inventing a result.
+
+---
+
+## Part 8 — Answer the Investigation Questions
+
+Answer all six questions:
+
+1. Can you find ICMP Echo Request packets?
+2. Can you find ICMP Echo Reply packets?
+3. Can you identify a DNS query?
+4. Can you identify the requested domain name?
+5. Can you find TCP traffic involving port 443?
+6. Can you read the actual HTTPS application content? Explain why or why not.
+
+Your answers should be based on the packets you actually observed.
+
+---
+
+## Part 9 — Write Your Final Diagnostic Report
+
+Create a report with these sections:
+
+### 1. Tools and Environment
+
+- Linux distribution.
+- `tcpdump` version.
+- Wireshark version.
+- Capture interface.
+
+### 2. Packet Capture
+
+- Whether capture succeeded.
+- Number of packets captured, if available.
+- Capture file name.
+- Any problems encountered.
+
+### 3. Protocol Observations
+
+Describe at least three protocols you observed.
+
+For example:
+
+- ICMP.
+- DNS.
+- TCP.
+- ARP.
+
+### 4. TCP Handshake
+
+Explain the SYN, SYN-ACK, and ACK sequence.
+
+Include packet evidence if you observed a complete handshake.
+
+### 5. HTTPS Analysis
+
+Explain what information was visible and why application content was encrypted.
+
+### 6. Troubleshooting Application
+
+Describe one possible network problem and explain how packet analysis could help investigate it.
+
+### 7. Lessons Learned
+
+Write a short paragraph describing what you learned about network traffic analysis.
+
+---
+
+## Student Completion Checklist
+
+- Check that `tcpdump` is installed.
+- Check that Wireshark is installed.
+- Identify available capture interfaces.
+- Capture traffic into `lesson8.pcap`.
+- Generate ICMP traffic.
+- Generate DNS traffic.
+- Generate HTTPS traffic.
+- Read the capture using `tcpdump`.
+- Open the capture in Wireshark.
+- Apply ICMP, DNS, TCP, and port 443 filters.
+- Investigate a TCP handshake.
+- Answer all six investigation questions.
+- Prepare the final diagnostic report.
+
+## Submission Requirements
+
+Submit:
+
+1. Screenshot showing the packet capture.
+2. Screenshot showing ICMP traffic.
+3. Screenshot showing DNS traffic.
+4. Screenshot showing TCP port 443 traffic.
+5. Explanation of the TCP handshake.
+6. Answers to the six investigation questions.
+7. Final diagnostic report.
+
+You may retain the `.pcap` file for your own analysis. Only submit it if your instructor requests it and it has been checked for sensitive information.
+
+## Assessment Criteria
+
+| Criteria                | Expected result                                       |
+| ----------------------- | ----------------------------------------------------- |
+| Tool preparation        | Both tools are available or limitations are explained |
+| Packet capture          | A capture file is created                             |
+| Protocol identification | At least three protocols are correctly identified     |
+| Filter usage            | Required Wireshark filters are applied                |
+| TCP understanding       | Handshake stages are explained                        |
+| HTTPS understanding     | Encryption and visible metadata are explained         |
+| Report quality          | Findings are based on actual evidence                 |
+
+## Completion Criteria
+
+A student successfully completes this assignment when they can:
+
+- Capture packets using `tcpdump`.
+- Open a packet capture in Wireshark.
+- Apply basic display filters.
+- Recognize common network protocols.
+- Explain the TCP three-way handshake.
+- Describe why HTTPS application content is encrypted.
+- Use packet evidence to explain a basic network scenario.
+
+**Congratulations!** You have completed the final practical assignment for Networking Fundamentals.
+
+## **4. Course completion review**
+
+**Networking Fundamentals**
+
+8 lessons complete
+
+# **8/8**
+
+Lessons developed
+
+# **80**
+
+Assessment questions across 8 lessons
+
+**Final course topics**
+
+- Introduction to Computer Networking
+- OSI Model and TCP/IP Model
+- IP Addressing and Subnetting
+- MAC Address, ARP and Switching
+- TCP, UDP and Network Ports
+- DNS, DHCP and NAT
+- Linux Networking and Troubleshooting
+- Network Traffic Analysis
+
+**Final quality notes for LMS implementation:**
+
+- Keep the 10 lesson sections as separate accordion panels.
+- Use the assessment's six single-choice, two multiple-choice, and two true/false questions.
+- Provide answer explanations after submission.
+- Make the practical assignment a separate submission activity.
+- Do not require students to upload unrestricted packet captures publicly; they can submit screenshots and written observations instead.
+- Make the course completion status depend on the quiz and practical assignment, rather than merely opening the lesson.
+
+**Recommended next course:** Network Security Fundamentals — building from packet analysis into firewalls, network scanning, packet filtering, intrusion detection, and defensive monitoring.

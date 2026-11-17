@@ -1,0 +1,1275 @@
+# **FORGESEC Academy — Networking Fundamentals, Lesson 07**
+
+
+
+Complete lesson package
+
+Beginner
+
+25–30 min reading time
+
+
+
+This package includes all 11 lesson sections, a 10-question knowledge assessment, and a practical Linux network diagnostic assignment. The content is organized for LMS accordion sections and includes explanations, command examples, troubleshooting scenarios, and student submission requirements.
+
+## **1. Complete lesson content**
+
+# Lesson 07 — Linux Networking and Troubleshooting
+
+**Course:** Networking Fundamentals\
+**Level:** Beginner\
+**Estimated reading time:** 25–30 minutes
+
+## Learning Objective
+
+Learn how to inspect network interfaces, IP configurations, routing tables, DNS settings, and active connections using Linux. Develop a systematic approach to identifying common network problems.
+
+**Central analogy:** Imagine a mechanic diagnosing a car. Instead of replacing random parts, they inspect the engine, fuel system, battery, and sensors one by one. Network troubleshooting follows the same principle: check each component systematically.
+
+---
+
+## Section 01 — What Is Network Troubleshooting?
+
+Network troubleshooting is the process of identifying, analyzing, and resolving problems that prevent devices or applications from communicating correctly.
+
+Common networking problems include:
+
+- No Internet connection.
+- Incorrect IP configuration.
+- DNS resolution failures.
+- Incorrect default gateway.
+- Packet loss.
+- High latency.
+- Blocked network ports.
+- Firewall restrictions.
+
+### Why Is Troubleshooting Important?
+
+Imagine your browser cannot open a website. Several things could be wrong:
+
+1. Your Wi-Fi is disconnected.
+2. Your device has no valid IP address.
+3. Your default gateway is unreachable.
+4. DNS cannot resolve the domain.
+5. The destination server is unavailable.
+6. A firewall blocks the connection.
+
+Restarting your computer without identifying the cause may not solve the problem.
+
+**Real-life analogy:** If a house has no electricity, you check the main supply, circuit breaker, and wiring instead of randomly replacing appliances.
+
+### A Systematic Troubleshooting Approach
+
+Follow this sequence:
+
+1. Check the physical or wireless connection.
+2. Inspect the network interface.
+3. Check the IP address and subnet.
+4. Check the default gateway.
+5. Test connectivity to an external IP address.
+6. Test DNS resolution.
+7. Inspect ports and application connectivity.
+
+The key principle is to move from basic connectivity toward application-level diagnosis.
+
+---
+
+## Section 02 — Inspect Network Interfaces
+
+A network interface is the component that allows your computer to communicate with a network.
+
+Examples include:
+
+- Ethernet interface.
+- Wi-Fi interface.
+- Loopback interface.
+- Virtual network interface.
+
+### Command 1 — List Network Interfaces
+
+```
+ip link
+```
+
+This displays available network interfaces and their link-layer properties.
+
+Example output:
+
+```
+1: lo: <LOOPBACK,UP>
+2: enp3s0: <BROADCAST,MULTICAST,UP>
+3: wlp2s0: <BROADCAST,MULTICAST>
+```
+
+Your interface names may be different.
+
+### Understanding Interface Names
+
+| Interface | Typical purpose           |
+| --------- | ------------------------- |
+| `lo`      | Loopback                  |
+| `eth0`    | Traditional Ethernet name |
+| `enp3s0`  | Predictable Ethernet name |
+| `wlan0`   | Traditional Wi-Fi name    |
+| `wlp2s0`  | Predictable Wi-Fi name    |
+
+### Command 2 — Display IP Addresses
+
+```
+ip addr
+```
+
+This displays IP addresses assigned to your interfaces.
+
+Example:
+
+```
+inet 192.168.1.10/24
+```
+
+This indicates:
+
+- IPv4 address: `192.168.1.10`
+- Prefix length: `/24`
+
+### Command 3 — Display a Specific Interface
+
+```
+ip addr show wlp2s0
+```
+
+Replace `wlp2s0` with your actual interface name.
+
+**Real-life analogy:** `ip link` is like checking which communication devices are installed, while `ip addr` checks their assigned addresses.
+
+### Key Takeaways
+
+- `ip link` displays network interfaces and their link-layer status.
+- `ip addr` displays assigned IP addresses.
+- Interface names vary between Linux systems.
+- An interface being administratively up does not necessarily mean it has working network connectivity.
+
+---
+
+## Section 03 — Check Your Routing Table
+
+A routing table tells your computer where to send network packets.
+
+It contains information about:
+
+- Directly connected networks.
+- Default gateway.
+- Specific network routes.
+- Network interfaces used for forwarding.
+
+### Command — Display Routes
+
+```
+ip route
+```
+
+Example:
+
+```
+default via 192.168.1.1 dev wlp2s0
+192.168.1.0/24 dev wlp2s0
+```
+
+### Understanding the Output
+
+| Output            | Meaning           |
+| ----------------- | ----------------- |
+| `default`         | Default route     |
+| `via 192.168.1.1` | Gateway address   |
+| `dev wlp2s0`      | Interface used    |
+| `192.168.1.0/24`  | Connected network |
+
+### What Is a Default Gateway?
+
+A default gateway is the next-hop router used when no more specific route matches the destination.
+
+**Real-life analogy:** Imagine a university building. If you don't know which department handles a request, you ask the main reception desk. The default gateway performs a similar role for traffic leaving your local network.
+
+### Advanced Inspection
+
+```
+ip route get 8.8.8.8
+```
+
+This asks the Linux kernel how it would route traffic to `8.8.8.8`.
+
+It can show:
+
+- Selected interface.
+- Next-hop gateway.
+- Source IP address.
+
+### Key Takeaways
+
+- A routing table determines where packets should go.
+- The default gateway is generally used to reach destinations outside directly connected networks.
+- `ip route get` helps investigate the route selected for a particular destination.
+
+---
+
+## Section 04 — Test Network Connectivity with Ping
+
+`ping` is one of the most commonly used network troubleshooting tools.
+
+It sends ICMP Echo Request messages and checks for ICMP Echo Replies.
+
+### Command 1 — Test Your Local Network Stack
+
+```
+ping -c 4 127.0.0.1
+```
+
+This tests the local loopback networking stack.
+
+The `-c 4` option sends four requests and then stops.
+
+### Command 2 — Test Your Default Gateway
+
+```
+ping -c 4 192.168.1.1
+```
+
+Replace the example IP with your actual gateway.
+
+This checks whether your device can communicate with its local router.
+
+### Command 3 — Test External IP Connectivity
+
+```
+ping -c 4 1.1.1.1
+```
+
+This tests connectivity to Cloudflare's public DNS IP address.
+
+### Understanding Ping Output
+
+Example:
+
+```
+64 bytes from 1.1.1.1: icmp_seq=1 ttl=57 time=18.4 ms
+```
+
+| Field          | Meaning                   |
+| -------------- | ------------------------- |
+| `64 bytes`     | Response size             |
+| `icmp_seq=1`   | Sequence number           |
+| `ttl=57`       | Remaining IP time to live |
+| `time=18.4 ms` | Round-trip time           |
+
+### What If Ping Fails?
+
+A failed ping does not automatically mean the destination is offline.
+
+Possible reasons include:
+
+- Network connectivity failure.
+- Firewall blocking ICMP.
+- Destination configured not to respond.
+- Routing problems.
+- Packet loss.
+
+**Real-life analogy:** Knocking on a door and receiving no answer does not prove nobody is inside. The person may simply not answer the door.
+
+### Key Takeaways
+
+- `ping` tests ICMP reachability.
+- `-c` controls the number of requests.
+- A failed ping is a diagnostic clue, not definitive proof that a device is offline.
+
+---
+
+## Section 05 — Understand Latency and Packet Loss
+
+Two important networking performance measurements are latency and packet loss.
+
+### Latency
+
+Latency is the time taken for data to travel between endpoints. It is commonly measured in milliseconds (ms).
+
+Example:
+
+```
+time=25 ms
+```
+
+Lower latency is generally preferable for interactive applications.
+
+### Packet Loss
+
+Packet loss occurs when packets fail to reach their intended destination.
+
+Example:
+
+```
+4 packets transmitted, 3 received, 25% packet loss
+```
+
+This indicates that one of the four probes did not receive a reply.
+
+### Why Do These Matter?
+
+| Problem          | Possible impact                      |
+| ---------------- | ------------------------------------ |
+| High latency     | Slow interactive response            |
+| Packet loss      | Interrupted communication            |
+| Unstable latency | Inconsistent application performance |
+| High jitter      | Poor real-time audio/video quality   |
+
+**Real-life analogy:** Latency is how long a delivery takes. Packet loss is when a delivery never arrives.
+
+Remember that ping measures round-trip time for ICMP probes. It does not directly measure the performance of every application or protocol.
+
+### Key Takeaways
+
+- Latency measures delay.
+- Packet loss measures missing packets.
+- Jitter describes variation in packet delay.
+- These measurements help identify performance problems, but they do not always reveal the exact cause.
+
+---
+
+## Section 06 — Trace the Network Path
+
+Sometimes your device can reach the Internet, but a particular destination is unreachable. You may want to identify the network path packets take.
+
+This is where traceroute-style tools are useful.
+
+### Command 1 — Use Traceroute
+
+```
+traceroute example.com
+```
+
+This attempts to identify intermediate routers between your computer and the destination.
+
+If it is not installed, use your distribution's package manager to install it.
+
+### Command 2 — Use Tracepath
+
+```
+tracepath example.com
+```
+
+`tracepath` is an alternative available on many Linux systems.
+
+### How Does Traceroute Work?
+
+It uses packets with progressively increasing TTL values.
+
+Each router that reduces a packet's TTL to zero may return an ICMP Time Exceeded message. This helps identify intermediate hops.
+
+Example:
+
+```
+1  192.168.1.1
+2  10.10.0.1
+3  203.0.113.1
+4  ...
+```
+
+The addresses above are illustrative.
+
+### Understanding Hops
+
+A hop is one routing step along the path. Each displayed hop represents an intermediate response, if one is received.
+
+**Important:** Some routers do not respond to traceroute probes. Asterisks or missing hops do not necessarily mean that traffic cannot pass through those routers.
+
+**Real-life analogy:** If you send a parcel across several cities, tracking information can show the distribution centers it passes through.
+
+### Key Takeaways
+
+- `traceroute` and `tracepath` help investigate network paths.
+- A hop represents an intermediate routing step.
+- Missing hop responses do not automatically prove a routing failure.
+
+---
+
+## Section 07 — Troubleshoot DNS Problems
+
+Suppose your Internet connection works, but your browser cannot open:
+
+```
+example.com
+```
+
+One possible cause is DNS resolution failure.
+
+### Command 1 — Resolve a Hostname
+
+```
+getent hosts example.com
+```
+
+This uses the system's configured name-resolution mechanisms.
+
+### Command 2 — Query DNS Directly
+
+```
+dig example.com
+```
+
+This displays DNS response information.
+
+### Command 3 — Check the Configured Resolver
+
+```
+resolvectl status
+```
+
+If `resolvectl` is unavailable:
+
+```
+cat /etc/resolv.conf
+```
+
+### A Simple Troubleshooting Comparison
+
+First, test external IP connectivity:
+
+```
+ping -c 4 1.1.1.1
+```
+
+Then test hostname resolution:
+
+```
+getent hosts example.com
+```
+
+| External IP test | DNS lookup | Possible explanation                                     |
+| ---------------- | ---------- | -------------------------------------------------------- |
+| Works            | Works      | Basic IP connectivity and DNS resolution are functioning |
+| Works            | Fails      | Possible DNS problem                                     |
+| Fails            | Works      | Possible routing, ICMP filtering, or connectivity issue  |
+| Fails            | Fails      | Could be a broader network issue                         |
+
+These are diagnostic clues, not definitive conclusions.
+
+**Real-life analogy:** You can reach the city, but if the address directory is broken, you may not know where a particular building is.
+
+### Key Takeaways
+
+- DNS translates domain names into information used to reach network services.
+- `getent hosts` uses system name-resolution mechanisms.
+- `dig` performs DNS queries.
+- `resolvectl status` helps inspect resolver configuration.
+
+---
+
+## Section 08 — Inspect Network Connections and Ports
+
+Sometimes the network works, but a specific application cannot connect. You may need to inspect active connections and listening services.
+
+### Command 1 — Show Listening TCP and UDP Sockets
+
+```
+ss -tuln
+```
+
+### Command 2 — Show Active TCP Connections
+
+```
+ss -tn
+```
+
+### Command 3 — Show Socket Details and Processes
+
+```
+sudo ss -tulpn
+```
+
+### Command 4 — Test an Application Connection
+
+```
+curl -I https://example.com
+```
+
+This sends an HTTP request and displays response headers.
+
+You can inspect:
+
+- Whether a connection succeeds.
+- The HTTP response status.
+- Server response headers.
+
+### Example Troubleshooting Scenario
+
+Suppose a web application should be available on port `8080`.
+
+Check whether a service is listening:
+
+```
+ss -tuln
+```
+
+Look for a listening entry associated with port `8080`.
+
+If no service is listening, possible explanations include:
+
+- The application is stopped.
+- It uses a different port.
+- It failed to start.
+- It is listening only on another interface.
+
+**Real-life analogy:** A building may have a valid address, but if the office is closed, visitors cannot receive service.
+
+### Key Takeaways
+
+- `ss` inspects network sockets.
+- Listening sockets indicate services waiting for connections.
+- `curl` helps test application-level communication.
+- A service listening locally does not automatically mean it is reachable from the Internet.
+
+---
+
+## Section 09 — Capture and Inspect Network Traffic
+
+Network troubleshooting sometimes requires inspecting actual packets.
+
+A useful Linux tool for this is `tcpdump`. It captures and displays network packets that your system is permitted to observe.
+
+### Check Whether tcpdump Is Installed
+
+```
+tcpdump --version
+```
+
+### Capture ICMP Traffic
+
+```
+sudo tcpdump -ni any icmp
+```
+
+Now open another terminal and run:
+
+```
+ping -c 4 1.1.1.1
+```
+
+You may see ICMP requests and replies in the capture terminal.
+
+### Capture DNS Traffic
+
+```
+sudo tcpdump -ni any port 53
+```
+
+This filters traffic using port 53.
+
+Note that encrypted DNS protocols such as DNS-over-HTTPS and DNS-over-TLS will not necessarily appear as ordinary DNS traffic on port 53.
+
+### Capture Traffic for a Particular Host
+
+```
+sudo tcpdump -ni any host 1.1.1.1
+```
+
+This filters packets involving the specified host.
+
+### Understanding the Command
+
+| Option or filter | Meaning                             |
+| ---------------- | ----------------------------------- |
+| `-n`             | Do not resolve addresses into names |
+| `-i any`         | Capture on available interfaces     |
+| `icmp`           | Filter ICMP packets                 |
+| `port 53`        | Filter traffic using port 53        |
+| `host`           | Filter traffic involving a host     |
+
+Press `Ctrl+C` to stop the capture.
+
+**Real-life analogy:** Ping tells you whether someone answers the phone. Packet capture lets you inspect the communication signals being exchanged.
+
+**Security note:** Capture only traffic on systems and networks you own or have permission to inspect. Packet captures can expose sensitive information.
+
+### Key Takeaways
+
+- `tcpdump` captures network packets.
+- Filters help narrow the traffic being inspected.
+- `-n` avoids address and service-name resolution.
+- Packet capture should only be performed on authorized systems and networks.
+
+---
+
+## Section 10 — A Practical Troubleshooting Workflow
+
+Let's combine everything into a single scenario.
+
+**Scenario:** Your Linux laptop connects to Wi-Fi, but websites are not loading.
+
+Follow this order rather than randomly changing network settings.
+
+### Step 1 — Check Interface Status
+
+```
+ip link
+```
+
+Is your Wi-Fi interface active?
+
+### Step 2 — Check IP Configuration
+
+```
+ip addr
+```
+
+Does your interface have a valid IP address?
+
+### Step 3 — Check the Default Route
+
+```
+ip route
+```
+
+Is a default gateway configured?
+
+### Step 4 — Test the Gateway
+
+```
+ping -c 4 <gateway-ip>
+```
+
+Can you reach your local router?
+
+### Step 5 — Test an External IP
+
+```
+ping -c 4 1.1.1.1
+```
+
+Does external IP connectivity work?
+
+### Step 6 — Test DNS
+
+```
+getent hosts example.com
+```
+
+Can your system resolve a domain name?
+
+### Step 7 — Test the Application
+
+```
+curl -I https://example.com
+```
+
+Can the application establish an HTTPS connection?
+
+### Example Diagnosis
+
+Suppose:
+
+- Wi-Fi interface is active.
+- Your laptop has a valid private IP.
+- You can reach your gateway.
+- You can ping `1.1.1.1`.
+- `getent hosts example.com` fails.
+
+A DNS resolution problem becomes a strong possibility.
+
+This is more useful than simply saying, "The Internet is not working."
+
+**Professional troubleshooting principle:** Collect evidence, isolate the failing component, and change only what is necessary.
+
+---
+
+## Section 11 — Lesson Recap
+
+### Important Commands
+
+| Tool           | Main purpose                              |
+| -------------- | ----------------------------------------- |
+| `ip link`      | Inspect interfaces                        |
+| `ip addr`      | Inspect IP addresses                      |
+| `ip route`     | Inspect routes                            |
+| `ip route get` | Check the selected route to a destination |
+| `ping`         | Test ICMP reachability                    |
+| `traceroute`   | Investigate network paths                 |
+| `tracepath`    | Investigate network paths                 |
+| `dig`          | Query DNS                                 |
+| `getent hosts` | Resolve hostnames using system mechanisms |
+| `resolvectl`   | Inspect resolver configuration            |
+| `ss`           | Inspect sockets                           |
+| `curl`         | Test application communication            |
+| `tcpdump`      | Capture packets                           |
+
+### Memory Map
+
+Remember the troubleshooting sequence:
+
+1. **Interface:** Is the network interface active?
+2. **IP:** Does the device have a valid IP configuration?
+3. **Route:** Is a suitable route and gateway available?
+4. **Connectivity:** Can the device reach the gateway and external destinations?
+5. **DNS:** Can the system resolve domain names?
+6. **Sockets:** Are the required services listening?
+7. **Application:** Can the application communicate successfully?
+8. **Packets:** What does the actual network traffic show?
+
+### Final Takeaway
+
+Network troubleshooting should follow a logical sequence, starting with the interface and ending with the application. Do not guess or randomly change settings. Inspect, test, collect evidence, and isolate the problem.
+
+## **2. Knowledge assessment**
+
+# Lesson 07 — Knowledge Assessment
+
+**Course:** Networking Fundamentals\
+**Topic:** Linux Networking and Troubleshooting\
+**Total questions:** 10
+
+**Question types:**
+
+- 6 single-choice questions
+- 2 multiple-choice questions
+- 2 true/false questions
+
+**Instructions:** Read each question carefully. For multiple-choice questions, select every correct answer.
+
+---
+
+## Question 1 — Single Choice
+
+Which Linux command displays network interfaces and their link-layer status?
+
+A. `ip link`\
+B. `curl`\
+C. `dig`\
+D. `ip route`
+
+**Correct answer:** A
+
+**Feedback:**
+
+- A — Correct. `ip link` displays network interfaces and their link-layer properties.
+- B — Incorrect. `curl` is used to communicate with URLs and application services.
+- C — Incorrect. `dig` performs DNS queries.
+- D — Incorrect. `ip route` displays the routing table.
+
+## Question 2 — Single Choice
+
+Which command displays the IP addresses assigned to your network interfaces?
+
+A. `ss -tn`\
+B. `ip addr`\
+C. `tcpdump`\
+D. `traceroute`
+
+**Correct answer:** B
+
+**Feedback:**
+
+- A — Incorrect. `ss -tn` displays TCP socket information.
+- B — Correct. `ip addr` displays interface addresses.
+- C — Incorrect. `tcpdump` captures network packets.
+- D — Incorrect. `traceroute` investigates the path to a destination.
+
+## Question 3 — Single Choice
+
+Your Linux computer needs to send traffic to a destination outside its local network. Which routing component is commonly used when no more specific route matches?
+
+A. DNS resolver\
+B. Loopback interface\
+C. Default gateway\
+D. Listening port
+
+**Correct answer:** C
+
+**Feedback:**
+
+- A — Incorrect. A DNS resolver helps translate domain names; it does not forward packets as a gateway.
+- B — Incorrect. The loopback interface provides communication within the local system.
+- C — Correct. The default gateway is the next hop for destinations without a more specific matching route.
+- D — Incorrect. A listening port identifies a service waiting for connections.
+
+## Question 4 — Single Choice
+
+Which command sends four ICMP Echo Requests to test connectivity to an external IP address?
+
+A. `dig -c 4 1.1.1.1`\
+B. `ss -c 4 1.1.1.1`\
+C. `curl -c 4 1.1.1.1`\
+D. `ping -c 4 1.1.1.1`
+
+**Correct answer:** D
+
+**Feedback:**
+
+- A — Incorrect. `dig` performs DNS queries and does not use `-c` this way.
+- B — Incorrect. `ss` inspects sockets.
+- C — Incorrect. `curl` makes application requests and does not use this ping option.
+- D — Correct. `ping -c 4` sends four ICMP Echo Requests.
+
+## Question 5 — Single Choice
+
+Your computer can ping `1.1.1.1`, but `getent hosts example.com` fails. What is a likely area to investigate?
+
+A. DNS resolution\
+B. Monitor resolution\
+C. Keyboard configuration\
+D. File permissions
+
+**Correct answer:** A
+
+**Feedback:**
+
+- A — Correct. External IP connectivity appears to work, so DNS resolution is a strong possibility to investigate.
+- B — Incorrect. Monitor resolution is unrelated to hostname lookup.
+- C — Incorrect. Keyboard configuration does not explain this network symptom.
+- D — Incorrect. File permissions are not the most likely explanation for this specific result.
+
+## Question 6 — Single Choice
+
+Which command is useful for checking whether a local service is listening on a network port?
+
+A. `ip addr`\
+B. `ss -tuln`\
+C. `dig example.com`\
+D. `ping 127.0.0.1`
+
+**Correct answer:** B
+
+**Feedback:**
+
+- A — Incorrect. `ip addr` displays interface addresses.
+- B — Correct. `ss -tuln` displays listening TCP and UDP sockets without resolving names.
+- C — Incorrect. `dig` queries DNS.
+- D — Incorrect. `ping` tests ICMP reachability of the loopback address.
+
+## Question 7 — Multiple Choice
+
+Which commands can help investigate DNS resolution or resolver configuration? Select all correct answers.
+
+A. `dig example.com`\
+B. `getent hosts example.com`\
+C. `resolvectl status`\
+D. `ip link`
+
+**Correct answers:** A, B, C
+
+**Feedback:**
+
+- A — Correct. `dig` queries DNS and displays the response.
+- B — Correct. `getent hosts` uses the system's hostname-resolution mechanisms.
+- C — Correct. `resolvectl status` displays resolver configuration on systems using systemd-resolved.
+- D — Incorrect. `ip link` displays interface information, not DNS configuration.
+
+## Question 8 — Multiple Choice
+
+Which statements about `tcpdump` are correct? Select all correct answers.
+
+A. It can capture network packets.\
+B. It can filter traffic using expressions such as `icmp` or `port 53`.\
+C. It automatically repairs incorrect routing tables.\
+D. It can help inspect ICMP traffic generated by ping.
+
+**Correct answers:** A, B, D
+
+**Feedback:**
+
+- A — Correct. `tcpdump` captures and displays packets visible to the selected interface.
+- B — Correct. Capture filters can narrow traffic by protocol, host, port, and other criteria.
+- C — Incorrect. `tcpdump` is an observation tool; it does not automatically repair routing.
+- D — Correct. An ICMP filter can help inspect ping requests and replies.
+
+## Question 9 — True or False
+
+If `ping` fails, the destination must be offline.
+
+**Correct answer:** False
+
+**Feedback:**
+
+- True — Incorrect. A destination may be online but configured to block or ignore ICMP requests. Routing or filtering may also affect the result.
+- False — Correct. A failed ping is evidence to investigate, not proof that the destination is offline.
+
+## Question 10 — True or False
+
+A systematic troubleshooting process should normally investigate basic interface and IP configuration before moving to DNS and application-level testing.
+
+**Correct answer:** True
+
+**Feedback:**
+
+- True — Correct. Checking from the lower-level connectivity components toward the application helps isolate problems logically.
+- False — Incorrect. Starting with basic connectivity gives useful evidence before investigating higher-level services.
+
+---
+
+## Answer Key
+
+| Question | Correct answer | Type            |
+| -------- | -------------- | --------------- |
+| 1        | A              | Single choice   |
+| 2        | B              | Single choice   |
+| 3        | C              | Single choice   |
+| 4        | D              | Single choice   |
+| 5        | A              | Single choice   |
+| 6        | B              | Single choice   |
+| 7        | A, B, C        | Multiple choice |
+| 8        | A, B, D        | Multiple choice |
+| 9        | False          | True/False      |
+| 10       | True           | True/False      |
+
+## Scoring Guide
+
+| Score | Result          | Interpretation                                        |
+| ----- | --------------- | ----------------------------------------------------- |
+| 9–10  | Excellent       | Strong understanding of Linux network troubleshooting |
+| 7–8   | Good            | Good understanding; review a few commands             |
+| 5–6   | Needs practice  | Revisit routing, DNS, and connectivity testing        |
+| 0–4   | Review required | Revisit the lesson before attempting the assignment   |
+
+**Suggested passing score:** 7 out of 10 (70%).
+
+### LMS Implementation Notes
+
+- Single-choice questions should allow one selection.
+- Multiple-choice questions should allow multiple selections.
+- True/false questions should provide two options.
+- Display feedback after submission.
+- Show the correct answer and explanation for every question.
+- Display the final score out of 10.
+- Allow students to review incorrect answers after submission.
+
+## **3. Practical assignment**
+
+# Practical Assignment — Linux Network Diagnostic Report
+
+**Course:** Networking Fundamentals\
+**Lesson:** 07 — Linux Networking and Troubleshooting\
+**Level:** Beginner
+
+## Assignment Objective
+
+Use Linux networking commands to inspect your network configuration, test connectivity, investigate DNS, inspect listening sockets, and capture basic network traffic.
+
+Your goal is to produce a short diagnostic report based on evidence collected from your own Linux system.
+
+## Part 1 — Inspect Network Interfaces
+
+Run:
+
+```
+ip link
+```
+
+Then run:
+
+```
+ip addr
+```
+
+**Tasks:**
+
+1. Identify your active network interfaces.
+2. Identify your primary Ethernet or Wi-Fi interface.
+3. Record its IPv4 address and prefix length, if assigned.
+4. Identify its MAC address.
+
+**Questions:**
+
+- What is the name of your primary network interface?
+- Is the interface administratively up?
+- Does it have an IPv4 address?
+
+## Part 2 — Inspect the Routing Table
+
+Run:
+
+```
+ip route
+```
+
+**Tasks:**
+
+1. Find the default route.
+2. Identify the default gateway.
+3. Identify the interface used for the default route.
+
+**Question:**
+
+Why does your computer need a default gateway when communicating with destinations outside its local network?
+
+## Part 3 — Test Connectivity
+
+Run these commands:
+
+```
+ping -c 4 127.0.0.1
+```
+
+```
+ping -c 4 <gateway-ip>
+```
+
+Replace `<gateway-ip>` with your actual gateway address.
+
+Then run:
+
+```
+ping -c 4 1.1.1.1
+```
+
+**Tasks:**
+
+1. Test the loopback address.
+2. Test your default gateway.
+3. Test external IP connectivity.
+4. Record the packet loss and round-trip time reported by each successful test.
+
+**Questions:**
+
+- Which tests succeeded?
+- Did any test show packet loss?
+- What could explain a failed ping even if the destination is online?
+
+## Part 4 — Investigate DNS
+
+Run:
+
+```
+getent hosts example.com
+```
+
+If `dig` is installed, also run:
+
+```
+dig example.com
+```
+
+Inspect your resolver configuration:
+
+```
+resolvectl status
+```
+
+If unavailable:
+
+```
+cat /etc/resolv.conf
+```
+
+**Tasks:**
+
+1. Check whether your system can resolve `example.com`.
+2. Record the returned IP address or DNS error.
+3. Identify the configured DNS resolver, if visible.
+
+**Question:**
+
+Why might external IP connectivity work while hostname resolution fails?
+
+## Part 5 — Inspect Listening Sockets
+
+Run:
+
+```
+ss -tuln
+```
+
+If you have permission and need process details, run:
+
+```
+sudo ss -tulpn
+```
+
+**Tasks:**
+
+1. Identify any listening TCP sockets.
+2. Identify any listening UDP sockets.
+3. Record at least one listening port, if present.
+4. If no listening sockets appear, explain what that might mean.
+
+**Question:**
+
+Does a service listening on a local port automatically mean it is accessible from the Internet? Explain.
+
+## Part 6 — Test HTTPS Connectivity
+
+Run:
+
+```
+curl -I https://example.com
+```
+
+**Tasks:**
+
+1. Check whether the request succeeds.
+2. Record the HTTP response status, if returned.
+3. Explain what this test tells you about application-level connectivity.
+
+If the command fails, record the error rather than repeatedly changing your network configuration.
+
+## Part 7 — Capture Basic Network Traffic
+
+Check whether `tcpdump` is installed:
+
+```
+tcpdump --version
+```
+
+If available, open one terminal and run:
+
+```
+sudo tcpdump -ni any icmp
+```
+
+Open another terminal and run:
+
+```
+ping -c 4 1.1.1.1
+```
+
+Observe the packet capture, then press `Ctrl+C` to stop it.
+
+**Tasks:**
+
+1. Identify ICMP Echo Request packets, if visible.
+2. Identify ICMP Echo Reply packets, if visible.
+3. Explain how packet capture helps troubleshoot connectivity.
+
+If `tcpdump` is unavailable or you cannot run it, state that in your report. Do not install software or change system settings without permission.
+
+## Part 8 — Write Your Diagnostic Report
+
+Create a short report containing the following sections:
+
+### 1. Network Interface Information
+
+- Primary interface name.
+- Interface status.
+- IPv4 address and prefix.
+- MAC address (redacted in public submissions).
+
+### 2. Routing Information
+
+- Default gateway.
+- Default route interface.
+- Brief explanation of the route.
+
+### 3. Connectivity Test Results
+
+- Loopback test.
+- Gateway test.
+- External IP test.
+- Packet loss and latency observations.
+
+### 4. DNS Test Results
+
+- Hostname lookup result.
+- DNS resolver information, if available.
+- Any observed errors.
+
+### 5. Listening Socket Observations
+
+- Example listening TCP or UDP ports.
+- What the results indicate.
+
+### 6. Application Connectivity
+
+- `curl` result.
+- HTTP response status or error message.
+
+### 7. Packet Capture Observations
+
+- Whether packet capture worked.
+- What ICMP packets you observed.
+- What you learned from the capture.
+
+### 8. Troubleshooting Scenario
+
+Describe one possible network failure and explain how you would investigate it using the commands from this lesson.
+
+Example scenario:
+
+Your laptop can reach its default gateway and an external IP address, but it cannot resolve domain names.
+
+Explain why DNS becomes a strong possibility and which commands you would use to investigate.
+
+---
+
+## Student Completion Checklist
+
+Mark each task complete when you have finished it.
+
+- Identify active network interfaces using `ip link`.
+- Record IPv4 address and prefix using `ip addr`.
+- Identify the default gateway using `ip route`.
+- Test loopback connectivity using `ping`.
+- Test gateway connectivity using `ping`.
+- Test external IP connectivity using `ping`.
+- Perform DNS resolution using `getent hosts` or `dig`.
+- Inspect listening sockets using `ss -tuln`.
+- Test HTTPS connectivity using `curl`.
+- Capture ICMP packets using `tcpdump`, if available.
+- Write and review the diagnostic report.
+
+## Submission Requirements
+
+Submit:
+
+1. Terminal screenshots or copied command outputs.
+2. Network interface and IP configuration.
+3. Default gateway identification.
+4. Connectivity and DNS test results.
+5. Listening socket observations.
+6. Packet capture observations, if available.
+7. A short diagnostic report explaining your results and one potential network failure.
+
+## Privacy and Safety
+
+- Redact public IP addresses and MAC addresses before sharing screenshots publicly.
+- Do not publish private network details unnecessarily.
+- Capture only traffic on systems and networks you own or have permission to inspect.
+- Do not scan or monitor networks belonging to other people without authorization.
+- Do not change firewall, routing, or network settings just to make a test succeed.
+
+## Completion Criteria
+
+A student successfully completes this assignment when they can:
+
+- Independently inspect Linux network interfaces and IP configuration.
+- Identify the default gateway and explain its purpose.
+- Perform basic connectivity tests.
+- Investigate DNS resolution.
+- Inspect listening sockets.
+- Test application-level communication.
+- Capture and interpret basic network traffic, where available.
+- Explain a troubleshooting scenario using evidence.
+
+**Next lesson:** Lesson 08 — Network Traffic Analysis.
+
+In the final lesson of the original Networking Fundamentals curriculum, students will be introduced to packet analysis, Wireshark, packet headers, protocols, and practical traffic inspection.
+
+## **4. LMS implementation and quality review**
+
+| Component            | Recommended implementation            |
+| -------------------- | ------------------------------------- |
+| Lesson content       | 11 accordion sections                 |
+| Reading time         | 25–30 minutes                         |
+| Knowledge assessment | 10 questions, automatic scoring       |
+| Passing score        | 70%                                   |
+| Feedback             | Explain every answer option           |
+| Practical assignment | Checklist plus report submission      |
+| Evidence             | Screenshots or copied terminal output |
+| Completion           | Quiz pass and assignment submission   |
+
+**Technical accuracy notes incorporated into this version:**
+
+- Interface `UP` status does not guarantee working connectivity.
+- A failed ICMP ping does not prove a host is offline.
+- DNS diagnostic results are clues, not absolute proof of the root cause.
+- A listening socket does not guarantee external accessibility.
+- DNS traffic on port 53 does not cover all encrypted DNS protocols.
+- `tcpdump` is presented as a packet observation tool, not a tool that automatically repairs network problems.
+
+The lesson is ready for LMS content entry. The next useful step is preparing Lesson 08 in the same format to complete the original Networking Fundamentals curriculum.
+
+📘Develop Lesson 08Tap to set up

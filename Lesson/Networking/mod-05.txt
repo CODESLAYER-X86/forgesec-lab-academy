@@ -1,0 +1,720 @@
+FORGESEC Academy — Networking Fundamentals
+Lesson 05: TCP, UDP and Network Ports
+Beginner
+20–25 minutes
+10-question assessment
+
+This lesson package includes the complete lesson, knowledge assessment, practical Linux assignment, and LMS implementation notes. The lesson follows your supplied material and retains its central office-building analogy.
+1. Complete lesson
+Lesson 05 — TCP, UDP and Network Ports
+Course: Networking Fundamentals
+Level: Beginner
+Estimated reading time: 20–25 minutes
+Learning Objectives
+By the end of this lesson, students should be able to:
+1. Explain why transport-layer protocols are needed.
+2. Describe the main characteristics of TCP.
+3. Explain the TCP three-way handshake.
+4. Describe UDP and identify common use cases.
+5. Compare TCP and UDP.
+6. Explain how port numbers identify application endpoints.
+7. Distinguish source ports, destination ports and listening ports.
+8. Use Linux commands to inspect network sockets and connections.
+Central analogy: Imagine a large office building. The IP address identifies the building, while the port number identifies a particular office or department inside it. TCP and UDP are two different ways of delivering messages to those offices.
+
+Section 01 — Why Do We Need TCP and UDP?
+In previous lessons, we learned:
+- IP addresses identify network-layer destinations.
+- MAC addresses support communication within a local network.
+- Switches forward Ethernet frames.
+- Routers forward packets between networks.
+But consider this situation:
+
+You open a web browser, start a video call and download a file at the same time.
+
+All three activities use the network. How does your computer know which incoming data belongs to which application?
+
+This is where Transport Layer protocols become important.
+
+The Transport Layer provides communication services between applications running on different devices. It helps the operating system distinguish different application communication endpoints.
+
+Two major transport protocols are:
+1. TCP — Transmission Control Protocol
+2. UDP — User Datagram Protocol
+Both are part of the Transport Layer in the TCP/IP model.
+The office-building analogy
+Imagine a large office building with many departments.
+- The building address identifies the destination building.
+- Each department has its own room or office number.
+- A delivery system helps messages reach the correct department.
+The IP address helps identify the destination host, while transport protocols and port numbers help deliver data to the appropriate application endpoint.
+
+Key takeaway: IP addressing gets data to the correct host. Transport-layer protocols help applications communicate with each other.
+Section 02 — What Is TCP?
+TCP stands for Transmission Control Protocol.
+
+TCP is a connection-oriented transport protocol. It establishes a connection before transferring ordinary application data and provides reliable, ordered delivery of a byte stream.
+Main characteristics of TCP
+- Connection-oriented: A connection is established before normal data transfer.
+- Reliable delivery: TCP uses acknowledgements and retransmissions to help ensure data arrives.
+- Ordered delivery: Data is delivered to the receiving application in the correct sequence.
+- Error detection: TCP uses a checksum to detect corruption in its header and data.
+- Flow control: TCP helps prevent a sender from overwhelming a receiver.
+- Congestion control: TCP adjusts transmission behavior in response to network congestion.
+How does TCP work?
+Imagine downloading a file from a website.
+
+The file needs to arrive correctly. If some data is lost, the receiving system needs a way to identify the missing data and request retransmission.
+
+TCP provides mechanisms for this process.
+
+For example:
+1. A sender transmits a portion of data.
+2. The receiver acknowledges received data.
+3. If data is missing, TCP can retransmit it.
+4. The receiving application gets the byte stream in the correct order.
+Real-life analogy: Tracked delivery
+Imagine sending an important package through a tracked delivery service.
+- The sender dispatches the package.
+- The delivery process tracks its progress.
+- Missing deliveries can be handled through another delivery attempt.
+- The sender can receive confirmation that delivery has progressed.
+TCP provides similar reliability mechanisms for data communication.
+Where is TCP used?
+Common TCP use cases include:
+- HTTP and HTTPS communication.
+- File transfers.
+- Email transport.
+- Remote administration through SSH.
+- Database connections.
+Remember: TCP is useful when reliable, ordered delivery matters.
+Section 03 — TCP Three-Way Handshake
+Before ordinary TCP application data is exchanged, a connection is established through a process called the three-way handshake.
+
+It has three steps.
+Step 1 — SYN
+The client sends a TCP segment with the SYN flag set.
+
+This requests a connection and communicates the client's initial sequence number.
+Step 2 — SYN-ACK
+The server responds with SYN and ACK flags set.
+
+It acknowledges the client's initial sequence number and communicates its own initial sequence number.
+Step 3 — ACK
+The client sends an ACK to acknowledge the server's initial sequence number.
+
+The connection is now established.
+Handshake diagram
+       CLIENT                         SERVER
+          |                              |
+          | -------- SYN -------------> |
+          |                              |
+          | <------ SYN-ACK ------------ |
+          |                              |
+          | -------- ACK -------------> |
+          |                              |
+          |                       Connection
+          |                        established
+Quick memory trick
+SYN → SYN-ACK → ACK
+Real-life analogy: Making a phone call
+Think about making a phone call:
+1. You call someone.
+2. They answer.
+3. You confirm that you can hear each other.
+Now communication can begin.
+Why is the handshake important?
+The handshake:
+- Establishes initial connection state.
+- Synchronizes sequence numbers between endpoints.
+- Helps both sides confirm that communication can proceed.
+Understanding the handshake is useful when studying network scanning, firewall behavior and connection troubleshooting.
+
+Key takeaway: TCP uses a three-way handshake to establish a connection before ordinary data transfer.
+Section 04 — What Is UDP?
+UDP stands for User Datagram Protocol.
+
+Unlike TCP, UDP is connectionless. It sends individual datagrams without establishing a connection through a TCP-style three-way handshake.
+
+UDP does not guarantee delivery, ordering or retransmission at the transport layer.
+Main characteristics of UDP
+- Connectionless: No TCP-style connection establishment is required.
+- Low protocol overhead: UDP has a relatively small header.
+- No built-in retransmission: UDP does not automatically retransmit lost datagrams.
+- No guaranteed ordering: Datagrams may arrive in a different order.
+- No built-in flow control like TCP: The application must account for its own requirements.
+- No built-in congestion control like TCP: Applications using UDP should implement appropriate congestion behavior where necessary.
+Where is UDP used?
+Common examples include:
+- Online gaming.
+- Voice and video communication.
+- Live streaming.
+- DNS queries in common configurations.
+- DHCP.
+Real-life analogy: Live broadcast
+Imagine listening to live football commentary.
+
+If one sentence is missed, receiving it several seconds later may not be useful. It may be better to continue with the latest information.
+
+UDP is useful when low delay and timely delivery are important. Applications can tolerate some loss or implement their own reliability mechanisms when needed.
+
+Important: UDP does not automatically make an application faster. Actual performance depends on the application, network conditions and protocol implementation.
+Section 05 — TCP vs UDP
+TCP and UDP both provide transport-layer communication, but they have different characteristics.
+Feature	TCP	UDP
+Connection	Connection-oriented	Connectionless
+Reliability	Built-in mechanisms	No delivery guarantee
+Ordering	Ordered byte stream	No ordering guarantee
+Retransmission	Supported	Not built in
+Handshake	Three-way handshake	No TCP-style handshake
+Flow control	Built in	Not built in
+Congestion control	Built in	Not built in
+Header size	Minimum 20 bytes	8 bytes
+Common uses	Reliable transfers, web, SSH	DNS, DHCP, real-time communicationWhen should an application use TCP?
+TCP is useful when:
+- Data must arrive reliably.
+- Data must be delivered in order.
+- Retransmission is important.
+- The application benefits from built-in flow and congestion control.
+When should an application use UDP?
+UDP is useful when:
+- Low delay is important.
+- The application can tolerate some packet loss.
+- The application implements its own reliability mechanisms if needed.
+- A simple request-and-response exchange benefits from low protocol overhead.
+Remember: TCP focuses on reliable, ordered delivery. UDP provides a simpler datagram service without built-in delivery or ordering guarantees.
+Section 06 — What Are Network Ports?
+An IP address identifies a network-layer destination. However, a computer can run many network services simultaneously.
+
+How does the operating system identify which application should receive incoming transport data?
+
+It uses port numbers.
+
+A port number is a transport-layer identifier used by TCP and UDP to distinguish application endpoints.
+Example
+192.168.1.10:443
+Here:
+- 192.168.1.10 is the IP address.
+- 443 is the port number.
+The IP address identifies the host, while the port helps identify the destination application endpoint.
+Real-life analogy: Apartment building
+Imagine an apartment building:
+- Building address = IP address.
+- Apartment number = port number.
+The building address gets the delivery to the correct building. The apartment number helps it reach the intended recipient.
+Port number ranges
+TCP and UDP port numbers are 16 bits long, giving a range from 0 to 65535.
+Range	Category
+0–1023	Well-known ports
+1024–49151	Registered ports
+49152–65535	Dynamic/private or ephemeral portsOperating systems commonly use ephemeral ports for temporary client-side connections.
+
+These ranges describe the standard port-number categories. Actual operating-system port allocation behavior can vary.
+Common network ports
+Port	Transport	Common service
+20/21	TCP	FTP data/control
+22	TCP	SSH
+23	TCP	Telnet
+25	TCP	SMTP
+53	UDP/TCP	DNS
+67/68	UDP	DHCP
+80	TCP	HTTP
+110	TCP	POP3
+123	UDP	NTP
+143	TCP	IMAP
+443	TCP	HTTPS
+3306	TCP	MySQL
+5432	TCP	PostgreSQLThese are common defaults, not guarantees. Services can be configured to use different ports. Some protocols also support additional transport choices; for example, HTTP/3 uses QUIC over UDP.
+Important security note
+A port number alone does not prove which application is running there. A service can use a non-default port, and different applications can use the same port number on different IP addresses or transport protocols.
+
+Key takeaway: A port number helps the operating system distinguish application endpoints.
+Section 07 — Source Ports and Destination Ports
+When a client communicates with a server, transport-layer headers contain source and destination port numbers.
+
+Consider this example:
+Client:  192.168.1.10:51520
+Server:  93.184.216.34:443
+- Source IP: 192.168.1.10
+- Source port: 51520
+- Destination IP: 93.184.216.34
+- Destination port: 443
+The client typically uses a temporary source port, while the server listens on its configured service port.
+Why are both ports necessary?
+Suppose your browser opens two different HTTPS connections.
+
+The operating system needs to distinguish the traffic belonging to each connection.
+
+It uses information including:
+- Source IP address.
+- Source port.
+- Destination IP address.
+- Destination port.
+- Transport protocol.
+This combination is commonly called a five-tuple.
+Five-tuple example
+TCP
+192.168.1.10:51520
+        |
+        v
+93.184.216.34:443
+The five values are:
+1. Transport protocol: TCP.
+2. Source IP address: 192.168.1.10.
+3. Source port: 51520.
+4. Destination IP address: 93.184.216.34.
+5. Destination port: 443.
+Real-life analogy
+A postal delivery record needs information about both the sender and receiver.
+
+Knowing only the building where the parcel arrived is not enough to identify the complete communication.
+
+Key takeaway: Source and destination ports help distinguish different application communications.
+Section 08 — What Is a Listening Port?
+A listening port is a local port on which a service is waiting for incoming communication.
+
+For example:
+- An SSH server commonly listens on TCP port 22.
+- A web server may listen on TCP port 80 or 443.
+- A DNS service may listen on UDP port 53 and may also accept TCP port 53 traffic.
+Why should security students understand listening ports?
+During a security assessment, you may need to identify:
+- Which ports are listening.
+- Which services are associated with those ports.
+- Which services are exposed to a network.
+- Whether unnecessary services are running.
+An exposed service can increase a system's attack surface.
+Real-life analogy: Office entrances
+Imagine a building with several entrances.
+
+Every open entrance may provide another possible access point. A building should only keep the entrances it actually needs.
+
+Similarly, a system should run only the network services it requires and protect them appropriately.
+Important distinctions
+1. Listening locally
+
+A service is waiting for incoming communication on a local socket.
+
+2. Open from a remote scanner's perspective
+
+A remote scanner receives a response consistent with the port being open.
+
+3. Filtered or blocked
+
+A firewall or another network control may prevent a remote system from reaching the service.
+
+A service can be listening locally while a firewall blocks external access to it.
+
+Key takeaway: A listening port does not automatically mean that the service is accessible from the Internet.
+Section 09 — Practical Linux Exploration
+Now inspect TCP, UDP and ports on your Linux system.
+Task 1 — Display listening sockets
+Run:
+ss -tuln
+What the options mean:
+- -t — TCP sockets.
+- -u — UDP sockets.
+- -l — Listening sockets.
+- -n — Show numeric addresses and port numbers.
+Illustrative output:
+Netid  State   Local Address:Port
+tcp    LISTEN  0.0.0.0:22
+tcp    LISTEN  127.0.0.1:5432
+Your actual system may show different services.
+Task 2 — Display TCP socket information
+Run:
+ss -tn
+This displays TCP socket information using numeric addresses.
+Task 3 — Display listening ports with process information
+Run:
+sudo ss -tulpn
+This can show process information for sockets where your permissions allow it.
+
+You may see a process name, process ID and listening port.
+Task 4 — Identify a service's port
+Run:
+getent services ssh
+This queries the system's service-name database for the SSH service.
+
+You can also inspect the service database:
+grep -E '^(ssh|https|http)[[:space:]]' /etc/services
+The service database lists conventional service names and port assignments. It does not prove that those services are running.
+Task 5 — Test connectivity to a known service
+If curl is installed, run:
+curl -I https://example.com
+This requests HTTP response headers from the example website over HTTPS.
+
+Observe:
+- Whether the connection succeeds.
+- The HTTP response status.
+- Whether the server returns response headers.
+A successful response demonstrates that the client was able to communicate with the remote web service. A failure may have several causes, including DNS problems, firewall rules or network connectivity issues.
+Safety note
+Only inspect systems you own or have explicit authorization to assess. Do not scan public IP addresses or university systems without permission.
+Section 10 — Lesson Recap and Memory Map
+Important concepts
+TCP: A connection-oriented transport protocol with reliable, ordered delivery.
+
+UDP: A connectionless transport protocol without built-in delivery or ordering guarantees.
+
+Three-Way Handshake: SYN → SYN-ACK → ACK.
+
+Port: A transport-layer identifier used to distinguish application endpoints.
+
+Source Port: The port associated with the sending endpoint.
+
+Destination Port: The port associated with the receiving endpoint.
+
+Listening Port: A local port where a service is waiting for incoming communication.
+
+Five-Tuple: Transport protocol, source IP, source port, destination IP and destination port.
+Memory map
+Concept	Everyday analogy
+TCP	Tracked delivery
+UDP	Live broadcast
+Three-way handshake	Confirming a phone call
+IP address	Building address
+Port	Apartment number
+Source port	Sender's communication endpoint
+Listening port	Office waiting for incoming messagesFinal takeaway
+IP gets traffic to the right host. The transport protocol and port information help deliver it to the right application endpoint.
+
+In the next lesson, we will explore DNS, DHCP and NAT—how devices find services, receive network configurations and communicate beyond their local networks.
+
+
+
+
+2. Knowledge assessment
+Lesson 05 — Knowledge Assessment
+Topic: TCP, UDP and Network Ports
+Total questions: 10
+Question types: 6 single-choice, 2 multiple-choice, 2 true/false
+Instructions
+- Read each question carefully.
+- Single-choice questions have one correct answer.
+- Multiple-choice questions may have more than one correct answer.
+- True/false questions require you to decide whether the statement is correct.
+- Review the explanations after answering.
+
+Part A — Single Choice
+Question 1
+Which Transport Layer protocol provides reliable and ordered delivery of a byte stream?
+
+A. IP
+B. TCP
+C. UDP
+D. ARP
+
+Correct answer: B — TCP
+
+Feedback:
+- A — Incorrect. IP provides network-layer addressing and packet delivery, not TCP's reliable byte-stream service.
+- B — Correct. TCP provides reliable, ordered delivery using acknowledgements, sequence numbers and retransmissions.
+- C — Incorrect. UDP does not guarantee delivery or ordering.
+- D — Incorrect. ARP resolves IPv4 addresses to link-layer addresses on a local network.
+Question 2
+What is the correct order of the TCP three-way handshake?
+
+A. ACK → SYN → SYN-ACK
+B. SYN → ACK → SYN-ACK
+C. SYN → SYN-ACK → ACK
+D. SYN-ACK → ACK → SYN
+
+Correct answer: C — SYN → SYN-ACK → ACK
+
+Feedback:
+- A — Incorrect. This is not the TCP handshake sequence.
+- B — Incorrect. The server's SYN-ACK response comes before the client's final ACK.
+- C — Correct. The client sends SYN, the server replies with SYN-ACK, and the client responds with ACK.
+- D — Incorrect. The client initiates the connection with SYN.
+Question 3
+Which protocol is connectionless and does not guarantee packet delivery?
+
+A. TCP
+B. UDP
+C. SSH
+D. HTTPS
+
+Correct answer: B — UDP
+
+Feedback:
+- A — Incorrect. TCP is connection-oriented and provides reliability mechanisms.
+- B — Correct. UDP sends datagrams without built-in delivery or ordering guarantees.
+- C — Incorrect. SSH is an application-layer protocol commonly carried over TCP.
+- D — Incorrect. HTTPS commonly uses TCP, although HTTP/3 uses QUIC over UDP.
+Question 4
+Which port is commonly used by SSH?
+
+A. 21
+B. 22
+C. 53
+D. 80
+
+Correct answer: B — 22
+
+Feedback:
+- A — Incorrect. Port 21 is commonly associated with FTP control.
+- B — Correct. SSH commonly uses TCP port 22.
+- C — Incorrect. Port 53 is commonly associated with DNS.
+- D — Incorrect. Port 80 is commonly associated with HTTP.
+Question 5
+A client connects to a web server at 93.184.216.34:443 from 192.168.1.10:51520.
+
+What is the client's source port?
+
+A. 443
+B. 80
+C. 51520
+D. 22
+
+Correct answer: C — 51520
+
+Feedback:
+- A — Incorrect. Port 443 is the destination port in this example.
+- B — Incorrect. Port 80 is commonly used for HTTP.
+- C — Correct. The client uses source port 51520.
+- D — Incorrect. Port 22 is commonly used by SSH.
+Question 6
+Which Linux command displays listening TCP and UDP sockets using numeric addresses?
+
+A. ip addr
+B. ss -tuln
+C. ping -c 4 1.1.1.1
+D. getent hosts example.com
+
+Correct answer: B — ss -tuln
+
+Feedback:
+- A — Incorrect. ip addr displays network interface addresses.
+- B — Correct. ss -tuln displays listening TCP and UDP sockets with numeric addresses and ports.
+- C — Incorrect. ping tests network reachability using ICMP.
+- D — Incorrect. getent hosts queries the host-name database.
+
+Part B — Multiple Choice
+Question 7
+Which of the following are characteristics of TCP?
+
+Select all correct answers.
+
+A. Connection-oriented communication
+B. Reliable delivery mechanisms
+C. No ordering guarantee
+D. Flow control
+E. Three-way handshake
+
+Correct answers: A, B, D, E
+
+Feedback:
+- A — Correct. TCP establishes a connection.
+- B — Correct. TCP uses acknowledgements and retransmissions to support reliable delivery.
+- C — Incorrect. TCP provides ordered delivery to the receiving application.
+- D — Correct. TCP uses flow control.
+- E — Correct. TCP establishes connections using a three-way handshake.
+Question 8
+Which of the following are commonly associated with UDP?
+
+Select all correct answers.
+
+A. DHCP
+B. DNS queries in common configurations
+C. TCP three-way handshake
+D. Real-time voice and video communication
+E. Built-in retransmission of every lost datagram
+
+Correct answers: A, B, D
+
+Feedback:
+- A — Correct. DHCP commonly uses UDP.
+- B — Correct. DNS commonly uses UDP, although TCP is also used.
+- C — Incorrect. UDP does not use the TCP three-way handshake.
+- D — Correct. UDP is commonly used in real-time communication.
+- E — Incorrect. UDP does not provide built-in retransmission of lost datagrams.
+
+Part C — True or False
+Question 9
+A service listening on a local port is always accessible from the Internet.
+
+Correct answer: False
+
+Feedback: A listening service may be restricted to a local interface or blocked by a firewall. Listening locally does not guarantee remote accessibility.
+Question 10
+A five-tuple includes the transport protocol, source IP, source port, destination IP and destination port.
+
+Correct answer: True
+
+Feedback: These five values help distinguish a network communication flow.
+
+Answer Key
+Question	Correct answer
+1	B
+2	C
+3	B
+4	B
+5	C
+6	B
+7	A, B, D, E
+8	A, B, D
+9	False
+10	TrueScoring Guide
+Score	Result
+9–10	Excellent — Strong understanding
+7–8	Good — Review a few concepts
+5–6	Developing — Revisit important sections
+0–4	Needs improvement — Review the lesson againRecommended pass mark: 7 out of 10 (70%).
+
+Learning reminder: Focus on understanding when TCP or UDP is appropriate, what port numbers identify, and how to inspect listening sockets using Linux.
+
+
+
+
+3. Practical Linux assignment
+Practical Assignment — TCP, UDP and Port Investigation
+Course: Networking Fundamentals
+Lesson: 05 — TCP, UDP and Network Ports
+Level: Beginner
+Assignment Objective
+Use Linux commands to inspect network sockets, identify common service ports and understand basic TCP and UDP communication.
+
+By completing this assignment, you should be able to:
+- Display listening TCP and UDP sockets.
+- Identify available process information for listening services.
+- Find the conventional SSH port.
+- Test HTTPS connectivity.
+- Explain the TCP three-way handshake.
+- Compare TCP and UDP.
+
+Task 1 — Display Listening TCP and UDP Sockets
+Run:
+ss -tuln
+Record the output.
+
+Answer these questions:
+1. What does -t represent?
+2. What does -u represent?
+3. What does -l represent?
+4. What does -n represent?
+5. Did you find any listening TCP sockets?
+6. Did you find any UDP sockets?
+Expected learning: Understand how Linux displays listening network sockets.
+Task 2 — Identify Listening Services and Processes
+Run:
+sudo ss -tulpn
+Identify at least three listening ports or services, if available.
+
+Complete this table:
+Port	Protocol	Service or process
+Example: 22	TCP	SSH
+		
+		
+		If fewer than three services are available, record the services you can find. Do not invent missing results.
+
+Answer:
+1. What additional information does this command display?
+2. Why might sudo be necessary?
+3. Does a listening service automatically mean it is accessible from the Internet? Explain.
+Task 3 — Find the SSH Service Port
+Run:
+getent services ssh
+Then inspect the service database:
+grep -E '^(ssh|https|http)[[:space:]]' /etc/services
+Answer:
+1. What port is conventionally assigned to SSH?
+2. Which transport protocol is associated with the conventional SSH service entry?
+3. Does finding a service in /etc/services prove that the service is running?
+Task 4 — Test HTTPS Connectivity
+Run:
+curl -I https://example.com
+Record:
+- Whether the request succeeded.
+- The HTTP response status, if available.
+- One response header.
+- Any error message, if the request failed.
+Answer:
+1. Which service is being accessed?
+2. Which port is commonly used for HTTPS over TCP?
+3. What does the -I option do?
+4. Does a successful response prove that every network service on your computer is reachable?
+Task 5 — Explain the TCP Three-Way Handshake
+Write the three handshake steps in the correct order.
+Client                         Server
+
+          _____________>
+
+          <_____________
+
+          _____________>
+For each step, explain:
+- Which side sends the message.
+- Which TCP flag or flags are used.
+- What the message accomplishes.
+Task 6 — Compare TCP and UDP
+Complete the following table:
+Feature	TCP	UDP
+Connection type		
+Delivery guarantee		
+Ordering guarantee		
+Retransmission		
+Example use case		Then answer:
+
+Why might a video call use UDP rather than relying entirely on TCP?
+
+Write your explanation in 3–5 sentences.
+
+Submission Requirements
+Submit the following:
+1. Terminal screenshots or copied command outputs.
+2. Results from ss -tuln.
+3. Results from sudo ss -tulpn.
+4. SSH service-port lookup results.
+5. HTTPS connectivity test results.
+6. Completed TCP three-way handshake explanation.
+7. Completed TCP vs UDP comparison.
+8. A short explanation of source and destination ports using a real or illustrative example.
+Completion Checklist
+- [ ] I ran ss -tuln.
+- [ ] I ran sudo ss -tulpn.
+- [ ] I identified available listening ports or services.
+- [ ] I checked the SSH service entry.
+- [ ] I tested HTTPS connectivity using curl.
+- [ ] I explained the TCP three-way handshake.
+- [ ] I compared TCP and UDP.
+- [ ] I explained source and destination ports.
+Safety and Privacy
+- Only inspect systems you own or have permission to assess.
+- Do not scan public IP addresses or university systems without authorization.
+- Avoid sharing sensitive network details in publicly accessible submissions.
+- Do not assume that every listening service is exposed to the Internet.
+Completion Criteria
+A successful submission demonstrates that the student can:
+- Explain TCP and UDP.
+- Describe the TCP three-way handshake.
+- Identify common network ports.
+- Inspect listening sockets using Linux.
+- Distinguish source and destination ports.
+- Explain why listening locally and being remotely accessible are different.
+Next lesson: Lesson 06 — DNS, DHCP and NAT.
+
+
+
+
+4. Quality review and LMS implementation
+Review item	Status
+Beginner-friendly explanations	Ready
+TCP and UDP comparison	Ready
+Three-way handshake diagram	Ready
+Common port reference table	Ready
+Source/destination port explanation	Ready
+Listening port and security concepts	Ready
+Linux practical commands	Ready
+10-question assessment	Ready
+Assignment and submission checklist	Ready
+
+Recommended LMS configuration
+- Lesson: Present the ten sections as separate accordion panels.
+- Quiz: Use automatic scoring, immediate answer feedback and an incorrect-answer review.
+- Multiple-choice questions: Require all correct options for full credit.
+- Assignment: Provide a text submission field and screenshot/file upload option.
+- Completion: Require the lesson quiz and practical assignment to be completed.
+Technical accuracy note: The lesson distinguishes local listening sockets from remotely accessible ports, and avoids suggesting that UDP is always faster or that a port number proves which service is running.
+
+The next lesson can follow this same structure for Lesson 06 — DNS, DHCP and NAT.
