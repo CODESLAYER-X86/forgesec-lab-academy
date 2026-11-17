@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Menu, Search, X } from "lucide-react";
-import type { SessionUser } from "@/lib/types/domain";
-import { SearchModal } from "@/components/search/search-modal";
+import { useAuthSession } from "@/components/auth/auth-session-provider";
 
-export function SiteHeader({ user }: { user: SessionUser | null }) {
+const SearchModal = dynamic(
+  () => import("@/components/search/search-modal").then((m) => m.SearchModal),
+  { ssr: false }
+);
+
+export function SiteHeader() {
+  const { user, loaded } = useAuthSession();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -83,7 +89,7 @@ export function SiteHeader({ user }: { user: SessionUser | null }) {
               type="button"
               onClick={() => setSearchOpen(true)}
               aria-label="Search curriculum"
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#303A44] bg-[#171D23] px-3 text-xs font-medium text-[#AAB4BE] hover:border-[#4B5866] hover:text-[#F3F4F6] transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#303A44] bg-[#171D23] px-3 text-xs font-medium text-[#AAB4BE] hover:border-[#4B5866] hover:text-[#F3F4F6] active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
             >
               <Search className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">Search</span>
@@ -92,7 +98,14 @@ export function SiteHeader({ user }: { user: SessionUser | null }) {
               </kbd>
             </button>
 
-            {user ? (
+            {!loaded ? (
+              <Link
+                href="/login"
+                className="hidden md:inline-flex h-9 min-w-[72px] items-center justify-center rounded-lg bg-[#A3E635] px-4 text-xs font-semibold text-[#101418] hover:bg-[#B4F04E] transition-colors whitespace-nowrap shrink-0"
+              >
+                Login
+              </Link>
+            ) : user ? (
               <div className="hidden md:flex items-center gap-3 shrink-0">
                 {showAdmin ? (
                   <Link
@@ -104,7 +117,7 @@ export function SiteHeader({ user }: { user: SessionUser | null }) {
                 ) : null}
                 <Link
                   href="/dashboard"
-                  className="inline-flex h-9 items-center rounded-lg bg-[#A3E635] px-4 text-xs font-semibold text-[#101418] hover:bg-[#B4F04E] transition-colors whitespace-nowrap shrink-0"
+                  className="inline-flex h-9 items-center rounded-lg bg-[#A3E635] px-4 text-xs font-semibold text-[#101418] hover:bg-[#B4F04E] active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
                 >
                   Dashboard
                 </Link>
@@ -112,7 +125,7 @@ export function SiteHeader({ user }: { user: SessionUser | null }) {
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex h-9 items-center rounded-lg bg-[#A3E635] px-4 text-xs font-semibold text-[#101418] hover:bg-[#B4F04E] transition-colors whitespace-nowrap shrink-0"
+                className="hidden md:inline-flex h-9 min-w-[72px] items-center justify-center rounded-lg bg-[#A3E635] px-4 text-xs font-semibold text-[#101418] hover:bg-[#B4F04E] active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
               >
                 Login
               </Link>
@@ -185,7 +198,9 @@ export function SiteHeader({ user }: { user: SessionUser | null }) {
         ) : null}
       </header>
 
-      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {searchOpen ? (
+        <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      ) : null}
     </>
   );
 }

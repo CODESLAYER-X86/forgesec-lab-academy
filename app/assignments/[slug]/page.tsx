@@ -3,12 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import { AssignmentTracker } from "@/components/learning/assignment-tracker";
-import { getCurrentUser } from "@/modules/auth/session";
 import {
   getAssignmentBySlug,
-  getUserAssignmentProgress,
+  getPublishedAssignments,
 } from "@/modules/assignments/service";
 import { getLessonById } from "@/modules/content/loader";
+
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const assignments = await getPublishedAssignments();
+  return assignments.map((a) => ({ slug: a.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -30,14 +36,9 @@ export default async function AssignmentDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [assignment, user] = await Promise.all([
-    getAssignmentBySlug(slug),
-    getCurrentUser(),
-  ]);
+  const assignment = await getAssignmentBySlug(slug);
   if (!assignment) notFound();
 
-  const progress = user ? await getUserAssignmentProgress(user.id) : [];
-  const record = progress.find((p) => p.assignmentId === assignment.id);
   const relatedLesson = assignment.lessonId ? getLessonById(assignment.lessonId) : null;
 
   return (
@@ -107,13 +108,7 @@ export default async function AssignmentDetailPage({
         </div>
       </section>
 
-      <AssignmentTracker
-        assignmentId={assignment.id}
-        slug={assignment.slug}
-        initialStatus={record?.status ?? "not_started"}
-        initialNotes={record?.notes ?? ""}
-        isAuthenticated={Boolean(user)}
-      />
+      <AssignmentTracker assignmentId={assignment.id} slug={assignment.slug} />
     </div>
   );
 }

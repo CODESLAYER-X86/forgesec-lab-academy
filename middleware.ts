@@ -2,8 +2,29 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
 
+const AUTH_REFRESH_PREFIXES = ["/dashboard", "/admin", "/login", "/auth", "/api"];
+
+function needsMiddlewareAuthRefresh(pathname: string): boolean {
+  return AUTH_REFRESH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
 export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured()) {
+    return NextResponse.next();
+  }
+
+  const { pathname } = request.nextUrl;
+  if (!needsMiddlewareAuthRefresh(pathname)) {
+    return NextResponse.next();
+  }
+
+  const hasSupabaseCookie = request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith("sb-"));
+
+  if (!hasSupabaseCookie) {
     return NextResponse.next();
   }
 

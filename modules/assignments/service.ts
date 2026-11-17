@@ -1,7 +1,8 @@
+import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurriculumSeed, readPreviewDb, writePreviewDb } from "@/lib/store/preview-store";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   AssignmentProgressRecord,
   AssignmentProgressStatus,
@@ -9,9 +10,9 @@ import type {
   PracticalAssignment,
 } from "@/lib/types/domain";
 
-export async function getPublishedAssignments(): Promise<PracticalAssignment[]> {
+export const getPublishedAssignments = cache(async (): Promise<PracticalAssignment[]> => {
   if (isSupabaseConfigured()) {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabasePublicClient();
     const dbAssignments: PracticalAssignment[] = [];
     if (supabase) {
       const { data } = await supabase
@@ -50,35 +51,73 @@ export async function getPublishedAssignments(): Promise<PracticalAssignment[]> 
   }
 
   return readPreviewDb().assignments.filter((a) => a.status === "published");
-}
+});
 
-export async function getAssignmentBySlug(slug: string): Promise<PracticalAssignment | null> {
-  const all = await getPublishedAssignments();
-  return all.find((a) => a.slug === slug) ?? null;
-}
-
-export async function getUserAssignmentProgress(
-  userId: string
-): Promise<AssignmentProgressRecord[]> {
+export const getAssignmentBySlug = cache(async (slug: string): Promise<PracticalAssignment | null> => {
   if (isSupabaseConfigured()) {
-    const supabase = await createSupabaseServerClient();
-    if (!supabase) return [];
-    const { data } = await supabase
-      .from("assignment_progress")
-      .select("*")
-      .eq("user_id", userId);
-    return (data ?? []).map((row) => ({
-      userId: row.user_id,
-      assignmentId: row.assignment_id,
-      status: row.status,
-      notes: row.notes ?? "",
-      completedAt: row.completed_at,
-      updatedAt: row.updated_at,
-    }));
+    const supabase = createSupabasePublicClient();
+    if (supabase) {
+      const { data: row } = await supabase
+        .from("assignments")
+        .select("*")
+        .eq("slug", slug)
+        .eq("status", "published")
+        .maybeSingle();
+      if (row) {
+        return {
+          id: row.id,
+          slug: row.slug,
+          title: row.title,
+          objective: row.objective,
+          category: row.category,
+          difficulty: row.difficulty,
+          lessonId: row.lesson_id ?? undefined,
+          prerequisites: row.prerequisites ?? [],
+          instructions: row.instructions ?? [],
+          expectedOutcome: row.expected_outcome,
+          safetyWarning: row.safety_warning,
+          status: row.status,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        };
+      }
+    }
+    return (
+      getCurriculumSeed().assignments.find(
+        (a) => a.slug === slug && a.status === "published"
+      ) ?? null
+    );
   }
 
-  return readPreviewDb().assignmentProgress.filter((p) => p.userId === userId);
-}
+  return (
+    readPreviewDb().assignments.find(
+      (a) => a.slug === slug && a.status === "published"
+    ) ?? null
+  );
+});
+
+export const getUserAssignmentProgress = cache(
+  async (userId: string): Promise<AssignmentProgressRecord[]> => {
+    if (isSupabaseConfigured()) {
+      const supabase = await createSupabaseServerClient();
+      if (!supabase) return [];
+      const { data } = await supabase
+        .from("assignment_progress")
+        .select("*")
+        .eq("user_id", userId);
+      return (data ?? []).map((row) => ({
+        userId: row.user_id,
+        assignmentId: row.assignment_id,
+        status: row.status,
+        notes: row.notes ?? "",
+        completedAt: row.completed_at,
+        updatedAt: row.updated_at,
+      }));
+    }
+
+    return readPreviewDb().assignmentProgress.filter((p) => p.userId === userId);
+  }
+);
 
 export async function updateAssignmentStatus(
   userId: string,

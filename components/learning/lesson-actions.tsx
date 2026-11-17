@@ -7,6 +7,7 @@ import {
   toggleBookmarkAction,
   toggleLessonCompletionAction,
 } from "@/app/actions/learning";
+import { useAuthSession } from "@/components/auth/auth-session-provider";
 
 export function LessonActions({
   lessonId,
@@ -22,13 +23,27 @@ export function LessonActions({
   pathId: string;
   slug: string;
   title: string;
-  initialCompleted: boolean;
-  initialBookmarked: boolean;
-  isAuthenticated: boolean;
+  initialCompleted?: boolean;
+  initialBookmarked?: boolean;
+  isAuthenticated?: boolean;
   hasQuiz?: boolean;
 }) {
-  const [completed, setCompleted] = useState(initialCompleted);
-  const [bookmarked, setBookmarked] = useState(initialBookmarked);
+  const {
+    user,
+    completedIds,
+    bookmarkedIds,
+    setLessonCompletedOptimistic,
+    setBookmarkOptimistic,
+  } = useAuthSession();
+
+  const resolvedAuth = isAuthenticated ?? Boolean(user);
+  const [completedOverride, setCompletedOverride] = useState<boolean | null>(null);
+  const [bookmarkedOverride, setBookmarkedOverride] = useState<boolean | null>(null);
+  const completed =
+    completedOverride ?? (initialCompleted !== undefined ? initialCompleted : completedIds.has(lessonId));
+  const bookmarked =
+    bookmarkedOverride ?? (initialBookmarked !== undefined ? initialBookmarked : bookmarkedIds.has(lessonId));
+
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -38,12 +53,13 @@ export function LessonActions({
       setNotice("Answer 100% of the module quiz correctly to complete this module.");
       return;
     }
-    if (!isAuthenticated) {
+    if (!resolvedAuth) {
       setNotice("Sign in to save lesson progress.");
       return;
     }
     const nextState = !completed;
-    setCompleted(nextState);
+    setCompletedOverride(nextState);
+    setLessonCompletedOptimistic(lessonId, nextState);
     setNotice(null);
     startTransition(async () => {
       const res = await toggleLessonCompletionAction({
@@ -53,19 +69,24 @@ export function LessonActions({
         completed: nextState,
       });
       if (!res.ok) {
-        setCompleted(!nextState);
+        setCompletedOverride(!nextState);
+        setLessonCompletedOptimistic(lessonId, !nextState);
         setNotice(res.error ?? "Unable to update progress.");
+      } else {
+        setCompletedOverride(null);
       }
     });
   };
 
   const handleToggleBookmark = () => {
-    if (!isAuthenticated) {
+    if (!resolvedAuth) {
       setNotice("Sign in to bookmark lessons.");
       return;
     }
     const prev = bookmarked;
-    setBookmarked(!prev);
+    const nextState = !prev;
+    setBookmarkedOverride(nextState);
+    setBookmarkOptimistic(lessonId, nextState);
     setNotice(null);
     startTransition(async () => {
       const res = await toggleBookmarkAction({
@@ -75,8 +96,11 @@ export function LessonActions({
         slug,
       });
       if (!res.ok) {
-        setBookmarked(prev);
+        setBookmarkedOverride(prev);
+        setBookmarkOptimistic(lessonId, prev);
         setNotice(res.error ?? "Unable to update bookmark.");
+      } else {
+        setBookmarkedOverride(null);
       }
     });
   };
@@ -98,7 +122,7 @@ export function LessonActions({
           type="button"
           disabled={isPending || hasQuiz}
           onClick={handleToggleComplete}
-          className={`inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors whitespace-nowrap ${
+          className={`inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold active:scale-[0.98] transition-all whitespace-nowrap ${
             completed
               ? "border border-[#22C55E]/40 bg-[#173D35] text-[#BBF7D0] disabled:opacity-90"
               : hasQuiz
@@ -128,7 +152,7 @@ export function LessonActions({
           type="button"
           disabled={isPending}
           onClick={handleToggleBookmark}
-          className={`inline-flex h-10 items-center gap-2 rounded-lg border px-3.5 text-sm font-medium transition-colors whitespace-nowrap ${
+          className={`inline-flex h-10 items-center gap-2 rounded-lg border px-3.5 text-sm font-medium active:scale-[0.98] transition-all whitespace-nowrap ${
             bookmarked
               ? "border-[#A3E635]/50 bg-[#202831] text-[#A3E635]"
               : "border-[#303A44] bg-[#171D23] text-[#AAB4BE] hover:text-[#F3F4F6]"
@@ -141,7 +165,7 @@ export function LessonActions({
         <button
           type="button"
           onClick={handleShare}
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#303A44] bg-[#171D23] px-3.5 text-sm font-medium text-[#AAB4BE] hover:text-[#F3F4F6] transition-colors whitespace-nowrap"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#303A44] bg-[#171D23] px-3.5 text-sm font-medium text-[#AAB4BE] hover:text-[#F3F4F6] active:scale-[0.98] transition-all whitespace-nowrap"
         >
           {copiedUrl ? (
             <>
@@ -166,7 +190,7 @@ export function LessonActions({
       {notice ? (
         <div className="text-xs text-[#F59E0B]">
           {notice}{" "}
-          {!isAuthenticated ? (
+          {!resolvedAuth ? (
             <Link href="/login" className="underline text-[#A3E635]">
               Go to login
             </Link>

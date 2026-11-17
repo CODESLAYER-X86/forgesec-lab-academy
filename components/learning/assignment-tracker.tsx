@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, Clock } from "lucide-react";
 import { updateAssignmentStatusAction } from "@/app/actions/learning";
+import { useAuthSession } from "@/components/auth/auth-session-provider";
 import type { AssignmentProgressStatus } from "@/lib/types/domain";
 
 const STATUS_OPTIONS: Array<{
@@ -24,22 +25,32 @@ export function AssignmentTracker({
 }: {
   assignmentId: string;
   slug: string;
-  initialStatus: AssignmentProgressStatus;
-  initialNotes: string;
-  isAuthenticated: boolean;
+  initialStatus?: AssignmentProgressStatus;
+  initialNotes?: string;
+  isAuthenticated?: boolean;
 }) {
-  const [status, setStatus] = useState<AssignmentProgressStatus>(initialStatus);
-  const [notes, setNotes] = useState(initialNotes);
+  const { user, assignmentProgressById, setAssignmentProgressOptimistic } =
+    useAuthSession();
+
+  const resolvedAuth = isAuthenticated ?? Boolean(user);
+  const hydrated = assignmentProgressById[assignmentId];
+
+  const [draftStatus, setDraftStatus] = useState<AssignmentProgressStatus | null>(null);
+  const [draftNotes, setDraftNotes] = useState<string | null>(null);
+  const status = draftStatus ?? initialStatus ?? hydrated?.status ?? "not_started";
+  const notes = draftNotes ?? initialNotes ?? hydrated?.notes ?? "";
+
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const saveUpdate = (nextStatus: AssignmentProgressStatus) => {
-    if (!isAuthenticated) {
+    if (!resolvedAuth) {
       setFeedback("Sign in to save practical assignment progress.");
       return;
     }
-    const prev = status;
-    setStatus(nextStatus);
+    const prevStatus = status;
+    setDraftStatus(nextStatus);
+    setAssignmentProgressOptimistic(assignmentId, { status: nextStatus, notes });
     setFeedback(null);
     startTransition(async () => {
       const res = await updateAssignmentStatusAction({
@@ -49,9 +60,11 @@ export function AssignmentTracker({
         notes,
       });
       if (!res.ok) {
-        setStatus(prev);
+        setDraftStatus(prevStatus);
+        setAssignmentProgressOptimistic(assignmentId, { status: prevStatus, notes });
         setFeedback(res.error ?? "Failed to save status.");
       } else {
+        setDraftStatus(null);
         setFeedback("Progress saved.");
       }
     });
@@ -96,7 +109,7 @@ export function AssignmentTracker({
             type="button"
             disabled={isPending}
             onClick={() => saveUpdate(opt.value)}
-            className={`h-9 rounded-lg px-3.5 text-xs font-semibold transition-colors whitespace-nowrap ${
+            className={`h-9 rounded-lg px-3.5 text-xs font-semibold active:scale-[0.98] transition-all whitespace-nowrap ${
               status === opt.value
                 ? "bg-[#A3E635] text-[#101418]"
                 : "border border-[#303A44] bg-[#101418] text-[#AAB4BE] hover:text-[#F3F4F6]"
@@ -115,7 +128,7 @@ export function AssignmentTracker({
           id="assignment-notes"
           rows={3}
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={(e) => setDraftNotes(e.target.value)}
           placeholder="Record observed output, flags tested, or environment notes..."
           className="mt-1.5 w-full rounded-lg border border-[#303A44] bg-[#101418] px-3 py-2 text-sm text-[#F3F4F6] placeholder-[#64748B] focus:border-[#A3E635] focus:outline-none"
         />
@@ -123,7 +136,7 @@ export function AssignmentTracker({
           {feedback ? (
             <span className="text-xs text-[#AAB4BE]">
               {feedback}{" "}
-              {!isAuthenticated ? (
+              {!resolvedAuth ? (
                 <Link href="/login" className="text-[#A3E635] underline">
                   Login
                 </Link>
@@ -138,7 +151,7 @@ export function AssignmentTracker({
             type="button"
             disabled={isPending}
             onClick={() => saveUpdate(status)}
-            className="h-8 rounded-md border border-[#303A44] bg-[#202831] px-3 text-xs font-medium text-[#F3F4F6] hover:border-[#4B5866]"
+            className="h-8 rounded-md border border-[#303A44] bg-[#202831] px-3 text-xs font-medium text-[#F3F4F6] hover:border-[#4B5866] active:scale-[0.98] transition-all"
           >
             Save Notes
           </button>

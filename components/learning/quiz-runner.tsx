@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
@@ -10,10 +9,8 @@ import {
   Terminal,
   XCircle,
 } from "lucide-react";
-import {
-  submitQuizAction,
-  toggleLessonCompletionAction,
-} from "@/app/actions/learning";
+import { submitQuizAction } from "@/app/actions/learning";
+import { useAuthSession } from "@/components/auth/auth-session-provider";
 import type { PublicQuiz, QuizAttemptRecord } from "@/lib/types/domain";
 
 export interface QuizLessonContext {
@@ -41,11 +38,21 @@ export function QuizRunner({
   previousBest,
 }: {
   quiz: PublicQuiz;
-  isAuthenticated: boolean;
+  isAuthenticated?: boolean;
   lessonContext?: QuizLessonContext;
   previousBest?: PreviousQuizBest | null;
 }) {
-  const router = useRouter();
+  const {
+    user,
+    quizBestBySlug,
+    setLessonCompletedOptimistic,
+    setQuizBestOptimistic,
+  } = useAuthSession();
+
+  const resolvedAuth = isAuthenticated ?? Boolean(user);
+  const resolvedPreviousBest =
+    previousBest !== undefined ? previousBest : quizBestBySlug[quiz.slug] ?? null;
+
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [result, setResult] = useState<QuizAttemptRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -122,25 +129,16 @@ export function QuizRunner({
       }
       setResult(res.result);
 
-      if (
-        res.result.percentage === 100 &&
-        res.result.passed &&
-        isAuthenticated &&
-        lessonContext &&
-        !lessonContext.isCompleted
-      ) {
-        const completionRes = await toggleLessonCompletionAction({
-          lessonId: lessonContext.lessonId,
-          pathId: lessonContext.pathId,
-          slug: lessonContext.slug,
-          completed: true,
+      if (resolvedAuth) {
+        setQuizBestOptimistic(quiz.slug, {
+          percentage: res.result.percentage,
+          passed: res.result.passed,
+          submittedAt: res.result.submittedAt,
         });
-        if (completionRes.ok) {
+        if (res.result.percentage === 100 && res.result.passed && lessonContext) {
+          setLessonCompletedOptimistic(lessonContext.lessonId, true);
           setAutoCompletedModule(true);
-          router.refresh();
         }
-      } else if (isAuthenticated) {
-        router.refresh();
       }
     });
   };
@@ -162,14 +160,14 @@ export function QuizRunner({
             <span className="font-medium text-[#F3F4F6] tabular-nums">
               Progress: {answeredCount} of {totalCount} answered
             </span>
-            {previousBest ? (
+            {resolvedPreviousBest ? (
               <span
                 className={`tabular-nums font-medium ${
-                  previousBest.percentage === 100 ? "text-[#22C55E]" : "text-[#F59E0B]"
+                  resolvedPreviousBest.percentage === 100 ? "text-[#22C55E]" : "text-[#F59E0B]"
                 }`}
               >
-                Previous best: {previousBest.percentage}% ·{" "}
-                {previousBest.percentage === 100 ? "Completed (100%)" : "100% required to complete"}
+                Previous best: {resolvedPreviousBest.percentage}% ·{" "}
+                {resolvedPreviousBest.percentage === 100 ? "Completed (100%)" : "100% required to complete"}
               </span>
             ) : (
               <span className="text-[#7B8794] tabular-nums">
@@ -222,7 +220,7 @@ export function QuizRunner({
                   Required score: 100%
                 </span>
               </p>
-              {!isAuthenticated ? (
+              {!resolvedAuth ? (
                 <p className="text-xs text-[#7B8794]">
                   Guest practice attempt —{" "}
                   <Link href="/login" className="text-[#A3E635] underline">

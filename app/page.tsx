@@ -1,20 +1,17 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, CheckCircle2, ShieldCheck, Terminal } from "lucide-react";
+import { ArrowRight, BookOpen, ShieldCheck, Terminal } from "lucide-react";
+import { StudentInvitationCard } from "@/components/learning/student-invitation-card";
 import { getSiteUrl } from "@/lib/env";
-import { getCurrentUser } from "@/modules/auth/session";
 import {
   getPublishedLearningPaths,
   getPublishedLessons,
   getPublishedWriteups,
 } from "@/modules/content/loader";
 
-export default async function HomePage() {
-  const [user, paths, lessons, writeups] = await Promise.all([
-    getCurrentUser(),
-    Promise.resolve(getPublishedLearningPaths()),
-    Promise.resolve(getPublishedLessons()),
-    Promise.resolve(getPublishedWriteups()),
-  ]);
+export default function HomePage() {
+  const paths = getPublishedLearningPaths();
+  const lessons = getPublishedLessons();
+  const writeups = getPublishedWriteups();
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -265,31 +262,7 @@ export default async function HomePage() {
 
       {/* Section 5: Student Invitation */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="flex flex-col justify-between gap-6 rounded-xl border border-[#303A44] bg-[#171D23] p-6 sm:flex-row sm:items-center sm:p-8">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-medium text-[#A3E635]">
-              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-              <span>Track Progress Across Sessions</span>
-            </div>
-            <h2 className="mt-2 text-xl font-semibold text-[#F3F4F6]">
-              {user
-                ? `Welcome back, ${user.displayName}`
-                : "Create your student learning workspace"}
-            </h2>
-            <p className="mt-1.5 text-sm text-[#AAB4BE]">
-              {user
-                ? "Resume your next incomplete module, review quiz results, and track practical assignments."
-                : "Sign in with Google to keep your completed modules, bookmarks, and quiz attempt history synced."}
-            </p>
-          </div>
-          <Link
-            href={user ? "/dashboard" : "/login"}
-            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-[#A3E635] px-6 text-sm font-semibold text-[#101418] hover:bg-[#B4F04E] transition-colors whitespace-nowrap"
-          >
-            <span>{user ? "Open Dashboard" : "Continue with Google"}</span>
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        </div>
+        <StudentInvitationCard />
       </section>
     </>
   );

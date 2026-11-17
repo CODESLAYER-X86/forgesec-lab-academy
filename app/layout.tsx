@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { AuthSessionProvider } from "@/components/auth/auth-session-provider";
+import { NavigationProgressBar } from "@/components/layout/navigation-progress";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { getSiteUrl } from "@/lib/env";
-import { getCurrentUser } from "@/modules/auth/session";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -47,13 +48,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
-
   return (
     <html
       lang="en"
@@ -63,17 +62,20 @@ export default async function RootLayout({
         suppressHydrationWarning
         className="min-h-screen flex flex-col bg-[#101418] text-[#F3F4F6]"
       >
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-[#A3E635] focus:px-4 focus:py-2 focus:text-xs focus:font-semibold focus:text-[#101418]"
-        >
-          Skip to main content
-        </a>
-        <SiteHeader user={user} />
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter />
+        <AuthSessionProvider>
+          <NavigationProgressBar />
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-[#A3E635] focus:px-4 focus:py-2 focus:text-xs focus:font-semibold focus:text-[#101418]"
+          >
+            Skip to main content
+          </a>
+          <SiteHeader />
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
+          <SiteFooter />
+        </AuthSessionProvider>
       </body>
     </html>
   );

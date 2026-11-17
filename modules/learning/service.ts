@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/env";
 import { readPreviewDb, writePreviewDb } from "@/lib/store/preview-store";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -18,7 +19,7 @@ import {
   type PathProgressSummary,
 } from "@/modules/learning/progress";
 
-export async function getUserLessonProgress(userId: string): Promise<LessonProgressRecord[]> {
+export const getUserLessonProgress = cache(async (userId: string): Promise<LessonProgressRecord[]> => {
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient();
     if (!supabase) return [];
@@ -38,7 +39,7 @@ export async function getUserLessonProgress(userId: string): Promise<LessonProgr
 
   const db = readPreviewDb();
   return db.lessonProgress.filter((p) => p.userId === userId);
-}
+});
 
 export async function toggleLessonCompletion(
   userId: string,
@@ -89,7 +90,7 @@ export async function toggleLessonCompletion(
   writePreviewDb(db);
 }
 
-export async function getUserBookmarks(userId: string): Promise<BookmarkRecord[]> {
+export const getUserBookmarks = cache(async (userId: string): Promise<BookmarkRecord[]> => {
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient();
     if (!supabase) return [];
@@ -113,7 +114,7 @@ export async function getUserBookmarks(userId: string): Promise<BookmarkRecord[]
   return db.bookmarks
     .filter((b) => b.userId === userId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
+});
 
 export async function toggleBookmark(
   userId: string,
@@ -173,6 +174,21 @@ export async function recordContentView(
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient();
     if (!supabase) return;
+    const { data: latest } = await supabase
+      .from("content_activity")
+      .select("id, content_id, viewed_at")
+      .eq("user_id", userId)
+      .order("viewed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latest && latest.content_id === item.contentId) {
+      const elapsedMs = Date.now() - Date.parse(latest.viewed_at);
+      if (Number.isFinite(elapsedMs) && elapsedMs < 5 * 60 * 1000) {
+        return;
+      }
+    }
+
     await supabase.from("content_activity").insert({
       user_id: userId,
       content_id: item.contentId,
@@ -208,7 +224,7 @@ export async function recordContentView(
   writePreviewDb(db);
 }
 
-export async function getUserActivity(userId: string): Promise<ContentActivityRecord[]> {
+export const getUserActivity = cache(async (userId: string): Promise<ContentActivityRecord[]> => {
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient();
     if (!supabase) return [];
@@ -234,7 +250,7 @@ export async function getUserActivity(userId: string): Promise<ContentActivityRe
     .filter((a) => a.userId === userId)
     .sort((a, b) => b.viewedAt.localeCompare(a.viewedAt))
     .slice(0, 20);
-}
+});
 
 export async function getDashboardLearningSummary(userId: string): Promise<{
   completedCount: number;

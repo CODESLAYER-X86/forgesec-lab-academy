@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -22,8 +23,12 @@ import { verifyPreviewSessionToken } from "@/modules/auth/preview-token";
 
 export const PREVIEW_SESSION_COOKIE = "forgesec_preview_uid";
 
-export async function getCurrentUser(): Promise<SessionUser | null> {
+export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   if (isSupabaseConfigured()) {
+    const cookieStore = await cookies();
+    const hasAuthCookie = cookieStore.getAll().some((c) => c.name.startsWith("sb-"));
+    if (!hasAuthCookie) return null;
+
     const supabase = await createSupabaseServerClient();
     if (!supabase) return null;
     const {
@@ -36,11 +41,10 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     const adminClient = createSupabaseAdminClient();
     const dbClient = adminClient ?? supabase;
 
-    const { data: existingProfile } = await dbClient
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    const [{ data: existingProfile }, { data: roleRow }] = await Promise.all([
+      dbClient.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      dbClient.from("user_roles").select("*").eq("user_id", user.id).maybeSingle(),
+    ]);
 
     let profile = existingProfile;
     if (!profile && adminClient) {
@@ -60,12 +64,6 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
         .single();
       profile = created;
     }
-
-    const { data: roleRow } = await dbClient
-      .from("user_roles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
 
     const { role, isPermanentAdmin } = resolveEffectiveRole(
       email,
@@ -128,7 +126,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     canManageAssignments: role === "admin" ? true : user.canManageAssignments,
     authMode: "preview",
   };
-}
+});
 
 export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();

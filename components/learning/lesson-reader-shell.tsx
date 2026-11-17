@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   ListTree,
 } from "lucide-react";
+import { useAuthSession } from "@/components/auth/auth-session-provider";
 import type { TocHeading } from "@/modules/content/loader";
 
 export interface PathNavItem {
@@ -27,6 +28,10 @@ export interface LessonPageStep {
   isAssessmentPage: boolean;
 }
 
+function isPlainLeftClick(e: MouseEvent<HTMLAnchorElement>): boolean {
+  return !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0);
+}
+
 export function LessonReaderShell({
   pathTitle,
   pathSlug,
@@ -38,6 +43,7 @@ export function LessonReaderShell({
   currentPage = 1,
   pageSteps = [],
   totalEstimatedMinutes,
+  onSelectPage,
   children,
 }: {
   pathTitle: string;
@@ -50,12 +56,35 @@ export function LessonReaderShell({
   currentPage?: number;
   pageSteps?: LessonPageStep[];
   totalEstimatedMinutes?: number;
+  onSelectPage?: (pageNumber: number, hash?: string) => void;
   children: React.ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { completedIds, loaded } = useAuthSession();
+
+  const resolvedPathItems = useMemo(() => {
+    if (!loaded) return pathItems;
+    return pathItems.map((item) => ({
+      ...item,
+      completed: item.completed || completedIds.has(item.id),
+    }));
+  }, [pathItems, completedIds, loaded]);
+
   const totalPages = pageSteps.length;
   const activeIsAssessment =
     totalPages > 0 && currentPage === totalPages && pageSteps[totalPages - 1]?.isAssessmentPage;
+
+  const handleStepClick = (
+    e: MouseEvent<HTMLAnchorElement>,
+    pageNumber: number,
+    hash?: string
+  ) => {
+    setMobileNavOpen(false);
+    if (onSelectPage && isPlainLeftClick(e)) {
+      e.preventDefault();
+      onSelectPage(pageNumber, hash);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -81,7 +110,7 @@ export function LessonReaderShell({
             aria-label="Course modules"
             className="mt-2 rounded-lg border border-[#303A44] bg-[#171D23] p-3 space-y-1"
           >
-            {pathItems.map((item) => {
+            {resolvedPathItems.map((item) => {
               const active = item.id === currentLessonId;
               return (
                 <div key={item.id} className="space-y-1">
@@ -111,7 +140,9 @@ export function LessonReaderShell({
                           <Link
                             key={step.pageNumber}
                             href={`/learn/lessons/${lessonSlug}?page=${step.pageNumber}`}
-                            onClick={() => setMobileNavOpen(false)}
+                            data-no-progress={onSelectPage ? "true" : undefined}
+                            prefetch={onSelectPage ? false : undefined}
+                            onClick={(e) => handleStepClick(e, step.pageNumber)}
                             aria-current={isStepActive ? "page" : undefined}
                             className={`flex items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors ${
                               isStepActive
@@ -146,11 +177,11 @@ export function LessonReaderShell({
               {pathTitle}
             </Link>
             <div className="mt-1 text-xs text-[#7B8794] tabular-nums">
-              {pathItems.filter((i) => i.completed).length} of {pathItems.length} completed
+              {resolvedPathItems.filter((i) => i.completed).length} of {resolvedPathItems.length} completed
             </div>
 
             <nav aria-label="Module curriculum" className="mt-4 space-y-1">
-              {pathItems.map((item) => {
+              {resolvedPathItems.map((item) => {
                 const active = item.id === currentLessonId;
                 return (
                   <div key={item.id} className="space-y-1">
@@ -183,6 +214,9 @@ export function LessonReaderShell({
                             <Link
                               key={step.pageNumber}
                               href={`/learn/lessons/${lessonSlug}?page=${step.pageNumber}`}
+                              data-no-progress={onSelectPage ? "true" : undefined}
+                            prefetch={onSelectPage ? false : undefined}
+                              onClick={(e) => handleStepClick(e, step.pageNumber)}
                               aria-current={isStepActive ? "page" : undefined}
                               className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-[11px] leading-snug transition-colors ${
                                 isStepActive
@@ -271,7 +305,10 @@ export function LessonReaderShell({
               {totalPages > 1 && lessonSlug && currentPage < totalPages ? (
                 <div className="mt-4 border-t border-[#303A44] pt-3">
                   <Link
-                    href={`/learn/lessons/${lessonSlug}?page=${totalPages}`}
+                    href={`/learn/lessons/${lessonSlug}?page=${totalPages}#knowledge-check`}
+                    data-no-progress={onSelectPage ? "true" : undefined}
+                    prefetch={onSelectPage ? false : undefined}
+                    onClick={(e) => handleStepClick(e, totalPages, "knowledge-check")}
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-[#A3E635] hover:underline"
                   >
                     <ClipboardCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />

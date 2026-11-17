@@ -2,8 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { QuizRunner } from "@/components/learning/quiz-runner";
-import { getCurrentUser } from "@/modules/auth/session";
-import { getPublicQuizBySlug } from "@/modules/quizzes/service";
+import { getPublicQuizBySlug, getPublishedQuizzes } from "@/modules/quizzes/service";
+
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const quizzes = await getPublishedQuizzes();
+  return quizzes.map((q) => ({ slug: q.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -25,10 +31,7 @@ export default async function QuizDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [quiz, user] = await Promise.all([
-    getPublicQuizBySlug(slug),
-    getCurrentUser(),
-  ]);
+  const quiz = await getPublicQuizBySlug(slug);
   if (!quiz) notFound();
 
   return (
@@ -50,7 +53,7 @@ export default async function QuizDetailPage({
         <p className="mt-2 text-sm text-[#AAB4BE]">{quiz.description}</p>
       </header>
 
-      <QuizRunner quiz={quiz} isAuthenticated={Boolean(user)} />
+      <QuizRunner quiz={quiz} />
     </div>
   );
 }

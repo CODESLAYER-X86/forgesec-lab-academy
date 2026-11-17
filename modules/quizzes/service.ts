@@ -1,7 +1,8 @@
+import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurriculumSeed, readPreviewDb, writePreviewDb } from "@/lib/store/preview-store";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   PublicQuiz,
   QuestionType,
@@ -20,76 +21,86 @@ function findCurriculumQuiz(slug: string, includeUnpublished = false): ServerQui
   );
 }
 
-async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false): Promise<ServerQuiz | null> {
-  const admin = createSupabaseAdminClient();
-  const client = admin ?? (await createSupabaseServerClient());
+const loadSupabaseQuizBySlug = cache(async function loadSupabaseQuizBySlug(
+  slug: string,
+  includeUnpublished = false,
+  includeAnswerKeys = true
+): Promise<ServerQuiz | null> {
+  const admin = includeAnswerKeys ? createSupabaseAdminClient() : null;
+  const client =
+    admin ??
+    (includeUnpublished
+      ? await createSupabaseServerClient()
+      : createSupabasePublicClient());
   if (!client) {
     return findCurriculumQuiz(slug, includeUnpublished);
   }
 
-  let query = client.from("quizzes").select("*").eq("slug", slug);
+  let query = client
+    .from("quizzes")
+    .select("*, quiz_questions(*, quiz_options(*))")
+    .eq("slug", slug);
   if (!includeUnpublished) query = query.eq("status", "published");
   const { data: quizRow } = await query.maybeSingle();
   if (!quizRow) {
     return findCurriculumQuiz(slug, includeUnpublished);
   }
 
-  const { data: qRows } = await client
-    .from("quiz_questions")
-    .select("*")
-    .eq("quiz_id", quizRow.id)
-    .order("sort_order");
-
-  if (!qRows || qRows.length === 0) {
+  const rawQuestions = (quizRow.quiz_questions as Array<Record<string, unknown>> | null) ?? [];
+  if (rawQuestions.length === 0) {
     return findCurriculumQuiz(slug, includeUnpublished);
   }
 
-  const questionIds = qRows.map((q) => q.id);
-  const { data: optRows } = questionIds.length
-    ? await client.from("quiz_options").select("*").in("question_id", questionIds).order("sort_order")
-    : { data: [] };
+  const qRows = [...rawQuestions].sort(
+    (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)
+  );
+  const questionIds = qRows.map((q) => String(q.id));
 
-  const { data: keyRows } =
-    admin && questionIds.length
-      ? await admin.from("quiz_answer_keys").select("*").in("question_id", questionIds)
-      : { data: [] };
-
-  // Map built-in curriculum answer keys to Supabase option UUIDs if SUPABASE_SERVICE_ROLE_KEY is omitted
-  const seedQuiz = findCurriculumQuiz(slug, true);
   const keyMap = new Map<
     string,
     { correctOptionIds: string[]; acceptedAnswers?: string[] }
-  >(
-    (keyRows ?? []).map((k) => [
-      k.question_id,
-      {
+  >();
+
+  if (includeAnswerKeys) {
+    const { data: keyRows } =
+      admin && questionIds.length
+        ? await admin.from("quiz_answer_keys").select("*").in("question_id", questionIds)
+        : { data: [] };
+
+    for (const k of keyRows ?? []) {
+      keyMap.set(k.question_id, {
         correctOptionIds: Array.isArray(k.correct_option_ids)
           ? (k.correct_option_ids as string[])
           : [],
         acceptedAnswers: Array.isArray(k.accepted_answers)
           ? (k.accepted_answers as string[])
           : undefined,
-      },
-    ])
-  );
-
-  if (keyMap.size === 0 && seedQuiz) {
-    for (const qRow of qRows) {
-      const seedQ = seedQuiz.questions.find((sq) => sq.sortOrder === qRow.sort_order);
-      if (!seedQ) continue;
-      const qOptRows = (optRows ?? []).filter((o) => o.question_id === qRow.id);
-      const correctLabels = new Set(
-        seedQ.options
-          .filter((so) => seedQ.correctOptionIds.includes(so.id))
-          .map((so) => so.label.toUpperCase())
-      );
-      const mappedOptionUuids = qOptRows
-        .filter((o) => correctLabels.has(String(o.label).toUpperCase()))
-        .map((o) => String(o.id));
-      keyMap.set(qRow.id, {
-        correctOptionIds: mappedOptionUuids,
-        acceptedAnswers: seedQ.acceptedAnswers,
       });
+    }
+
+    // Map built-in curriculum answer keys to Supabase option UUIDs if SUPABASE_SERVICE_ROLE_KEY is omitted
+    const seedQuiz = findCurriculumQuiz(slug, true);
+    if (keyMap.size === 0 && seedQuiz) {
+      for (const qRow of qRows) {
+        const seedQ = seedQuiz.questions.find(
+          (sq) => sq.sortOrder === Number(qRow.sort_order ?? 0)
+        );
+        if (!seedQ) continue;
+        const qOptRows =
+          (qRow.quiz_options as Array<Record<string, unknown>> | null) ?? [];
+        const correctLabels = new Set(
+          seedQ.options
+            .filter((so) => seedQ.correctOptionIds.includes(so.id))
+            .map((so) => so.label.toUpperCase())
+        );
+        const mappedOptionUuids = qOptRows
+          .filter((o) => correctLabels.has(String(o.label).toUpperCase()))
+          .map((o) => String(o.id));
+        keyMap.set(String(qRow.id), {
+          correctOptionIds: mappedOptionUuids,
+          acceptedAnswers: seedQ.acceptedAnswers,
+        });
+      }
     }
   }
 
@@ -106,32 +117,35 @@ async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false):
     createdAt: quizRow.created_at,
     updatedAt: quizRow.updated_at,
     questions: qRows.map((q) => {
-      const answerKey = keyMap.get(q.id);
+      const answerKey = keyMap.get(String(q.id));
+      const rawOptions =
+        (q.quiz_options as Array<Record<string, unknown>> | null) ?? [];
+      const sortedOptions = [...rawOptions].sort(
+        (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)
+      );
       return {
-        id: q.id,
-        prompt: q.prompt,
-        questionType: q.question_type,
-        sortOrder: q.sort_order,
-        placeholder: q.placeholder ?? undefined,
-        explanation: q.explanation,
+        id: String(q.id),
+        prompt: String(q.prompt),
+        questionType: q.question_type as QuestionType,
+        sortOrder: Number(q.sort_order ?? 0),
+        placeholder: q.placeholder ? String(q.placeholder) : undefined,
+        explanation: String(q.explanation ?? ""),
         correctOptionIds: answerKey?.correctOptionIds ?? [],
         acceptedAnswers: answerKey?.acceptedAnswers,
-        options: (optRows ?? [])
-          .filter((o) => o.question_id === q.id)
-          .map((o) => ({
-            id: o.id,
-            label: o.label,
-            optionText: o.option_text,
-            sortOrder: o.sort_order,
-          })),
+        options: sortedOptions.map((o) => ({
+          id: String(o.id),
+          label: String(o.label),
+          optionText: String(o.option_text),
+          sortOrder: Number(o.sort_order ?? 0),
+        })),
       };
     }),
   };
-}
+});
 
-export async function getPublishedQuizzes(): Promise<PublicQuiz[]> {
+export const getPublishedQuizzes = cache(async (): Promise<PublicQuiz[]> => {
   if (isSupabaseConfigured()) {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabasePublicClient();
     const dbQuizzes: PublicQuiz[] = [];
     if (supabase) {
       const { data: rows } = await supabase
@@ -142,6 +156,9 @@ export async function getPublishedQuizzes(): Promise<PublicQuiz[]> {
       for (const row of rows ?? []) {
         const qList = (row.quiz_questions as Array<Record<string, unknown>>) ?? [];
         if (qList.length === 0) continue;
+        const sortedQuestions = [...qList].sort(
+          (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)
+        );
         dbQuizzes.push({
           id: row.id,
           slug: row.slug,
@@ -152,19 +169,24 @@ export async function getPublishedQuizzes(): Promise<PublicQuiz[]> {
           lessonId: row.lesson_id ?? undefined,
           passPercentage: Number(row.pass_percentage ?? 100),
           status: row.status,
-          questions: qList.map((q) => ({
-            id: String(q.id),
-            prompt: String(q.prompt),
-            questionType: q.question_type as QuestionType,
-            sortOrder: Number(q.sort_order ?? 0),
-            placeholder: q.placeholder ? String(q.placeholder) : undefined,
-            options: ((q.quiz_options as Array<Record<string, unknown>>) ?? []).map((o) => ({
-              id: String(o.id),
-              label: String(o.label),
-              optionText: String(o.option_text),
-              sortOrder: Number(o.sort_order ?? 0),
-            })),
-          })),
+          questions: sortedQuestions.map((q) => {
+            const opts = ((q.quiz_options as Array<Record<string, unknown>>) ?? []).sort(
+              (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)
+            );
+            return {
+              id: String(q.id),
+              prompt: String(q.prompt),
+              questionType: q.question_type as QuestionType,
+              sortOrder: Number(q.sort_order ?? 0),
+              placeholder: q.placeholder ? String(q.placeholder) : undefined,
+              options: opts.map((o) => ({
+                id: String(o.id),
+                label: String(o.label),
+                optionText: String(o.option_text),
+                sortOrder: Number(o.sort_order ?? 0),
+              })),
+            };
+          }),
         });
       }
     }
@@ -180,17 +202,17 @@ export async function getPublishedQuizzes(): Promise<PublicQuiz[]> {
 
   const db = readPreviewDb();
   return db.quizzes.filter((q) => q.status === "published").map(toPublicQuiz);
-}
+});
 
-export async function getPublicQuizBySlug(slug: string): Promise<PublicQuiz | null> {
+export const getPublicQuizBySlug = cache(async (slug: string): Promise<PublicQuiz | null> => {
   if (isSupabaseConfigured()) {
-    const quiz = await loadSupabaseQuizBySlug(slug, false);
+    const quiz = await loadSupabaseQuizBySlug(slug, false, false);
     return quiz ? toPublicQuiz(quiz) : null;
   }
   const db = readPreviewDb();
   const found = db.quizzes.find((q) => q.slug === slug && q.status === "published");
   return found ? toPublicQuiz(found) : null;
-}
+});
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -296,7 +318,7 @@ export async function submitQuizAttempt(params: {
   return record;
 }
 
-export async function getUserQuizAttempts(userId: string): Promise<QuizAttemptRecord[]> {
+export const getUserQuizAttempts = cache(async (userId: string): Promise<QuizAttemptRecord[]> => {
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient();
     if (!supabase) return [];
@@ -323,7 +345,7 @@ export async function getUserQuizAttempts(userId: string): Promise<QuizAttemptRe
   return db.quizAttempts
     .filter((a) => a.userId === userId)
     .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
-}
+});
 
 export async function getAllQuizzesForAdmin(): Promise<ServerQuiz[]> {
   if (isSupabaseConfigured()) {
