@@ -1,0 +1,1094 @@
+---
+id: net-002
+title: "OSI Model and TCP/IP Model"
+slug: osi-model-and-tcp-ip-model
+description: "Explore the seven-layer OSI model, the four-layer TCP/IP model, data encapsulation and decapsulation, and practical layer inspection on Linux."
+category: networking
+pathId: networking-fundamentals
+moduleNumber: 2
+difficulty: beginner
+estimatedMinutes: 20
+tags:
+  - networking
+  - osi-model
+  - tcp-ip
+status: published
+updatedAt: "2026-11-17"
+quizSlug: net-osi-tcpip-check
+assignmentSlug: explore-network-layers-linux
+---
+## Learning Objectives
+By the end of this lesson, students will be able to:
+1. Explain why networking models are important.
+2. Identify and describe all seven layers of the OSI model.
+3. Understand the responsibilities of each OSI layer.
+4. Explain encapsulation and decapsulation.
+5. Identify the four layers of the TCP/IP model.
+6. Compare the OSI and TCP/IP models.
+7. Use Linux commands to inspect interfaces, IP addresses, routing, and basic connectivity.
+Central analogy: Sending a parcel from your home to someone in another country. Each stage has a specific responsibility, just like each networking layer.
+
+## Section 01 — Why Do We Need Networking Models?
+
+### 1.1 Understanding Networking Models
+
+Imagine sending a parcel to someone in another country.
+
+Several things must happen:
+1. You prepare the parcel.
+2. You write the receiver's address.
+3. The delivery company collects it.
+4. Distribution centers handle and transport it.
+5. The parcel reaches the destination.
+6. The receiver collects it.
+Computer communication follows a similar process.
+
+When you send a message, open a website, or download a file, several networking operations happen behind the scenes.
+
+Different technologies and devices work together to make communication possible.
+
+But how do we organize all these operations?
+
+This is where networking models become important.
+
+### 1.2 What Is a Networking Model?
+
+A networking model is a conceptual framework that divides network communication into different layers.
+
+Each layer has specific responsibilities.
+
+Instead of treating communication as one enormous process, we divide it into smaller, understandable parts.
+
+For example:
+- One layer handles applications.
+- Another handles data delivery.
+- Another handles logical addressing.
+- Another handles physical transmission.
+Each layer works with the layers around it to complete the communication process.
+
+### 1.3 Why Do We Use Networking Models?
+
+Networking models make communication easier to understand and manage.
+
+Four important benefits:
+
+1. Simplifies networking
+
+Breaking communication into layers makes complex networking processes easier to learn.
+
+2. Separates responsibilities
+
+Each layer has a specific job instead of one component handling everything.
+
+3. Helps troubleshoot problems
+
+If a computer cannot communicate with another device, we can investigate different parts of the communication process.
+
+4. Supports interoperability
+
+Different devices and technologies can communicate by following common standards and protocols.
+
+### 1.4 Real-Life Analogy: Parcel Delivery Departments
+
+Imagine a large parcel delivery company.
+
+It has several departments:
+- Parcel preparation.
+- Address verification.
+- Packaging.
+- Transportation.
+- Local distribution.
+- Final delivery.
+Each department performs a specific task.
+
+If the parcel never leaves the warehouse, the problem might be in transportation.
+
+If it reaches the wrong city, the problem might involve addressing or routing.
+
+Networking layers help us organize and troubleshoot communication in a similar way.
+
+### 1.5 Practical Example
+
+Suppose you open a website, but the page does not load.
+
+Several things could be wrong:
+- The browser may have a problem.
+- The network connection may be unavailable.
+- The IP configuration may be incorrect.
+- The router may not be forwarding traffic correctly.
+- The remote server may be unavailable.
+Networking models help us understand these different responsibilities and investigate problems systematically.
+
+### 1.6 Important Terminology
+
+| Term | Meaning |
+| --- | --- |
+| Networking model | Framework for organizing communication into layers |
+| Layer | A part of a networking model with specific responsibilities |
+| Protocol | Rules governing communication |
+| Interoperability | Ability of different systems to work together |
+| Troubleshooting | Identifying and resolving problemsKnowledge Check |
+
+Why do networking models divide communication into layers?
+
+A. To make computers physically smaller.
+B. To organize networking responsibilities and simplify communication.
+C. To eliminate the need for protocols.
+D. To prevent devices from communicating.
+
+Key takeaway: Networking models organize complex communication into manageable layers, making networking easier to understand, develop, and troubleshoot.
+
+## Section 02 — Introduction to the OSI Model
+
+### 2.1 What Is the OSI Model?
+
+OSI stands for Open Systems Interconnection.
+
+The OSI model is a conceptual reference model that describes network communication using seven layers.
+
+Each layer has a specific responsibility.
+
+The seven layers, from top to bottom, are:
+1. Application
+2. Presentation
+3. Session
+4. Transport
+5. Network
+6. Data Link
+7. Physical
+
+### 2.2 The Seven Layers at a Glance
+
+| Layer | Name | Main Responsibility |
+| --- | --- | --- |
+| 7 | Application | Network services for applications |
+| 6 | Presentation | Data formatting, encryption, and compression |
+| 5 | Session | Managing communication sessions |
+| 4 | Transport | End-to-end data delivery |
+| 3 | Network | Logical addressing and routing |
+| 2 | Data Link | Local network frame delivery |
+| 1 | Physical | Transmission of raw bits |
+
+### 2.3 Understanding the Layer Order
+
+The OSI model is commonly represented vertically.
+- Application is at the top.
+- Physical is at the bottom.
+When data is sent, it moves down through the layers.
+
+When data is received, it moves up through the corresponding layers.
+
+We will explore this process in Section 04.
+
+### 2.4 Memory Trick
+
+Remember the seven layers using:
+
+All People Seem To Need Data Processing
+
+| Letter | Layer |
+| --- | --- |
+| A | Application |
+| P | Presentation |
+| S | Session |
+| T | Transport |
+| N | Network |
+| D | Data Link |
+| P | PhysicalThis mnemonic follows the order from top to bottom. |
+
+### 2.5 Real-Life Analogy: Seven Delivery Departments
+
+Imagine a parcel delivery organization with seven departments.
+
+Each department handles a different stage:
+- One accepts the delivery request.
+- One prepares and formats the parcel.
+- One manages the delivery process.
+- One organizes transportation.
+- One handles destination addressing.
+- One manages local delivery.
+- One physically transports the parcel.
+The OSI model organizes network communication in a similar way.
+
+### 2.6 Important Terminology
+
+- OSI: Open Systems Interconnection.
+- Layer: A logical division of networking responsibilities.
+- Reference model: A conceptual framework used to understand system behavior.
+- Encapsulation: Adding protocol information as data moves down the networking layers.
+- Decapsulation: Processing and removing protocol information as data moves up the receiving layers.
+Knowledge Check
+
+How many layers are present in the OSI model?
+
+A. Four
+B. Five
+C. Seven
+D. Eight
+
+Key takeaway: The OSI model has seven layers, each responsible for a different part of network communication.
+
+## Section 03 — Understanding the Seven OSI Layers
+
+Let's explore each layer individually.
+
+The parcel-delivery analogy will help us understand how their responsibilities differ.
+
+### 3.1 Layer 7 — Application
+
+The Application Layer provides network services to applications.
+
+It is the layer closest to the user.
+
+When you use a browser, email application, or other network-enabled software, application-layer protocols help provide the required services.
+Common Examples
+- HTTP — Web communication.
+- HTTPS — Secure web communication.
+- DNS — Domain-name resolution.
+- SMTP — Sending email.
+Real-Life Analogy
+Imagine visiting a post office to send a parcel.
+
+The post office provides the service you need.
+
+Similarly, the Application Layer provides network services that applications use.
+Practical Example
+You enter:
+https://example.com
+into your browser.
+
+The browser uses HTTP over a secure connection to communicate with the website.
+Remember
+The Application Layer provides network services to applications.
+
+### 3.2 Layer 6 — Presentation
+
+The Presentation Layer deals with how data is represented.
+
+It helps ensure that information is represented in a form that the receiving application can understand.
+Main Responsibilities
+- Data formatting.
+- Encryption and decryption.
+- Compression and decompression.
+Real-Life Analogy
+Imagine writing a letter in Bengali and sending it to someone who understands English.
+
+You may need to translate the letter into a language the receiver understands.
+
+You may also place the letter in a protected envelope.
+
+This resembles the Presentation Layer's conceptual responsibilities.
+Practical Example
+A system may need to convert data into a suitable format before another application processes it.
+
+Encryption and compression are also commonly associated with this layer in the OSI conceptual model.
+
+Technical note: In modern Internet applications, functions such as encryption and data formatting are often implemented by application protocols and libraries rather than by a separate OSI Presentation Layer.
+Remember
+The Presentation Layer focuses on data representation and transformation.
+
+### 3.3 Layer 5 — Session
+
+The Session Layer manages communication sessions between applications.
+
+A session represents an organized communication interaction.
+Main Responsibilities
+- Establishing sessions.
+- Maintaining sessions.
+- Managing communication.
+- Terminating sessions.
+Real-Life Analogy
+Think about a telephone conversation.
+1. Someone starts a call.
+2. Both people communicate.
+3. The conversation continues.
+4. Eventually, someone ends the call.
+The Session Layer is conceptually responsible for managing similar communication interactions.
+Practical Example
+Imagine two applications communicating during a long-running interaction.
+
+They need to manage the communication context and determine when the interaction begins and ends.
+Remember
+The Session Layer manages communication sessions.
+
+### 3.4 Layer 4 — Transport
+
+The Transport Layer handles end-to-end data delivery between applications.
+
+It is responsible for organizing communication between devices and their applications.
+Important Protocols
+TCP — Transmission Control Protocol
+
+TCP provides reliable, ordered delivery of a byte stream.
+
+It includes mechanisms such as:
+- Segmentation.
+- Sequence numbering.
+- Acknowledgments.
+- Retransmission.
+- Reassembly.
+UDP — User Datagram Protocol
+
+UDP provides connectionless datagram communication.
+
+It does not provide TCP-style delivery guarantees.
+Real-Life Analogy
+Imagine sending a large book to another country.
+
+Instead of sending the entire book as one enormous package, you divide it into smaller packages.
+
+You number the packages so the receiver can identify their order.
+
+A reliable delivery service may also track missing packages and arrange retransmission.
+
+This is similar to how TCP provides reliable data delivery.
+Practical Example
+When you download a file over a TCP-based connection, TCP helps ensure that the received data is delivered reliably and in the correct order.
+What Is a Port Number?
+A port number helps identify the application or service associated with network communication.
+
+For example:
+- HTTP commonly uses port 80.
+- HTTPS commonly uses port 443.
+- SSH commonly uses port 22.
+Think of an IP address as a building address and a port number as a particular department inside that building.
+Remember
+The Transport Layer supports communication between applications using mechanisms such as TCP and UDP.
+
+### 3.5 Layer 3 — Network
+
+The Network Layer handles logical addressing and routing.
+
+It helps packets travel between different networks.
+Important Protocol
+IP — Internet Protocol
+
+IP provides logical addressing and supports packet forwarding across interconnected networks.
+Main Responsibilities
+- Logical addressing.
+- Packet forwarding.
+- Routing between networks.
+Real-Life Analogy
+Imagine sending a parcel from Dhaka to London.
+
+The parcel needs a destination address.
+
+The delivery company also needs to determine a route through different locations.
+
+Similarly, the Network Layer uses IP addressing and routing to help packets reach their destinations.
+Practical Example
+Your computer has an IP address:
+192.168.1.105
+When it communicates with a device on another network, IP packets are forwarded through routers toward the destination.
+Remember
+The Network Layer handles IP addressing and routing between networks.
+
+### 3.6 Layer 2 — Data Link
+
+The Data Link Layer handles communication over a local network link.
+
+It organizes data into frames and supports local delivery.
+Main Responsibilities
+- Framing.
+- MAC addressing.
+- Error detection.
+- Local frame delivery.
+Common Technologies
+- Ethernet.
+- Wi-Fi (IEEE 802.11).
+Real-Life Analogy
+Imagine a parcel arriving at a local distribution center.
+
+Workers identify its local delivery destination and send it to the appropriate delivery location.
+
+The Data Link Layer performs a similar role for communication over a local network link.
+Practical Example
+Your computer communicates with a router through a local Ethernet or Wi-Fi connection.
+
+Ethernet frames or Wi-Fi frames carry the network-layer packets over that local link.
+Remember
+The Data Link Layer handles local-link communication and frame delivery.
+
+### 3.7 Layer 1 — Physical
+
+The Physical Layer is responsible for transmitting raw bits through a physical communication medium.
+
+It deals with the physical transmission of signals.
+Examples
+- Ethernet cables.
+- Fiber-optic cables.
+- Radio signals.
+- Physical connectors.
+Real-Life Analogy
+Imagine the roads, vehicles, and physical infrastructure used to transport parcels.
+
+Without physical transportation infrastructure, parcels cannot move between locations.
+
+Similarly, without a transmission medium, network signals cannot travel between devices.
+Practical Example
+When you connect your computer using an Ethernet cable, electrical signals travel through the cable to carry information.
+
+With fiber-optic connections, information is transmitted using light.
+
+With Wi-Fi, information travels using radio signals.
+Remember
+The Physical Layer transmits bits through electrical, optical, or radio signals.
+
+### 3.8 Complete OSI Layer Summary
+
+| Layer | Name | Main Function | Example |
+| --- | --- | --- | --- |
+| 7 | Application | Network services | HTTP, DNS |
+| 6 | Presentation | Data representation | Formatting, encryption |
+| 5 | Session | Session management | Session control |
+| 4 | Transport | End-to-end delivery | TCP, UDP |
+| 3 | Network | Logical addressing and routing | IP |
+| 2 | Data Link | Local frame delivery | Ethernet, Wi-Fi |
+| 1 | Physical | Signal transmission | Cables, radioKnowledge Check |
+
+Which OSI layer is responsible for logical addressing and routing between networks?
+
+A. Data Link
+B. Network
+C. Physical
+D. Presentation
+
+Key takeaway: Each OSI layer performs a specific networking function, from application services at the top to physical signal transmission at the bottom.
+
+## Section 04 — How the Seven Layers Work Together
+
+### 4.1 Understanding Encapsulation
+
+When data is sent over a network, it passes through different networking layers.
+
+Each layer may add its own protocol information.
+
+This process is called encapsulation.
+
+Think about sending a parcel.
+1. You place the item inside a package.
+2. You wrap the package.
+3. You attach a delivery label.
+4. The delivery company transports it.
+Each additional part helps the parcel reach its destination.
+
+Networking works similarly.
+
+### 4.2 The Sending Process
+
+Imagine opening a website using your browser.
+
+Your computer prepares data and passes it through the networking layers.
+
+The conceptual OSI sending process is:
+1. Application: The application creates the data.
+2. Presentation: Data representation is handled.
+3. Session: Communication session responsibilities are handled.
+4. Transport: Data is organized into transport-layer units.
+5. Network: Logical addressing information is used.
+6. Data Link: Frames are created for local-link delivery.
+7. Physical: Bits are transmitted through the communication medium.
+
+### 4.3 Understanding Data Units
+
+As information moves through networking layers, its protocol data unit (PDU) has different names.
+
+| Layer | Data Unit |
+| --- | --- |
+| Application | Data |
+| Presentation | Data |
+| Session | Data |
+| Transport (TCP) | Segment |
+| Transport (UDP) | Datagram |
+| Network (IP) | Packet |
+| Data Link | Frame |
+| Physical | BitsA PDU (Protocol Data Unit) is the name given to data at a particular networking layer. |
+
+Important distinctions:
+- A TCP segment belongs to the Transport Layer.
+- A UDP datagram belongs to the Transport Layer.
+- An IP packet belongs to the Network Layer.
+- A frame belongs to the Data Link Layer.
+- Bits are transmitted through the Physical Layer.
+
+### 4.4 What Is Decapsulation?
+
+When data reaches the receiving device, the receiving layers process the incoming information in the reverse direction.
+
+This is called decapsulation.
+
+The receiving device:
+1. Receives bits.
+2. Processes the Data Link frame.
+3. Processes the Network packet.
+4. Processes the Transport segment or datagram.
+5. Passes data to the appropriate application.
+The relevant protocol information is processed or removed as the data moves upward.
+
+### 4.5 Real-Life Analogy: Opening a Parcel
+
+Imagine receiving a parcel.
+1. You receive the delivery package.
+2. You check the delivery label.
+3. You remove the outer wrapping.
+4. You open the inner package.
+5. You take out the original item.
+This resembles decapsulation.
+
+The receiving device processes the different layers of protocol information until the original application data becomes available.
+
+### 4.6 Why Is Encapsulation Important?
+
+Encapsulation allows different networking layers to perform their responsibilities independently.
+
+For example:
+- TCP can manage reliable data delivery.
+- IP can handle logical addressing and routing.
+- Ethernet can handle local frame delivery.
+Each technology contributes to the overall communication process.
+
+Knowledge Check
+
+What is the process called when networking layers add protocol information as data moves down the sending device's layers?
+
+A. Decapsulation
+B. Encapsulation
+C. Decryption
+D. Routing
+
+Key takeaway: Encapsulation happens during sending, while decapsulation happens during receiving.
+
+## Section 05 — Introduction to the TCP/IP Model
+
+### 5.1 What Is the TCP/IP Model?
+
+The TCP/IP model is a networking architecture used to describe communication across interconnected networks, including the Internet.
+
+TCP/IP stands for:
+- Transmission Control Protocol.
+- Internet Protocol.
+The commonly taught TCP/IP model contains four layers.
+1. Application.
+2. Transport.
+3. Internet.
+4. Network Access.
+Unlike the seven-layer OSI model, TCP/IP combines some related responsibilities into fewer layers.
+
+### 5.2 The Four TCP/IP Layers
+
+| Layer | Main Responsibility |
+| --- | --- |
+| Application | Application-level network services |
+| Transport | End-to-end communication |
+| Internet | IP addressing and routing |
+| Network Access | Local network communication and physical transmission5.3 Layer 4 — Application |
+
+The Application Layer provides network communication services to applications.
+
+It combines the responsibilities represented by three OSI layers:
+- Application.
+- Presentation.
+- Session.
+Examples
+- HTTP and HTTPS.
+- DNS.
+- SMTP.
+- SSH.
+Real-Life Analogy
+Think of the departments responsible for accepting a parcel request, preparing the information, and managing the delivery interaction.
+
+TCP/IP groups these related application-level responsibilities together.
+Practical Example
+Your browser uses HTTP to request a webpage.
+
+DNS helps resolve the website's domain name.
+Remember
+The TCP/IP Application Layer provides application-level network services.
+
+### 5.4 Layer 3 — Transport
+
+The Transport Layer supports communication between applications.
+
+Important protocols include:
+- TCP.
+- UDP.
+Responsibilities
+- Application-to-application communication.
+- Port addressing.
+- Segmentation and reassembly where applicable.
+- Reliability mechanisms provided by TCP.
+Real-Life Analogy
+Imagine organizing the packages for a delivery and identifying which recipient or department should receive them.
+
+Transport-layer mechanisms help organize delivery to the correct application.
+Remember
+The Transport Layer handles end-to-end application communication.
+
+### 5.5 Layer 2 — Internet
+
+The Internet Layer handles logical addressing and packet routing.
+
+Its central protocol is IP.
+Responsibilities
+- IP addressing.
+- Packet forwarding.
+- Routing between networks.
+Real-Life Analogy
+A delivery company needs the destination address and a route to reach another city.
+
+The Internet Layer helps packets travel between networks.
+Remember
+The Internet Layer handles IP addressing and routing.
+
+### 5.6 Layer 1 — Network Access
+
+The Network Access Layer handles communication over the local network and the transmission of information through the underlying network medium.
+
+It combines responsibilities associated with the OSI Data Link and Physical layers.
+Examples
+- Ethernet.
+- Wi-Fi.
+- Physical transmission media.
+Real-Life Analogy
+Think about the local delivery infrastructure, roads, vehicles, and transportation methods that physically move a parcel.
+Remember
+The Network Access Layer handles local network communication and physical transmission.
+
+### 5.7 TCP/IP Layer Summary
+
+| TCP/IP Layer | Examples | Main Function |
+| --- | --- | --- |
+| Application | HTTP, DNS, SSH | Application services |
+| Transport | TCP, UDP | End-to-end communication |
+| Internet | IP | Addressing and routing |
+| Network Access | Ethernet, Wi-Fi | Local delivery and transmissionKnowledge Check |
+
+How many layers are present in the commonly taught TCP/IP model?
+
+A. Three
+B. Four
+C. Five
+D. Seven
+
+Key takeaway: The TCP/IP model describes Internet communication using four layers.
+
+## Section 06 — OSI vs TCP/IP Model
+
+### 6.1 Understanding the Difference
+
+The OSI and TCP/IP models describe similar networking functions.
+
+However, they organize these functions differently.
+
+The OSI model has seven layers.
+
+The commonly taught TCP/IP model has four layers.
+Layer Mapping
+
+| OSI Model | TCP/IP Model |
+| --- | --- |
+| Application | Application |
+| Presentation | Application |
+| Session | Application |
+| Transport | Transport |
+| Network | Internet |
+| Data Link | Network Access |
+| Physical | Network Access |
+
+### 6.2 Key Differences
+
+| Feature | OSI Model | TCP/IP Model |
+| --- | --- | --- |
+| Number of layers | Seven | Four |
+| Main purpose | Reference model | Practical networking architecture |
+| Organization | More detailed separation | Combines related responsibilities |
+| Internet use | Helps explain networking | Describes Internet architecture6.3 Real-Life Analogy: Seven Departments vs Four Departments |
+
+Imagine two delivery companies.
+
+Company A:
+
+Has seven specialized departments.
+
+Each department performs a separate task.
+
+Company B:
+
+Has four larger departments.
+
+Some related responsibilities are combined.
+
+Both companies can successfully deliver parcels.
+
+The difference is how they organize their operations.
+
+This is similar to the OSI and TCP/IP models.
+
+### 6.4 Why Should We Learn Both?
+
+Both models are important in networking education.
+
+OSI model:
+- Helps understand networking concepts.
+- Makes troubleshooting easier to organize.
+- Provides a detailed reference for networking responsibilities.
+TCP/IP model:
+- Describes practical Internet communication.
+- Helps understand the protocols used by real networks.
+- Groups networking responsibilities into four layers.
+
+### 6.5 Important Technical Note
+
+These models are conceptual frameworks.
+
+Not every real-world protocol fits perfectly into only one layer.
+
+For example, encryption and data formatting can be implemented at different places in real networking systems.
+
+Similarly, some technologies perform responsibilities that span multiple conceptual layers.
+
+The models help us understand networking; they are not strict physical diagrams of every computer's internal operation.
+
+Knowledge Check
+
+Which statement correctly describes the difference between the OSI and TCP/IP models?
+
+A. OSI has four layers, while TCP/IP has seven.
+B. Both models have exactly seven layers.
+C. OSI has seven layers, while the commonly taught TCP/IP model has four.
+D. TCP/IP does not support Internet communication.
+
+Key takeaway: OSI provides a detailed seven-layer reference model, while TCP/IP describes Internet communication using four commonly taught layers.
+
+## Section 07 — Practical Networking Exploration
+
+### 7.1 Why Use Linux?
+
+Linux provides command-line tools that help us inspect network configuration and test connectivity.
+
+In this section, we will connect networking theory with practical Linux commands.
+
+We will use four commands:
+1. ip link
+2. ip addr
+3. ip route
+4. ping -c 4 1.1.1.1
+These commands help us investigate different aspects of network communication.
+
+### 7.2 Prepare Your Environment
+
+Open a Linux terminal.
+
+You can use:
+- Ubuntu.
+- Debian.
+- Kali Linux.
+- Linux Mint.
+- Another Linux distribution with the required utilities.
+You can also use a Linux virtual machine.
+
+Important: These exercises are intended for inspecting your own network and testing basic connectivity.
+
+### 7.3 Task 1 — Identify Network Interfaces
+
+Command
+ip link
+What does it do?
+This command displays the network interfaces available on your computer.
+
+A network interface is a component through which a device connects to a network.
+Example Output
+```text
+1: lo: <LOOPBACK,UP,LOWER_UP>
+    link/loopback 00:00:00:00:00:00
+```
+
+```text
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP>
+    link/ether 08:00:27:12:34:56
+```
+Understanding the Output
+lo
+
+The loopback interface allows a computer to communicate with itself.
+
+enp0s3
+
+An example Ethernet interface name.
+
+Other possible names include:
+- eth0
+- ens33
+- wlan0
+- wlp2s0
+Interface naming depends on the Linux system and hardware.
+
+UP
+
+The interface is administratively enabled.
+
+LOWER_UP
+
+The underlying network link is operational.
+
+link/ether
+
+Indicates an Ethernet-style hardware address.
+Real-Life Analogy
+Think of checking all available roads and transportation connections around your house.
+
+You need to identify which connection is available before using it.
+Your Task
+Execute:
+ip link
+Record:
+- Available interface names.
+- Active interface.
+- MAC address, if available.
+- Interface state.
+
+### 7.4 Task 2 — Inspect IP Addresses
+
+Command
+ip addr
+What does it do?
+This command displays IP addresses assigned to your network interfaces.
+
+It can show:
+- IPv4 addresses.
+- IPv6 addresses.
+- Interface names.
+- Interface states.
+Example Output
+```text
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP>
+    inet 192.168.1.105/24
+    inet6 fe80::a00:27ff:fe12:3456/64
+```
+Understanding the Output
+inet
+
+Indicates an IPv4 address.
+
+192.168.1.105
+
+An example IPv4 address.
+
+inet6
+
+Indicates an IPv6 address.
+
+fe80::...
+
+An example IPv6 link-local address.
+Real-Life Analogy
+Imagine checking the destination and return addresses written on a parcel.
+
+The address identifies where communication should be directed.
+
+Similarly, IP addresses help identify network destinations.
+Your Task
+Execute:
+ip addr
+Identify:
+1. Your active network interface.
+2. Its IPv4 address.
+3. Its IPv6 address, if available.
+4. Its current state.
+
+### 7.5 Task 3 — Inspect the Routing Table
+
+Command
+ip route
+What does it do?
+This command displays the system's IPv4 routing table.
+
+The routing table helps Linux decide where to forward packets.
+Example Output
+default via 192.168.1.1 dev enp0s3
+192.168.1.0/24 dev enp0s3 proto kernel scope link
+Understanding the Output
+default
+
+Indicates the default route.
+
+via 192.168.1.1
+
+Identifies the next-hop gateway.
+
+dev enp0s3
+
+Identifies the interface used by the route.
+What Is a Default Gateway?
+A default gateway is the next-hop device used when no more specific routing entry matches a destination.
+
+In a typical home network, it is usually your router.
+Real-Life Analogy
+Imagine living in a neighborhood.
+
+If you want to travel outside your neighborhood, you use the main road that leads to the larger road network.
+
+The default gateway serves a similar purpose.
+Your Task
+Execute:
+ip route
+Find the line beginning with:
+default via
+Record:
+- Default gateway IP address.
+- Network interface used by the default route.
+
+### 7.6 Task 4 — Test Network Connectivity
+
+Command
+ping -c 4 1.1.1.1
+What does it do?
+The ping command sends ICMP Echo Request messages to a destination and waits for Echo Reply messages.
+
+The option -c 4 tells Linux to send four requests and then stop.
+
+1.1.1.1 is a public IP address associated with Cloudflare's DNS service.
+Example Output
+PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.
+
+64 bytes from 1.1.1.1: icmp_seq=1 ttl=57 time=25.2 ms
+64 bytes from 1.1.1.1: icmp_seq=2 ttl=57 time=24.8 ms
+64 bytes from 1.1.1.1: icmp_seq=3 ttl=57 time=25.0 ms
+64 bytes from 1.1.1.1: icmp_seq=4 ttl=57 time=24.9 ms
+
+--- 1.1.1.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss
+Your results will probably be different.
+Understanding the Output
+icmp_seq
+
+Indicates the sequence number of the request.
+
+ttl
+
+Time To Live. It limits how many IP forwarding hops a packet can pass through before being discarded.
+
+time
+
+Indicates the measured round-trip time.
+
+packet loss
+
+Shows the percentage of transmitted requests for which no reply was received.
+What If Ping Fails?
+A failed ping does not automatically mean that your Internet connection is unavailable.
+
+Possible reasons include:
+- No Internet connectivity.
+- Routing problems.
+- Firewall restrictions.
+- ICMP filtering.
+- Destination unavailability.
+Real-Life Analogy
+Imagine calling someone and waiting for a reply.
+
+If they respond, you know the communication attempt received a response.
+
+If they do not, you cannot immediately conclude why they did not respond.
+
+The same principle applies to ping.
+Your Task
+Execute:
+ping -c 4 1.1.1.1
+Record:
+- Number of transmitted packets.
+- Number of received packets.
+- Packet loss.
+- Average response time, if available.
+
+### 7.7 Practical Command Summary
+
+| Command | Purpose |
+| --- | --- |
+| ip link | Inspect network interfaces |
+| ip addr | Inspect IP addresses |
+| ip route | Inspect routing information |
+| ping -c 4 1.1.1.1 | Test ICMP connectivity7.8 Important Security and Privacy Note |
+
+When submitting terminal output:
+- Do not share passwords.
+- Do not share private credentials.
+- Avoid exposing unnecessary public IP information.
+- Hide sensitive hostnames and personal details.
+Knowledge Check
+
+Which command displays the system's routing table?
+
+A. ip link
+B. ip addr
+C. ip route
+D. ping
+
+Key takeaway: Linux commands help us inspect network interfaces, IP addresses, routing information, and basic connectivity.
+
+## Section 08 — Lesson Recap and Memory Map
+
+### 8.1 The Seven OSI Layers
+
+| Layer | Name | Remember It As |
+| --- | --- | --- |
+| 7 | Application | Network services |
+| 6 | Presentation | Data formatting |
+| 5 | Session | Communication sessions |
+| 4 | Transport | End-to-end delivery |
+| 3 | Network | IP addressing and routing |
+| 2 | Data Link | Local frames and MAC addresses |
+| 1 | Physical | Bits and transmission mediaMemory trick: All People Seem To Need Data Processing. |
+
+### 8.2 The Four TCP/IP Layers
+
+1. Application.
+2. Transport.
+3. Internet.
+4. Network Access.
+
+### 8.3 OSI and TCP/IP Comparison
+
+Remember the mapping:
+- OSI Application, Presentation, Session → TCP/IP Application.
+- OSI Transport → TCP/IP Transport.
+- OSI Network → TCP/IP Internet.
+- OSI Data Link, Physical → TCP/IP Network Access.
+
+### 8.4 Important Networking Concepts
+
+| Concept | Meaning |
+| --- | --- |
+| Encapsulation | Adding protocol information during sending |
+| Decapsulation | Processing protocol information during receiving |
+| PDU | Protocol Data Unit |
+| Segment | TCP transport-layer data unit |
+| Datagram | UDP transport-layer data unit |
+| Packet | IP network-layer data unit |
+| Frame | Data Link layer data unit |
+| Bits | Physical transmission representation8.5 Linux Commands to Remember |
+
+ip link
+Displays network interfaces.
+ip addr
+Displays assigned IP addresses.
+ip route
+Displays routing information.
+ping -c 4 1.1.1.1
+Sends four ICMP Echo Requests to test connectivity.
+
+### 8.6 Final Lesson Takeaway
+
+Networking communication involves multiple operations working together.
+
+The OSI model helps us understand these operations through seven conceptual layers.
+
+The TCP/IP model organizes Internet communication into four commonly taught layers.
+
+Encapsulation helps prepare data for transmission, while decapsulation allows the receiving device to process the information.
+
+Understanding these models is essential for learning network troubleshooting, cybersecurity, system administration, and network engineering.
+
+You have completed Lesson 02: OSI Model and TCP/IP Model.
+
+Continue to the knowledge assessment and practical assignment to test your understanding.

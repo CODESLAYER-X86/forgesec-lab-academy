@@ -11,12 +11,16 @@ import {
   updateCurrentUserProfile,
 } from "@/modules/auth/session";
 import { updateAssignmentStatus } from "@/modules/assignments/service";
-import { getLessonById } from "@/modules/content/loader";
+import { getLessonById, getPublishedLessons } from "@/modules/content/loader";
 import {
   toggleBookmark,
   toggleLessonCompletion,
 } from "@/modules/learning/service";
-import { submitQuizAttempt } from "@/modules/quizzes/service";
+import {
+  getPublicQuizBySlug,
+  getUserQuizAttempts,
+  submitQuizAttempt,
+} from "@/modules/quizzes/service";
 
 const LessonCompletionSchema = z.object({
   lessonId: z.string().min(2).max(128),
@@ -38,6 +42,31 @@ export async function toggleLessonCompletionAction(
   const lesson = getLessonById(parsed.data.lessonId);
   if (!lesson || lesson.meta.slug !== parsed.data.slug) {
     return { ok: false, error: "Lesson not found." };
+  }
+
+  const linkedQuiz = lesson.meta.quizSlug
+    ? await getPublicQuizBySlug(lesson.meta.quizSlug)
+    : null;
+
+  if (linkedQuiz) {
+    if (!parsed.data.completed) {
+      return {
+        ok: false,
+        error: "Modules with a knowledge check cannot be manually unmarked.",
+      };
+    }
+    const attempts = await getUserQuizAttempts(user.id);
+    const hasPerfectScore = attempts.some(
+      (a) =>
+        (a.quizSlug === linkedQuiz.slug || a.quizId === linkedQuiz.id) &&
+        a.percentage === 100
+    );
+    if (!hasPerfectScore) {
+      return {
+        ok: false,
+        error: "Answer 100% of the module quiz correctly to complete this module.",
+      };
+    }
   }
 
   await toggleLessonCompletion(
@@ -103,7 +132,23 @@ export async function submitQuizAction(
       answers: parsed.data.answers,
     });
     if (user) {
+      if (result.percentage === 100 && result.passed) {
+        const matchingLesson = getPublishedLessons().find(
+          (l) => l.meta.quizSlug === parsed.data.slug
+        );
+        if (matchingLesson) {
+          await toggleLessonCompletion(
+            user.id,
+            matchingLesson.meta.id,
+            matchingLesson.meta.pathId,
+            true
+          );
+          revalidatePath(`/learn/lessons/${matchingLesson.meta.slug}`);
+          revalidatePath(`/learn/paths/${matchingLesson.meta.pathId}`);
+        }
+      }
       revalidatePath("/dashboard");
+      revalidatePath("/dashboard/learning");
       revalidatePath("/dashboard/quiz-results");
     }
     return { ok: true, result };

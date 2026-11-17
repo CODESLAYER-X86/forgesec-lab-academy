@@ -32,13 +32,14 @@ export function countWords(markdown: string): number {
 
 function stripSectionPrefix(title: string): string {
   return title
+    .replace(/^Section\s+\d+\s*[—–-]\s*/i, "")
     .replace(/^[A-Z]\.\s+/i, "")
     .replace(/^\d+\.\s+/, "")
     .trim();
 }
 
 function isRecapHeading(cleanTitle: string): boolean {
-  return /^(?:[A-Z]\.\s+)?(?:Module Recap|Module Completion|Summary|Explore Your Next Learning Path)\b/i.test(
+  return /^(?:Section\s+\d+\s*[—–-]\s*|[A-Z]\.\s+)?(?:Module Recap|Lesson Recap|Final Recap|Module Completion|Summary|Explore Your Next Learning Path)\b/i.test(
     cleanTitle
   );
 }

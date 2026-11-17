@@ -1,0 +1,1154 @@
+---
+id: net-001
+title: "Introduction to Computer Networking"
+slug: introduction-to-computer-networking
+description: "Understand what computer networks are, LAN/WAN/WLAN/PAN topologies, routers and switches, client-server vs. peer-to-peer models, and Linux interface inspection."
+category: networking
+pathId: networking-fundamentals
+moduleNumber: 1
+difficulty: beginner
+estimatedMinutes: 20
+tags:
+  - networking
+  - lan-wan
+  - topologies
+status: published
+updatedAt: "2026-11-17"
+quizSlug: net-intro-networking-check
+assignmentSlug: explore-local-network-basics
+---
+## Learning Objectives
+
+By the end of this lesson, students will be able to:
+
+1. Explain what a computer network is and why networks are important.
+2. Identify common network types: LAN, WAN, WLAN, and PAN.
+3. Describe how devices communicate and exchange data.
+4. Recognize the roles of routers, switches, modems, and access points.
+5. Differentiate between client-server and peer-to-peer architectures.
+6. Explain the basic process of accessing a website through the Internet.
+7. Use basic Linux commands to inspect network interfaces and configuration.
+
+---
+
+## Section 01 — What is a Computer Network?
+
+### 1.1 Understanding Computer Networks
+
+A **computer network** is a group of two or more computing devices connected together so they can communicate and share information or resources.
+
+These devices can include:
+
+- Desktop computers
+- Laptops
+- Smartphones
+- Servers
+- Printers
+- Network cameras
+- Other smart devices
+
+Devices can connect through cables or wireless technologies such as Wi-Fi.
+
+For example, imagine three computers connected to the same network. They can communicate with each other, share files, and access a shared printer.
+
+That is a computer network.
+
+### 1.2 Real-Life Analogy: A Postal Delivery System
+
+Think about how a postal service works.
+
+When someone wants to send a letter:
+
+1. The sender writes the letter.
+2. The postal service receives it.
+3. The letter travels through different delivery centers.
+4. The letter reaches the correct recipient.
+
+Computer networks work in a similar way.
+
+- Sender: The device sending information.
+- Message: The data being transmitted.
+- Network: The communication system.
+- Recipient: The device receiving information.
+
+Just as postal services help people exchange letters, computer networks help devices exchange data.
+
+### 1.3 Why Are Computer Networks Important?
+
+Computer networks make modern digital communication possible.
+
+**Common uses include:**
+
+| Purpose | Example |
+|---|---|
+| Communication | Sending emails and messages |
+| File sharing | Sharing documents between computers |
+| Resource sharing | Using a shared network printer |
+| Internet access | Browsing websites |
+| Remote access | Connecting to another computer |
+| Online services | Using cloud storage and applications |
+
+#### Practical Example
+
+Suppose a university has a computer laboratory with 30 computers.
+
+Instead of connecting every computer to a separate printer, the university can connect all computers to one network printer.
+
+Students can send their documents to the shared printer through the network.
+
+This saves equipment, time, and money.
+
+### 1.4 Important Terminology
+
+- **Network:** Connected devices that communicate with each other.
+- **Node:** Any device connected to a network.
+- **Host:** A device that participates in network communication, commonly using an IP address.
+- **Data:** Information exchanged between devices.
+- **Resource sharing:** Making resources available to other devices.
+
+### 1.5 Knowledge Check
+
+**Question:** What is the main purpose of a computer network?
+
+A. To increase the physical size of a computer.  
+B. To allow devices to communicate and share resources.  
+C. To replace computer operating systems.  
+D. To prevent computers from exchanging information.
+
+**Key takeaway:** A computer network connects devices so they can exchange information and share resources.
+
+---
+
+## Section 02 — Types of Networks
+
+### 2.1 Understanding Network Types
+
+Computer networks are commonly classified according to their geographical coverage, connection methods, and intended use.
+
+In this lesson, we will focus on four common types:
+
+1. LAN — Local Area Network
+2. WAN — Wide Area Network
+3. WLAN — Wireless Local Area Network
+4. PAN — Personal Area Network
+
+### 2.2 LAN — Local Area Network
+
+A **LAN (Local Area Network)** connects devices within a relatively small geographical area.
+
+Examples include:
+
+- A university computer laboratory.
+- An office network.
+- A home network.
+- A school computer room.
+
+#### Real-Life Analogy
+
+Imagine a university library.
+
+Students, librarians, and computers are all inside the same building. They can use shared resources and communicate through the library's internal systems.
+
+A LAN works similarly by connecting devices within a limited area.
+
+#### Practical Example
+
+A university laboratory has 20 computers connected to the same network switch.
+
+Those computers form a LAN.
+
+**Remember:** LAN usually covers a limited area, such as a room, building, or campus.
+
+### 2.3 WAN — Wide Area Network
+
+A **WAN (Wide Area Network)** connects networks over large geographical distances.
+
+It can connect:
+
+- Different cities.
+- Different countries.
+- Multiple office locations.
+- Networks across continents.
+
+#### Real-Life Analogy
+
+Imagine a company with offices in Dhaka, Chattogram, and London.
+
+Each office has its own local network. A WAN allows those separate networks to communicate over long distances.
+
+#### Practical Example
+
+A multinational company connects its office networks across several countries so employees can access shared company resources.
+
+The Internet is the most widely known example of a WAN, although it is more accurately described as a global network of interconnected networks.
+
+### 2.4 WLAN — Wireless Local Area Network
+
+A **WLAN (Wireless Local Area Network)** is a local network that uses wireless communication, commonly Wi-Fi, instead of requiring every device to use a physical network cable.
+
+Examples:
+
+- Home Wi-Fi.
+- University Wi-Fi.
+- Office wireless networks.
+- Public Wi-Fi hotspots.
+
+#### Real-Life Analogy
+
+Think of a classroom where students can communicate without physically passing notes to one another.
+
+Similarly, devices can exchange information over wireless signals rather than individual network cables.
+
+#### Practical Example
+
+Your laptop connects to your home Wi-Fi router.
+
+It can access the Internet without an Ethernet cable.
+
+**Remember:** WLAN is a type of LAN that uses wireless communication.
+
+### 2.5 PAN — Personal Area Network
+
+A **PAN (Personal Area Network)** connects devices around an individual over a short distance.
+
+Examples:
+
+- A smartphone connected to wireless earbuds.
+- A laptop connected to a Bluetooth mouse.
+- A smartphone sharing its Internet connection with another device.
+
+#### Real-Life Analogy
+
+Think of your personal belongings.
+
+Your phone, smartwatch, and wireless earbuds are all close to you and can communicate with each other.
+
+That small personal communication environment is similar to a PAN.
+
+### 2.6 Network Types at a Glance
+
+| Network | Full Form | Typical Coverage | Example |
+|---|---|---|---|
+| LAN | Local Area Network | Small area | Computer laboratory |
+| WAN | Wide Area Network | Large geographical area | Interconnected company offices |
+| WLAN | Wireless Local Area Network | Wireless local area | Home Wi-Fi |
+| PAN | Personal Area Network | Around an individual | Bluetooth earbuds |
+
+#### Practical Comparison
+
+Imagine a university:
+
+- The computer laboratory uses a LAN.
+- The campus Wi-Fi operates as a WLAN.
+- A student's phone and smartwatch can form a PAN.
+- The university's network connected to other campuses across different cities can participate in a WAN.
+
+### 2.7 Knowledge Check
+
+**Question:** A student connects wireless earbuds to a smartphone using Bluetooth. Which network type best describes this connection?
+
+A. WAN  
+B. LAN  
+C. PAN  
+D. MAN
+
+**Key takeaway:** Different network types serve different geographical and communication requirements. Remember LAN for local connections, WAN for large distances, WLAN for wireless local connections, and PAN for personal devices.
+
+---
+
+## Section 03 — How Devices Communicate
+
+### 3.1 Understanding Data Communication
+
+Computer networks allow devices to exchange information through a process called **data communication**.
+
+When you send a message, open a website, or transfer a file, data travels from one device to another.
+
+For communication to work, devices need:
+
+- A sender.
+- A receiver.
+- Data or a message.
+- A communication medium.
+- Rules for exchanging information.
+
+These rules are called **protocols**.
+
+### 3.2 How Does Data Travel?
+
+Suppose you send a photograph from your laptop to another computer.
+
+The general process is:
+
+1. Your laptop prepares the data.
+2. The data is divided into smaller units when required by the communication protocol.
+3. Those units travel through the network.
+4. The receiving computer receives the transmitted data.
+5. The data is reassembled when necessary.
+
+This allows large amounts of information to travel through computer networks.
+
+### 3.3 Real-Life Analogy: Sending a Large Book
+
+Imagine you want to send a large book to someone through the postal service.
+
+Instead of sending the entire book as one enormous package, you divide it into several smaller packages.
+
+Each package is labeled with delivery information.
+
+The receiver collects all the packages and puts the book back together.
+
+Network communication can work in a similar way.
+
+Information is divided into smaller units called **packets** in packet-based networks.
+
+Each packet carries information that helps it reach the intended destination.
+
+### 3.4 What Is a Network Protocol?
+
+A **network protocol** is a set of rules that defines how devices communicate and exchange data.
+
+Without common communication rules, devices might not understand each other's messages.
+
+Think about human language.
+
+If one person speaks Bengali and another understands only Japanese, communication may be difficult.
+
+Protocols provide agreed-upon communication rules for computers.
+
+### 3.5 Common Network Protocols
+
+| Protocol | Main Purpose |
+|---|---|
+| HTTP | Transfers web content |
+| HTTPS | Transfers web content using encrypted connections |
+| TCP | Provides reliable, ordered data delivery |
+| UDP | Provides connectionless data transmission |
+| IP | Addresses and routes packets |
+| DNS | Translates domain names into IP addresses |
+| SSH | Provides secure remote access to computers |
+
+You do not need to memorize every technical detail yet. Just understand that different protocols perform different communication tasks.
+
+### 3.6 Understanding IP Addresses
+
+An **IP address (Internet Protocol address)** identifies a network interface for communication using IP.
+
+Think of an IP address like a postal address.
+
+If you want to send a letter, you need the recipient's address.
+
+Similarly, network communication uses IP addresses to identify where packets should be delivered.
+
+Example of an IPv4 address:
+
+```text
+192.168.1.10
+```
+
+This is a common private IPv4 address format used in local networks.
+
+A device may have different IP addresses for different network interfaces.
+
+### 3.7 What Is a MAC Address?
+
+A **MAC address (Media Access Control address)** is an address associated with a network interface and commonly used for communication on a local network.
+
+Example:
+
+```text
+00:1A:2B:3C:4D:5E
+```
+
+#### IP Address vs MAC Address
+
+Think of a delivery system:
+
+- IP address: Helps identify the network destination.
+- MAC address: Helps identify the network interface for local-link delivery.
+
+They serve different purposes and work together in network communication.
+
+### 3.8 Knowledge Check
+
+**Question:** What is the primary purpose of a network protocol?
+
+A. To increase computer storage.  
+B. To define rules for communication between devices.  
+C. To replace IP addresses.  
+D. To physically connect computers.
+
+**Key takeaway:** Devices communicate using agreed-upon protocols. Data travels through networks in packets, and addressing helps deliver it to the correct destination.
+
+---
+
+## Section 04 — Network Devices
+
+### 4.1 Understanding Network Devices
+
+Computer networks require hardware that connects devices and helps information travel between them.
+
+Some important networking devices include:
+
+1. Router
+2. Switch
+3. Modem
+4. Wireless Access Point
+
+Each device has a different responsibility.
+
+### 4.2 Router
+
+A **router** connects different networks and forwards IP packets between them.
+
+For example, a home router connects your home network to your Internet service provider's network.
+
+#### Real-Life Analogy
+
+Imagine a road intersection.
+
+Vehicles arrive from different roads. Traffic signs and directions help them choose the correct road toward their destinations.
+
+A router performs a similar function for network traffic.
+
+#### Practical Example
+
+Your laptop is connected to a home network.
+
+When you visit a website, your laptop sends network traffic toward its default gateway, which is commonly your home router.
+
+The router forwards the traffic toward the destination network.
+
+**Remember:** A router connects networks and forwards packets between them.
+
+### 4.3 Switch
+
+A **network switch** connects multiple devices within a local network.
+
+It uses MAC addresses to forward Ethernet frames to the appropriate ports.
+
+#### Real-Life Analogy
+
+Imagine an office receptionist who knows which employee sits at which desk.
+
+When a message arrives for a particular employee, the receptionist directs it to the correct person.
+
+A network switch similarly forwards local network traffic toward the appropriate connected device.
+
+#### Practical Example
+
+A university computer laboratory has 25 computers.
+
+A switch connects all 25 computers using Ethernet cables.
+
+The computers can communicate over the local network.
+
+### 4.4 Modem
+
+A **modem** is a device that performs modulation and demodulation to support communication over a particular transmission system.
+
+In everyday home networking, a modem or ISP-provided terminal device connects the customer's network to the Internet service provider's access network.
+
+#### Real-Life Analogy
+
+Think of a translator who helps two communication systems exchange information using compatible signals.
+
+A modem performs signal-related conversion appropriate to its communication technology.
+
+#### Practical Example
+
+A household uses an ISP-provided cable modem to receive Internet connectivity through a cable network.
+
+**Remember:** The modem provides the connection to the ISP's access technology. The router handles routing between networks. Some home devices combine both functions.
+
+### 4.5 Wireless Access Point
+
+A **wireless access point (AP)** allows wireless devices to connect to a network.
+
+It provides Wi-Fi connectivity and bridges wireless devices to the network infrastructure.
+
+#### Real-Life Analogy
+
+Imagine a meeting hall with a central communication point.
+
+People can connect through that point rather than needing individual cables to reach the network infrastructure.
+
+A wireless access point provides a similar connection opportunity for Wi-Fi devices.
+
+#### Practical Example
+
+A university installs several access points across its campus.
+
+Students can connect their laptops and smartphones to the university's wireless network.
+
+### 4.6 Network Devices Comparison
+
+| Device | Main Function |
+|---|---|
+| Router | Connects different networks |
+| Switch | Connects devices within a local network |
+| Modem | Provides communication over an ISP access technology |
+| Access Point | Provides wireless network connectivity |
+
+### 4.7 How They Work Together
+
+Consider a typical home network:
+
+```text
+             Internet
+                |
+             [Modem]
+                |
+             [Router]
+                |
+          [Network Switch]
+             /       
+        [Desktop]  [Laptop]
+
+             [Wi-Fi AP]
+              /     
+          [Phone] [Tablet]
+```
+
+This is a simplified example. In many homes, the modem, router, switch, and wireless access point functions are combined into one device.
+
+#### Knowledge Check
+
+**Question:** Which device primarily connects multiple devices within a local Ethernet network and forwards frames using MAC addresses?
+
+A. Modem  
+B. Router  
+C. Switch  
+D. Monitor
+
+**Key takeaway:** Routers connect networks, switches connect devices within LANs, modems support ISP access technologies, and access points provide wireless connectivity.
+
+---
+
+## Section 05 — Network Architectures
+
+### 5.1 What Is Network Architecture?
+
+**Network architecture** describes how devices and services are organized and how they communicate within a network.
+
+Two common architectures are:
+
+1. Client-server architecture.
+2. Peer-to-peer architecture.
+
+Understanding these architectures helps explain how applications, websites, and file-sharing systems work.
+
+### 5.2 Client-Server Architecture
+
+In a **client-server architecture**, one device or system provides a service, and other devices request that service.
+
+The requesting device is called the **client**.
+
+The device or system providing the service is called the **server**.
+
+#### Real-Life Analogy: A Restaurant
+
+Imagine visiting a restaurant.
+
+1. You are the customer.
+2. You request food from the waiter.
+3. The kitchen prepares the food.
+4. The waiter delivers it to you.
+
+The customer requests a service, and the kitchen provides it.
+
+A client-server network works similarly.
+
+- Client: Requests a service.
+- Server: Provides the requested service.
+
+#### Practical Example
+
+When you open a website:
+
+1. Your browser acts as a client.
+2. It sends a request to a web server.
+3. The server processes the request.
+4. The server sends a response.
+5. Your browser displays the website.
+
+### 5.3 Peer-to-Peer Architecture
+
+In a **peer-to-peer (P2P) architecture**, devices can communicate and share resources directly with one another.
+
+A device can act as both a requester and a provider of resources.
+
+#### Real-Life Analogy: Sharing Notes Between Students
+
+Imagine five students in a classroom.
+
+Each student has different study notes.
+
+Instead of asking one central person to distribute every document, students exchange notes directly with one another.
+
+This resembles peer-to-peer communication.
+
+#### Practical Example
+
+Two computers on a local network share files directly with each other without requiring a dedicated central file server.
+
+### 5.4 Client-Server vs Peer-to-Peer
+
+| Feature | Client-Server | Peer-to-Peer |
+|---|---|---|
+| Organization | Central service provider | Distributed participants |
+| Communication | Clients request from servers | Peers communicate directly |
+| Management | Often centrally managed | Often distributed |
+| Example | Website hosting | Direct peer file sharing |
+
+Neither architecture is universally better.
+
+The appropriate architecture depends on the application's requirements, security, management, scalability, and resources.
+
+#### Knowledge Check
+
+**Question:** You open a website, and your browser requests information from a remote web server. Which architecture does this represent?
+
+A. Peer-to-peer  
+B. Client-server  
+C. Personal area network  
+D. Wireless local network
+
+**Key takeaway:** Client-server systems use service providers and requesting clients. Peer-to-peer systems allow participating devices to share resources directly.
+
+---
+
+## Section 06 — How the Internet Works
+
+### 6.1 What Is the Internet?
+
+The **Internet** is a worldwide system of interconnected computer networks that communicate using the Internet Protocol suite.
+
+It connects billions of devices and allows people to access websites, exchange messages, use cloud services, and communicate across the world.
+
+The Internet is not one giant computer.
+
+It is a network of networks.
+
+#### Real-Life Analogy: A Global Road System
+
+Imagine roads connecting villages, cities, and countries.
+
+A vehicle can travel from one location to another by moving through different connected roads.
+
+Similarly, data can travel through interconnected networks to reach a destination anywhere on the Internet.
+
+### 6.2 What Is an ISP?
+
+An **ISP (Internet Service Provider)** is a company or organization that provides Internet connectivity to customers.
+
+Examples include providers that offer:
+
+- Home broadband.
+- Mobile Internet.
+- Business Internet.
+- Dedicated connectivity services.
+
+#### Practical Example
+
+You subscribe to a broadband package from an Internet provider.
+
+The ISP connects your home network to its network, allowing your devices to access the Internet.
+
+### 6.3 What Is a Server?
+
+A **server** is a computer system or software service that provides resources or services to other systems.
+
+Servers can host:
+
+- Websites.
+- Applications.
+- Files.
+- Databases.
+- Email services.
+
+#### Real-Life Analogy
+
+Think of a library.
+
+The library stores books and provides access to visitors.
+
+A server stores or manages resources and provides them to clients when requested.
+
+### 6.4 What Happens When You Open a Website?
+
+Suppose you type:
+
+```text
+https://example.com
+```
+
+into your browser.
+
+A simplified process looks like this:
+
+**Step 1: You enter a website address.**
+
+Your browser receives the domain name `example.com`.
+
+**Step 2: DNS finds an IP address.**
+
+Your device uses the Domain Name System (DNS) to find an IP address associated with the domain name.
+
+Think of DNS as a phone directory.
+
+You search for a person's name, and the directory helps you find their telephone number.
+
+Similarly, DNS helps translate domain names into IP addresses.
+
+**Step 3: Your device establishes communication.**
+
+Depending on the protocol and connection type, your device establishes the necessary network communication with the destination server.
+
+For a typical HTTPS website, this includes establishing a secure connection.
+
+**Step 4: Your browser sends a request.**
+
+Your browser sends an HTTP request to the web server.
+
+**Step 5: The server responds.**
+
+The web server processes the request and sends back the requested content.
+
+**Step 6: Your browser displays the website.**
+
+Your browser processes the received resources and displays the website.
+
+### 6.5 Website Communication Diagram
+
+```text
+       Your Computer
+             |
+             |
+       DNS Resolution
+             |
+             |
+       IP Address Found
+             |
+             |
+       Internet / ISP
+             |
+             |
+        Web Server
+             |
+             |
+       Server Response
+             |
+             |
+       Your Browser
+             |
+             |
+       Website Displayed
+```
+
+This diagram represents a simplified flow. Real communication may involve routers, DNS resolvers, caching systems, content delivery networks, firewalls, and several other services.
+
+### 6.6 Important Internet Terminology
+
+| Term | Meaning |
+|---|---|
+| Internet | Global network of interconnected networks |
+| ISP | Internet Service Provider |
+| Server | System providing services or resources |
+| Client | System requesting services |
+| DNS | Domain Name System |
+| Domain name | Human-readable name used to identify an Internet resource |
+| IP address | Address used for IP communication |
+| HTTP | Protocol used for web communication |
+| HTTPS | HTTP secured using TLS |
+
+#### Knowledge Check
+
+**Question:** You type a website name into your browser. Which service helps translate the domain name into an IP address?
+
+A. DHCP  
+B. DNS  
+C. FTP  
+D. SSH
+
+**Key takeaway:** The Internet connects networks around the world. DNS helps locate services, ISPs provide connectivity, and servers respond to client requests.
+
+---
+
+## Section 07 — Practical Linux Exploration
+
+### 7.1 Why Explore Networking Using Linux?
+
+Linux provides several command-line tools for inspecting network configuration.
+
+As a beginner in cybersecurity and networking, you should become comfortable examining your own computer's network interfaces and configuration.
+
+In this practical section, we will use three commands:
+
+1. `ip addr`
+2. `ip link`
+3. `ip route`
+
+These commands are part of the Linux `ip` networking utility, commonly provided by the `iproute2` package.
+
+**Important:** These commands inspect network information. They do not require you to attack, modify, or interfere with another device.
+
+### 7.2 Open the Linux Terminal
+
+First, open a terminal on your Linux system.
+
+You can usually open it through your desktop application menu or a keyboard shortcut.
+
+The terminal allows you to interact with Linux by entering commands.
+
+### 7.3 Command 01 — `ip addr`
+
+#### What does it do?
+
+The `ip addr` command displays IP addresses assigned to your network interfaces.
+
+It can help you identify:
+
+- Network interface names.
+- IPv4 addresses.
+- IPv6 addresses.
+- Interface status information.
+
+#### Command
+
+```bash
+ip addr
+```
+
+#### Example Output
+
+```text
+1: lo: <LOOPBACK,UP,LOWER_UP>
+    inet 127.0.0.1/8 scope host lo
+
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP>
+    inet 192.168.1.105/24 brd 192.168.1.255
+```
+
+Your actual output may look different.
+
+#### Understanding the Output
+
+**`lo`**
+
+This is the loopback interface. It allows a computer to communicate with itself.
+
+**`eth0`**
+
+This is an example of an Ethernet interface name.
+
+Modern Linux systems may use names such as `enp0s3`, `ens33`, or other predictable interface names.
+
+**`inet`**
+
+Indicates an IPv4 address.
+
+**`127.0.0.1`**
+
+A loopback IPv4 address. It refers to your own computer.
+
+**`192.168.1.105`**
+
+An example of a private IPv4 address.
+
+**`/24`**
+
+Indicates the prefix length, which describes the network portion of the address.
+
+#### Your Task
+
+Run:
+
+```bash
+ip addr
+```
+
+Find the interface connected to your network.
+
+Record:
+
+- Interface name.
+- IPv4 address.
+- Interface state.
+
+### 7.4 Command 02 — `ip link`
+
+#### What does it do?
+
+The `ip link` command displays information about network interfaces.
+
+It helps you identify:
+
+- Available network interfaces.
+- Interface names.
+- Whether interfaces are administratively up or down.
+- Hardware address information when available.
+
+#### Command
+
+```bash
+ip link
+```
+
+#### Example Output
+
+```text
+1: lo: <LOOPBACK,UP,LOWER_UP>
+    link/loopback 00:00:00:00:00:00
+
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP>
+    link/ether 08:00:27:12:34:56
+```
+
+#### Understanding the Output
+
+**`lo`**
+
+The loopback interface.
+
+**`eth0`**
+
+An example Ethernet interface.
+
+**`UP`**
+
+The interface is administratively enabled.
+
+**`LOWER_UP`**
+
+The underlying link is operational.
+
+**`link/ether`**
+
+Indicates an Ethernet-style hardware address.
+
+**`08:00:27:12:34:56`**
+
+An example MAC address.
+
+#### Your Task
+
+Run:
+
+```bash
+ip link
+```
+
+Identify:
+
+- The available network interfaces.
+- Your active network interface.
+- Its MAC address, if displayed.
+
+### 7.5 Command 03 — `ip route`
+
+#### What does it do?
+
+The `ip route` command displays the system's IP routing table.
+
+The routing table helps Linux determine where network packets should be forwarded.
+
+It can show:
+
+- The default route.
+- Destination networks.
+- Gateway addresses.
+- Associated network interfaces.
+
+#### Command
+
+```bash
+ip route
+```
+
+#### Example Output
+
+```text
+default via 192.168.1.1 dev eth0
+192.168.1.0/24 dev eth0 proto kernel scope link
+```
+
+#### Understanding the Output
+
+**`default`**
+
+Indicates the default route, used when no more specific routing entry matches the destination.
+
+**`via 192.168.1.1`**
+
+Indicates the next-hop gateway for that route.
+
+**`dev eth0`**
+
+Indicates the network interface used by the route.
+
+**`192.168.1.0/24`**
+
+An example of a directly connected local network.
+
+#### What Is a Default Gateway?
+
+A **default gateway** is the next-hop device that a computer sends traffic to when the destination is not covered by a more specific route.
+
+In a typical home network, this is usually your router.
+
+#### Real-Life Analogy
+
+Imagine living in an apartment building.
+
+If you want to go somewhere outside the building, you first leave through the main entrance.
+
+The main entrance is similar to a default gateway: it provides a path toward destinations outside your local network.
+
+#### Your Task
+
+Run:
+
+```bash
+ip route
+```
+
+Find the line beginning with `default`.
+
+Record:
+
+- Default gateway IP address.
+- Network interface used by the default route.
+
+### 7.6 Practical Command Summary
+
+| Command | Purpose | Information |
+|---|---|---|
+| `ip addr` | Displays IP addresses | IP address and interface details |
+| `ip link` | Displays network interfaces | Interface state and MAC address |
+| `ip route` | Displays routing information | Default gateway and routes |
+
+### 7.7 Practice Exercise
+
+Open your Linux terminal and execute the commands in this order:
+
+```bash
+ip addr
+ip link
+ip route
+```
+
+Answer these questions:
+
+1. What is the name of your active network interface?
+2. What IPv4 address is assigned to it?
+3. What is its MAC address?
+4. What is your default gateway?
+5. Which interface is used for the default route?
+
+**Important:** Your results may differ depending on whether you use Wi-Fi, Ethernet, a virtual machine, or a cloud-based Linux environment.
+
+If you are using a virtual machine, your interface and gateway may belong to the virtual network rather than your physical home network.
+
+**Key takeaway:** Linux provides simple commands that allow you to inspect network interfaces, IP addresses, MAC addresses, and routing information.
+
+---
+
+## Section 08 — Lesson Recap
+
+### 8.1 What Have We Learned?
+
+In this lesson, we explored the foundations of computer networking.
+
+Let's review the most important concepts.
+
+#### 1. Computer Networks
+
+A computer network connects devices so they can communicate and share resources.
+
+Example: Computers sharing a printer in a university laboratory.
+
+#### 2. Types of Networks
+
+- LAN: Connects devices within a limited geographical area.
+- WAN: Connects networks over large distances.
+- WLAN: Provides wireless local networking.
+- PAN: Connects personal devices over short distances.
+
+#### 3. Device Communication
+
+Devices exchange data using communication protocols.
+
+Important concepts:
+
+- Data packets.
+- IP addresses.
+- MAC addresses.
+- Network protocols.
+
+#### 4. Network Devices
+
+- Router: Connects different networks.
+- Switch: Connects devices within a local network.
+- Modem: Supports communication through an ISP access technology.
+- Access Point: Provides wireless network connectivity.
+
+#### 5. Network Architectures
+
+- Client-server: Clients request services from servers.
+- Peer-to-peer: Devices can share resources directly.
+
+#### 6. The Internet
+
+The Internet is a global network of interconnected networks.
+
+Important components include:
+
+- ISPs.
+- Servers.
+- DNS.
+- IP addresses.
+- HTTP and HTTPS.
+
+#### 7. Linux Networking Commands
+
+We explored:
+
+```bash
+ip addr
+ip link
+ip route
+```
+
+These commands help us inspect our network configuration.
+
+### 8.2 Quick Memory Revision
+
+| Concept | Remember It As |
+|---|---|
+| Network | Connected devices |
+| LAN | Local connection |
+| WAN | Large geographical network |
+| WLAN | Wireless local network |
+| PAN | Personal device network |
+| IP address | IP communication address |
+| MAC address | Network interface address |
+| Protocol | Communication rules |
+| Router | Connects networks |
+| Switch | Connects local devices |
+| DNS | Domain-name lookup |
+| Server | Provides services |
+| Client | Requests services |
+| Gateway | Next hop toward other networks |
+
+### 8.3 Final Lesson Takeaway
+
+Computer networking is the foundation of modern communication.
+
+Every time you browse a website, send a message, connect to Wi-Fi, or access a remote server, networking technologies make that communication possible.
+
+For cybersecurity professionals, understanding networking is essential because security systems, applications, servers, and attacks all operate through connected systems.
+
+**You have completed Lesson 01: Introduction to Computer Networking.**
+
+Next, test your understanding with the lesson quiz and complete the practical Linux assignment.

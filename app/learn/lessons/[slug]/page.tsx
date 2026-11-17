@@ -62,14 +62,6 @@ export default async function LessonPage({
   const lesson = getLessonBySlug(slug);
   if (!lesson) notFound();
 
-  const pages = paginateLesson(lesson.content, lesson.meta.estimatedMinutes, {
-    hasQuiz: Boolean(lesson.meta.quizSlug),
-  });
-  const currentPage = clampPageNumber(resolvedSearchParams?.page, pages.length);
-  const activePage = pages[currentPage - 1];
-  const prevPage = currentPage > 1 ? pages[currentPage - 2] : null;
-  const nextPage = currentPage < pages.length ? pages[currentPage] : null;
-
   const { path: learningPath, pathLessons, previous, next } = getLessonNeighbors(lesson);
   const user = await getCurrentUser();
   const activeUser = isAccountActive(user) ? user : null;
@@ -94,6 +86,14 @@ export default async function LessonPage({
       ? getUserQuizAttempts(activeUser.id)
       : Promise.resolve([]),
   ]);
+
+  const pages = paginateLesson(lesson.content, lesson.meta.estimatedMinutes, {
+    hasQuiz: Boolean(quiz),
+  });
+  const currentPage = clampPageNumber(resolvedSearchParams?.page, pages.length);
+  const activePage = pages[currentPage - 1];
+  const prevPage = currentPage > 1 ? pages[currentPage - 2] : null;
+  const nextPage = currentPage < pages.length ? pages[currentPage] : null;
 
   const completedSet = new Set(progress.filter((p) => p.completed).map((p) => p.lessonId));
   const isCompleted = completedSet.has(lesson.meta.id);
@@ -258,27 +258,25 @@ export default async function LessonPage({
       {/* Embedded Knowledge Check, Practical Assignment & Completion on Final Page */}
       {activePage.isAssessmentPage ? (
         <div className="mt-10 space-y-10">
-          <section
-            id="knowledge-check"
-            className="scroll-mt-24 border-t border-[#303A44] pt-8 space-y-6"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-semibold text-[#A3E635]">
-                  <ClipboardCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>End-of-Module Knowledge Check</span>
-                </div>
-                <h2 className="mt-1.5 text-2xl font-bold text-[#F3F4F6]">
-                  {quiz ? quiz.title : "Knowledge Check"}
-                </h2>
-                {quiz ? (
+          {quiz ? (
+            <section
+              id="knowledge-check"
+              className="scroll-mt-24 border-t border-[#303A44] pt-8 space-y-6"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#A3E635]">
+                    <ClipboardCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>End-of-Module Knowledge Check</span>
+                  </div>
+                  <h2 className="mt-1.5 text-2xl font-bold text-[#F3F4F6]">
+                    {quiz.title}
+                  </h2>
                   <p className="mt-1 text-sm text-[#AAB4BE] tabular-nums">
-                    {quiz.questions.length} questions · Pass threshold {quiz.passPercentage}% · Server-graded
+                    {quiz.questions.length} questions · 100% required to complete module · Server-graded
                   </p>
-                ) : null}
-              </div>
+                </div>
 
-              {quiz ? (
                 <Link
                   href={`/quizzes/${quiz.slug}`}
                   className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-[#303A44] bg-[#171D23] px-3.5 text-xs font-medium text-[#AAB4BE] hover:border-[#4B5866] hover:text-[#F3F4F6] whitespace-nowrap"
@@ -286,10 +284,8 @@ export default async function LessonPage({
                   <span>Standalone view</span>
                   <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                 </Link>
-              ) : null}
-            </div>
+              </div>
 
-            {quiz ? (
               <QuizRunner
                 quiz={quiz}
                 isAuthenticated={Boolean(activeUser)}
@@ -313,16 +309,8 @@ export default async function LessonPage({
                     : null
                 }
               />
-            ) : (
-              <div className="rounded-xl border border-[#303A44] bg-[#171D23] p-6 text-sm text-[#AAB4BE]">
-                Practice assessments are available in the{" "}
-                <Link href="/quizzes" className="text-[#A3E635] underline">
-                  Quizzes catalog
-                </Link>
-                .
-              </div>
-            )}
-          </section>
+            </section>
+          ) : null}
 
           {assignment ? (
             <section className="space-y-3">
@@ -355,7 +343,7 @@ export default async function LessonPage({
             className="scroll-mt-24 rounded-xl border border-[#303A44] bg-[#171D23] p-6"
           >
             <LessonActions
-              key={`${lesson.meta.id}-${String(isCompleted)}-${String(isBookmarked)}`}
+              key={`${lesson.meta.id}-${String(isCompleted)}-${String(isBookmarked)}-${String(Boolean(quiz))}`}
               lessonId={lesson.meta.id}
               pathId={lesson.meta.pathId}
               slug={lesson.meta.slug}
@@ -363,6 +351,7 @@ export default async function LessonPage({
               initialCompleted={isCompleted}
               initialBookmarked={isBookmarked}
               isAuthenticated={Boolean(activeUser)}
+              hasQuiz={Boolean(quiz)}
             />
           </section>
 

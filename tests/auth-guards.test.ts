@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { isPreviewAuthEnabled } from "@/lib/env";
+import { getSiteUrl, isPreviewAuthEnabled } from "@/lib/env";
 import type { SessionUser } from "@/lib/types/domain";
 import {
   canAccessAdminConsole,
@@ -13,6 +13,7 @@ import {
   signPreviewSessionToken,
   verifyPreviewSessionToken,
 } from "@/modules/auth/preview-token";
+import { resolveRedirectOrigin, sanitizeRedirectPath } from "@/modules/auth/redirect";
 
 function makeUser(overrides: Partial<SessionUser> = {}): SessionUser {
   return {
@@ -37,12 +38,23 @@ describe("Authorization & RBAC guards", () => {
   const originalPreviewFlag = process.env.ENABLE_LOCAL_PREVIEW_AUTH;
   const originalSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const originalSupabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalAppUrl = process.env.APP_URL;
+  const originalVercelEnv = process.env.VERCEL_ENV;
+  const originalVercelUrl = process.env.VERCEL_URL;
+  const originalVercelProdUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
 
   afterEach(() => {
-    (process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv;
-    (process.env as Record<string, string | undefined>).ENABLE_LOCAL_PREVIEW_AUTH = originalPreviewFlag;
-    (process.env as Record<string, string | undefined>).NEXT_PUBLIC_SUPABASE_URL = originalSupabaseUrl;
-    (process.env as Record<string, string | undefined>).NEXT_PUBLIC_SUPABASE_ANON_KEY = originalSupabaseAnon;
+    const env = process.env as Record<string, string | undefined>;
+    env.NODE_ENV = originalNodeEnv;
+    env.ENABLE_LOCAL_PREVIEW_AUTH = originalPreviewFlag;
+    env.NEXT_PUBLIC_SUPABASE_URL = originalSupabaseUrl;
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalSupabaseAnon;
+    env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+    env.APP_URL = originalAppUrl;
+    env.VERCEL_ENV = originalVercelEnv;
+    env.VERCEL_URL = originalVercelUrl;
+    env.VERCEL_PROJECT_PRODUCTION_URL = originalVercelProdUrl;
   });
 
   it("enforces permanent ADMIN_EMAILS case-insensitively regardless of DB role", () => {
@@ -125,5 +137,68 @@ describe("Authorization & RBAC guards", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
     expect(isPreviewAuthEnabled()).toBe(false);
+  });
+
+  it("never traps production OAuth callbacks on localhost:3000 when env vars are unset or placeholder", () => {
+    const env = process.env as Record<string, string | undefined>;
+    env.NODE_ENV = "production";
+    delete env.NEXT_PUBLIC_SITE_URL;
+    delete env.APP_URL;
+    delete env.VERCEL_ENV;
+    delete env.VERCEL_URL;
+    delete env.VERCEL_PROJECT_PRODUCTION_URL;
+
+    expect(
+      resolveRedirectOrigin({
+        requestUrl: "https://academy.example.com/auth/callback?code=abc",
+      })
+    ).toBe("https://academy.example.com");
+
+    // Even if NEXT_PUBLIC_SITE_URL was accidentally left as http://localhost:3000 from .env.example
+    env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
+    expect(
+      resolveRedirectOrigin({
+        requestUrl: "https://academy.example.com/auth/callback?code=abc",
+      })
+    ).toBe("https://academy.example.com");
+
+    // Reverse proxy with internal bind address uses validated x-forwarded-host
+    expect(
+      resolveRedirectOrigin({
+        requestUrl: "http://0.0.0.0:3000/auth/callback?code=abc",
+        forwardedHost: "ais-dev-demo.run.app",
+        forwardedProto: "https",
+      })
+    ).toBe("https://ais-dev-demo.run.app");
+  });
+
+  it("pins production redirects to explicit external site URL and ignores spoofed forwarded headers", () => {
+    const env = process.env as Record<string, string | undefined>;
+    env.NODE_ENV = "production";
+    env.NEXT_PUBLIC_SITE_URL = "https://academy.forgesec.dev";
+    delete env.APP_URL;
+    delete env.VERCEL_ENV;
+
+    expect(
+      resolveRedirectOrigin({
+        requestUrl: "https://evil-host.example/auth/callback",
+        forwardedHost: "attacker.example",
+        forwardedProto: "https",
+      })
+    ).toBe("https://academy.forgesec.dev");
+
+    // Vercel preview deployment uses VERCEL_URL
+    env.VERCEL_ENV = "preview";
+    env.VERCEL_URL = "forgesec-git-feature.vercel.app";
+    expect(getSiteUrl()).toBe("https://forgesec-git-feature.vercel.app");
+  });
+
+  it("sanitizes OAuth next redirect paths against open redirects", () => {
+    expect(sanitizeRedirectPath("/learn/linux-fundamentals")).toBe("/learn/linux-fundamentals");
+    expect(sanitizeRedirectPath("//evil.example")).toBe("/dashboard");
+    expect(sanitizeRedirectPath("/\\evil.example")).toBe("/dashboard");
+    expect(sanitizeRedirectPath("https://evil.example")).toBe("/dashboard");
+    expect(sanitizeRedirectPath("/dashboard\r\nInjected: 1")).toBe("/dashboard");
+    expect(sanitizeRedirectPath(null)).toBe("/dashboard");
   });
 });

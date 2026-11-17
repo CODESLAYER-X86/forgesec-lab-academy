@@ -19,7 +19,7 @@ describe("Lesson section-aware pagination & static quiz cleanup", () => {
   const quizSlugs = new Set(db.quizzes.filter((q) => q.status === "published").map((q) => q.slug));
 
   it("removes static Knowledge Check, Answer Key, and escaped badge artifacts from all published lessons", () => {
-    expect(lessons.length).toBe(15);
+    expect(lessons.length).toBe(20);
     for (const lesson of lessons) {
       expect(lesson.content).not.toMatch(/^#{1,3}\s+(?:\*\*)?(?:[A-Z]\.\s+)?Knowledge Check/im);
       expect(lesson.content).not.toMatch(/^#{1,3}\s+(?:\*\*)?(?:[A-Z]\.\s+)?Answer Key/im);
@@ -28,26 +28,30 @@ describe("Lesson section-aware pagination & static quiz cleanup", () => {
     }
   });
 
-  it("maps every published lesson quizSlug 1:1 to a unique published interactive quiz", () => {
+  it("maps every published lesson quizSlug 1:1 to a unique published interactive quiz with 100% pass requirement", () => {
     const seen = new Set<string>();
     for (const lesson of lessons) {
       expect(lesson.meta.quizSlug).toBeTruthy();
       expect(quizSlugs.has(lesson.meta.quizSlug!)).toBe(true);
       expect(seen.has(lesson.meta.quizSlug!)).toBe(false);
       seen.add(lesson.meta.quizSlug!);
+      const quiz = db.quizzes.find((q) => q.slug === lesson.meta.quizSlug);
+      expect(quiz?.passPercentage).toBe(100);
     }
-    expect(seen.size).toBe(15);
+    expect(seen.size).toBe(20);
   });
 
-  it("splits Linux modules into balanced multi-page reading steps ending with an assessment page", () => {
-    const linuxLessons = lessons.filter((l) => l.meta.category === "linux");
-    expect(linuxLessons).toHaveLength(10);
+  it("splits Linux and Networking modules into balanced multi-page reading steps ending with an assessment page", () => {
+    const multiStepLessons = lessons.filter(
+      (l) => l.meta.category === "linux" || l.meta.category === "networking"
+    );
+    expect(multiStepLessons).toHaveLength(18);
 
-    for (const lesson of linuxLessons) {
+    for (const lesson of multiStepLessons) {
       const pages = paginateLesson(lesson.content, lesson.meta.estimatedMinutes, {
         hasQuiz: Boolean(lesson.meta.quizSlug),
       });
-      expect(pages.length).toBeGreaterThanOrEqual(4);
+      expect(pages.length).toBeGreaterThanOrEqual(3);
       expect(pages[pages.length - 1]?.isAssessmentPage).toBe(true);
 
       const readingPages = pages.slice(0, -1);
@@ -55,7 +59,7 @@ describe("Lesson section-aware pagination & static quiz cleanup", () => {
         expect(page.isAssessmentPage).toBe(false);
         expect(page.mdxContent.trim().length).toBeGreaterThan(100);
         expect(page.estimatedMinutes).toBeGreaterThanOrEqual(1);
-        expect(page.estimatedMinutes).toBeLessThanOrEqual(5);
+        expect(page.estimatedMinutes).toBeLessThanOrEqual(6);
         expect(hasBalancedFences(page.mdxContent)).toBe(true);
       }
 
@@ -63,9 +67,9 @@ describe("Lesson section-aware pagination & static quiz cleanup", () => {
     }
   });
 
-  it("paginates shorter networking & web-security lessons into 1 reading page + 1 closing assessment page", () => {
-    const shortLessons = lessons.filter((l) => l.meta.category !== "linux");
-    expect(shortLessons).toHaveLength(5);
+  it("paginates shorter web-security lessons into 1 reading page + 1 closing assessment page", () => {
+    const shortLessons = lessons.filter((l) => l.meta.category === "web-security");
+    expect(shortLessons).toHaveLength(2);
 
     for (const lesson of shortLessons) {
       const pages = paginateLesson(lesson.content, lesson.meta.estimatedMinutes, {

@@ -1,5 +1,5 @@
 import { isSupabaseConfigured } from "@/lib/env";
-import { readPreviewDb, writePreviewDb } from "@/lib/store/preview-store";
+import { getCurriculumSeed, readPreviewDb, writePreviewDb } from "@/lib/store/preview-store";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
@@ -12,28 +12,41 @@ import type {
 export async function getPublishedAssignments(): Promise<PracticalAssignment[]> {
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient();
-    if (!supabase) return [];
-    const { data } = await supabase
-      .from("assignments")
-      .select("*")
-      .eq("status", "published")
-      .order("title");
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      title: row.title,
-      objective: row.objective,
-      category: row.category,
-      difficulty: row.difficulty,
-      lessonId: row.lesson_id ?? undefined,
-      prerequisites: row.prerequisites ?? [],
-      instructions: row.instructions ?? [],
-      expectedOutcome: row.expected_outcome,
-      safetyWarning: row.safety_warning,
-      status: row.status,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
+    const dbAssignments: PracticalAssignment[] = [];
+    if (supabase) {
+      const { data } = await supabase
+        .from("assignments")
+        .select("*")
+        .eq("status", "published")
+        .order("title");
+      for (const row of data ?? []) {
+        dbAssignments.push({
+          id: row.id,
+          slug: row.slug,
+          title: row.title,
+          objective: row.objective,
+          category: row.category,
+          difficulty: row.difficulty,
+          lessonId: row.lesson_id ?? undefined,
+          prerequisites: row.prerequisites ?? [],
+          instructions: row.instructions ?? [],
+          expectedOutcome: row.expected_outcome,
+          safetyWarning: row.safety_warning,
+          status: row.status,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        });
+      }
+    }
+    const bySlug = new Map<string, PracticalAssignment>(
+      dbAssignments.map((a) => [a.slug, a])
+    );
+    for (const seedAssign of getCurriculumSeed().assignments) {
+      if (seedAssign.status === "published" && !bySlug.has(seedAssign.slug)) {
+        bySlug.set(seedAssign.slug, seedAssign);
+      }
+    }
+    return Array.from(bySlug.values());
   }
 
   return readPreviewDb().assignments.filter((a) => a.status === "published");

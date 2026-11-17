@@ -1,0 +1,374 @@
+---
+id: net-004
+title: "MAC Address, ARP and Switching"
+slug: mac-address-arp-and-switching
+description: "Understand 48-bit Ethernet MAC addresses, Layer 2 switch MAC tables, ARP request/reply resolution, unicast/broadcast/multicast, and VLANs."
+category: networking
+pathId: networking-fundamentals
+moduleNumber: 4
+difficulty: beginner
+estimatedMinutes: 25
+tags:
+  - networking
+  - arp
+  - switching
+status: published
+updatedAt: "2026-11-17"
+quizSlug: net-mac-arp-switching-check
+assignmentSlug: investigate-local-network-arp
+---
+## Learning Objectives
+By the end of this lesson, students should be able to:
+- Explain what a MAC address is and why networks use it.
+- Understand the basic structure of a MAC address.
+- Explain how network switches forward Ethernet frames.
+- Understand how ARP resolves IPv4 addresses into MAC addresses.
+- Inspect the ARP cache in Linux.
+- Distinguish between unicast, broadcast, and multicast communication.
+- Explain how a default gateway handles communication outside a local network.
+- Understand the basic purpose of VLANs.
+- Use Linux commands to inspect local network information.
+Central real-life analogy: Imagine a university campus. Every student has a unique ID card, the university has a reception desk that helps identify people, and internal delivery staff take messages to the correct rooms.
+
+This lesson connects the IP addressing concepts from Lesson 03 to actual local network communication.
+
+## Section 01 — What Is a MAC Address?
+
+MAC stands for Media Access Control.
+
+A MAC address is a link-layer identifier associated with a network interface. It is commonly used to identify interfaces during communication on a local network.
+Example
+00:1A:2B:3C:4D:5E
+A typical Ethernet MAC address is 48 bits long and is written as six hexadecimal pairs.
+Why Do We Need MAC Addresses?
+Remember:
+- IP addresses help identify network-layer destinations.
+- MAC addresses help identify link-layer destinations on a local network.
+Real-Life Analogy
+Think of a university:
+- IP address = The building's network address.
+- MAC address = The student's identification number used within the campus system.
+Important Characteristics
+- A typical Ethernet MAC address is 48 bits.
+- It is represented in hexadecimal.
+- It is associated with a network interface.
+- It is used for local link-layer communication.
+- MAC addresses can be changed or spoofed in software, so they should not be treated as permanent proof of device identity.
+Do Not Confuse IP and MAC Addresses
+192.168.1.10
+This is an IPv4 address.
+00:1A:2B:3C:4D:5E
+This is a MAC address.
+
+Remember: IP identifies the network-layer destination, while MAC identifies the link-layer destination for local delivery.
+
+## Section 02 — Understanding MAC Address Structure
+
+A typical 48-bit MAC address consists of six octets.
+
+Example:
+00:1A:2B:3C:4D:5E
+The first 24 bits are commonly associated with the manufacturer identifier, called the Organizationally Unique Identifier (OUI).
+
+The remaining bits identify the interface within that allocation.
+Real-Life Analogy
+Imagine a student ID:
+- First part = University identification.
+- Remaining part = Individual student number.
+Together they form the complete identifier.
+Hexadecimal Reminder
+Hexadecimal uses 16 symbols:
+0 1 2 3 4 5 6 7 8 9 A B C D E F
+This makes it convenient to represent binary values.
+
+For example, one hexadecimal digit represents four bits.
+Important
+Not every MAC address is an ordinary individual unicast address. Broadcast and multicast MAC addresses also exist.
+
+Remember: A typical Ethernet MAC address contains 48 bits, represented using hexadecimal notation.
+
+## Section 03 — What Is a Network Switch?
+
+A network switch connects multiple devices within a Local Area Network (LAN).
+
+It forwards Ethernet frames based on destination MAC addresses.
+Real-Life Analogy
+Imagine a university reception desk.
+
+Students and staff send messages to different departments. The receptionist learns where people are located and directs messages accordingly.
+
+A switch performs a similar function for network frames.
+How Does a Switch Work?
+A switch learns MAC addresses by examining the source MAC address of incoming frames.
+
+It maintains a MAC address table, sometimes called a CAM table.
+
+Example:
+
+| MAC address | Switch port |
+| --- | --- |
+| AA:AA:AA:AA:AA:01 | Port 1 |
+| BB:BB:BB:BB:BB:02 | Port 2 |
+| CC:CC:CC:CC:CC:03 | Port 3When a frame arrives: |
+
+1. The switch examines its source MAC address.
+2. It learns which port the source is connected to.
+3. It checks the destination MAC address.
+4. If the destination is known, it forwards the frame through the appropriate port.
+5. If the destination is unknown, it generally floods the frame through other eligible ports in that VLAN.
+Why Is This Useful?
+Without a switch learning device locations, it would be much harder to deliver local network traffic efficiently.
+
+Remember: A switch primarily uses MAC addresses to forward frames within a LAN.
+
+## Section 04 — What Is ARP?
+
+ARP stands for Address Resolution Protocol.
+
+It is used in IPv4 networks to discover the MAC address associated with an IPv4 address on the local network.
+
+Let's imagine:
+
+Your computer wants to communicate with:
+192.168.1.20
+But it doesn't know the destination MAC address.
+
+How does it find it?
+
+It uses ARP.
+How ARP Works
+Suppose:
+
+| Device | IP address | MAC address |
+| --- | --- | --- |
+| Computer A | 192.168.1.10 | AA:AA:AA:AA:AA:10 |
+| Computer B | 192.168.1.20 | BB:BB:BB:BB:BB:20Computer A wants to communicate with Computer B. |
+
+Step 1 — ARP Request
+Computer A sends an ARP request:
+Who has 192.168.1.20? Tell 192.168.1.10.
+
+The request is broadcast on the local network.
+Step 2 — ARP Reply
+Computer B recognizes its IP address and replies with its MAC address.
+Step 3 — ARP Cache
+Computer A stores the discovered mapping in its ARP cache.
+
+Now it can send Ethernet frames to Computer B using the discovered MAC address.
+Real-Life Analogy
+You know someone's room number but not their student ID. You ask the reception desk, and it provides the correct identification information.
+Important Distinction
+ARP is used for IPv4 address resolution.
+
+IPv6 uses Neighbor Discovery Protocol (NDP), not ARP.
+
+Remember: ARP helps a device discover the MAC address associated with a local IPv4 address.
+
+## Section 05 — ARP Cache and ARP Table
+
+Your computer does not need to ask for the same MAC address every time it communicates with another local device.
+
+It stores discovered IP-to-MAC mappings temporarily in an ARP cache.
+
+Example:
+IP address       MAC address
+192.168.1.1      AA:BB:CC:DD:EE:01
+192.168.1.20     AA:BB:CC:DD:EE:20
+Why Is the ARP Cache Useful?
+- Reduces repeated ARP requests.
+- Saves network traffic.
+- Makes local communication more efficient.
+Real-Life Analogy
+Imagine saving someone's phone number after looking it up once. You don't need to ask the receptionist every time you want to call them.
+Inspect the ARP Table in Linux
+Run:
+ip neigh
+This displays neighbor information, including IP-to-link-layer address mappings.
+
+You may also use:
+arp -a
+On some Linux installations, the legacy arp command may not be installed.
+Important
+ARP cache entries can expire or change. The table may not always contain every device on your network.
+
+Remember: The ARP cache temporarily stores discovered mappings to make local communication more efficient.
+
+## Section 06 — Unicast, Broadcast and Multicast
+
+Network communication can happen in different delivery patterns.
+1. Unicast
+Unicast means one sender communicates with one specific receiver.
+
+Example:
+
+Computer A sends a file to Computer B.
+
+Analogy: Sending a private letter to one person.
+2. Broadcast
+Broadcast means one sender sends information to all eligible devices within the local broadcast domain.
+
+An Ethernet broadcast MAC address is:
+FF:FF:FF:FF:FF:FF
+Example: An ARP request asking which device has a particular IPv4 address.
+
+Analogy: Making an announcement over a university loudspeaker that everyone in the building can hear.
+3. Multicast
+Multicast means sending information to a specific group of interested receivers.
+
+Example: A network video stream delivered to subscribed multicast receivers.
+
+Analogy: Sending an announcement only to members of a particular university club.
+Quick Comparison
+
+| Type | Communication |
+| --- | --- |
+| Unicast | One to one |
+| Broadcast | One to all in a broadcast domain |
+| Multicast | One to a selected groupRemember: |
+
+- Unicast targets one receiver.
+- Broadcast targets everyone in the broadcast domain.
+- Multicast targets a selected group.
+
+## Section 07 — Default Gateway and Local Network Communication
+
+Let's connect this lesson with the previous IP addressing lesson.
+
+Suppose your computer has:
+Computer A: 192.168.1.10/24
+Gateway:    192.168.1.1
+You want to communicate with another device.
+Scenario A — Communicating Inside Your Local Network
+Destination:
+192.168.1.20
+Your computer determines that the destination belongs to the same subnet.
+
+It uses ARP to discover the destination's MAC address, then sends the Ethernet frame to that device.
+Scenario B — Communicating Outside Your Local Network
+Destination:
+8.8.8.8
+Your computer determines that the destination is outside its local subnet.
+
+It sends the frame to the MAC address of its default gateway, not directly to the MAC address of the remote Internet server.
+
+The router then forwards the packet toward its destination.
+Real-Life Analogy
+- Local destination = Delivering a parcel to another room in your building.
+- Remote destination = Giving the parcel to the building's shipping department so it can be sent elsewhere.
+Important Distinction
+When communicating with a remote IPv4 destination:
+- Destination IP: Remote destination's IP.
+- Destination MAC: Next-hop gateway's MAC address.
+The router then forwards the packet toward its destination.
+
+This is one of the most important concepts in networking.
+
+## Section 08 — VLAN Fundamentals
+
+VLAN stands for Virtual Local Area Network.
+
+A VLAN allows network administrators to divide a physical switched network into separate logical networks.
+Real-Life Analogy
+Imagine a university using the same physical network infrastructure for multiple departments.
+- VLAN 10 — Computer Science.
+- VLAN 20 — Administration.
+- VLAN 30 — Library.
+Even if devices connect to the same physical switch, VLAN configuration can keep their Layer 2 broadcast domains separate.
+Why Use VLANs?
+- Separate departments.
+- Reduce broadcast-domain size.
+- Improve network organization.
+- Support network segmentation.
+- Help enforce security policies.
+Important
+Communication between different VLANs generally requires Layer 3 routing.
+
+VLANs are a foundational concept for understanding enterprise networks and network security.
+
+## Section 09 — Practical Linux Exploration
+
+Now let's inspect actual network information using Linux.
+
+### Task 1 — Find Your MAC Address
+
+Run:
+ip link
+Look for:
+link/ether aa:bb:cc:dd:ee:ff
+This is an example of a MAC address.
+
+Identify your active Ethernet or Wi-Fi interface.
+
+### Task 2 — Inspect IP-to-MAC Mappings
+
+Run:
+ip neigh
+Observe:
+- IP addresses.
+- Link-layer addresses.
+- Neighbor states.
+You might initially see an empty table or incomplete entries. That is normal.
+
+### Task 3 — Generate Local Network Traffic
+
+First identify your default gateway:
+ip route
+Then ping your gateway:
+ping -c 4 192.168.1.1
+Replace the example address with your actual gateway.
+
+Now inspect the neighbor table again:
+ip neigh
+You may see an entry for your gateway.
+
+### Task 4 — Observe ARP Requests
+
+If tcpdump is installed, run:
+sudo tcpdump -ni any arp
+In another terminal, generate some local network traffic.
+
+Observe ARP requests and replies where visible.
+
+Press Ctrl+C to stop capturing.
+
+Safety: Only inspect your own device and authorized lab networks. Avoid collecting other people's network traffic.
+
+## Section 10 — Lesson Recap and Memory Map
+
+MAC Address
+Identifies a network interface at the link layer.
+Switch
+Forwards Ethernet frames using MAC address information.
+ARP
+Resolves local IPv4 addresses to MAC addresses.
+ARP Cache
+Temporarily stores discovered address mappings.
+Communication Types
+- Unicast = One to one.
+- Broadcast = One to all in a broadcast domain.
+- Multicast = One to a selected group.
+Default Gateway
+Provides the next hop for traffic leaving the local network.
+VLAN
+Divides a physical switched network into separate logical Layer 2 networks.
+Final Memory Analogy — University Campus
+
+| Networking concept | University analogy |
+| --- | --- |
+| MAC address | Student identification |
+| Switch | Reception directing visitors |
+| ARP | Asking reception for someone's identification |
+| ARP cache | Saved student directory |
+| Unicast | Private message |
+| Broadcast | Campus-wide announcement |
+| Multicast | Club-specific announcement |
+| Default gateway | Main campus exit |
+| VLAN | Separate departmental spacesThe Most Important Relationship |
+
+IP identifies the network-layer destination, while MAC identifies the link-layer next hop.
+
+Make sure you understand this distinction before moving to the next lesson.
+Next Lesson
+Lesson 05 — TCP, UDP and Network Ports
+
+This will introduce how applications communicate, how connections are established, and why network ports are essential for cybersecurity.

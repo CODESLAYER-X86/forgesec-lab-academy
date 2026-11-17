@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum app_role {
+  student
+  instructor
+  admin
+}
+
+enum content_type {
+  tutorial
+  learning_path
+  writeup
+  guide
+  reference
+  glossary
+}
+
+enum quiz_status {
+  draft
+  published
+  archived
+}
+
+enum question_type {
+  single_choice
+  multiple_select
+  true_false
+  command_input
+}
+
+enum assignment_status {
+  draft
+  published
+  archived
+}
+
+enum assignment_progress_status {
+  not_started
+  in_progress
+  completed
+}
+
+model profiles {
+  id                    String    @id @db.Uuid
+  email                 String    @unique
+  display_name          String    @default("Academy Learner")
+  avatar_url            String?
+  bio                   String?   @default("")
+  interests             String[]  @default([])
+  account_status        String    @default("active")
+  deletion_requested_at DateTime? @db.Timestamptz(6)
+  created_at            DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime  @default(now()) @db.Timestamptz(6)
+}
+
+model quizzes {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug            String          @unique
+  title           String
+  description     String
+  category        String          @default("linux")
+  difficulty      String          @default("beginner")
+  lesson_id       String?
+  pass_percentage Int             @default(100)
+  status          quiz_status     @default(draft)
+  created_by      String?         @db.Uuid
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
+  quiz_questions  quiz_questions[]
+}
+
+model quiz_questions {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quiz_id         String            @db.Uuid
+  prompt          String
+  question_type   question_type     @default(single_choice)
+  placeholder     String?
+  explanation     String            @default("")
+  sort_order      Int               @default(0)
+  quizzes         quizzes           @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  quiz_options    quiz_options[]
+  quiz_answer_key quiz_answer_keys?
+}
+
+model quiz_options {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question_id    String         @db.Uuid
+  label          String
+  option_text    String
+  sort_order     Int            @default(0)
+  quiz_questions quiz_questions @relation(fields: [question_id], references: [id], onDelete: Cascade)
+}
+
+model quiz_answer_keys {
+  question_id        String         @id @db.Uuid
+  correct_option_ids String[]       @db.Uuid
+  accepted_answers   String[]       @default([])
+  quiz_questions     quiz_questions @relation(fields: [question_id], references: [id], onDelete: Cascade)
+}
+
+model assignments {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug             String            @unique
+  title            String
+  objective        String
+  category         String            @default("linux")
+  difficulty       String            @default("beginner")
+  lesson_id        String?
+  prerequisites    String[]          @default([])
+  instructions     String[]          @default([])
+  expected_outcome String
+  safety_warning   String
+  status           assignment_status @default(draft)
+  created_by       String?           @db.Uuid
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime          @default(now()) @db.Timestamptz(6)
+}

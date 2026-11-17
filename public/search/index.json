@@ -161,51 +161,131 @@
   },
   {
     "id": "net-001",
-    "title": "IP Addressing, Subnets and Routing Basics",
-    "slug": "ip-addressing-subnets-and-routing",
-    "description": "Understand IPv4 addresses, CIDR subnet masks, default gateways, and how Linux decides where to send packets.",
+    "title": "Introduction to Computer Networking",
+    "slug": "introduction-to-computer-networking",
+    "description": "Understand what computer networks are, LAN/WAN/WLAN/PAN topologies, routers and switches, client-server vs. peer-to-peer models, and Linux interface inspection.",
+    "type": "tutorial",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "networking",
+      "lan-wan",
+      "topologies"
+    ],
+    "searchableText": "Introduction to Computer Networking Understand what computer networks are, LAN/WAN/WLAN/PAN topologies, routers and switches, client-server vs. peer-to-peer models, and Linux interface inspection. networking lan-wan topologies Learning Objectives By the end of this lesson, students will be able to: 1. Explain what a computer network is and why networks are important. 2. Identify common network types: LAN, WAN, WLAN, and PAN. 3. Describe how devices communicate and exchange data. 4. Recognize the roles of routers, switches, modems, and access points. 5. Differentiate between client-server and peer-to-peer architectures. 6. Explain the basic process of accessing a website through the Internet. 7. Use basic Linux commands to inspect network interfaces and configuration. --- Section 01 — What is a Computer Network? 1.1 Understanding Computer Networks A computer network is a group of two or more computing devices connected together so they can communicate and share information or resources. These devices can include: - Desktop computers - Laptops - Smartphones - Servers - Printers - Network cameras - Other smart devices Devices can connect through cables or wireless technologies such as Wi-Fi. For example, imagine three computers connected to the same network. They can communicate with each other, share files, and access a shared printer. That is a computer network. 1.2 Real-Life Analogy: A Postal Delivery System Think about how a postal service works. When someone wants to send a letter: 1. The sender writes the letter. 2. The postal service receives it. 3. The letter travels through different delivery c",
+    "url": "/learn/lessons/introduction-to-computer-networking"
+  },
+  {
+    "id": "net-002",
+    "title": "OSI Model and TCP/IP Model",
+    "slug": "osi-model-and-tcp-ip-model",
+    "description": "Explore the seven-layer OSI model, the four-layer TCP/IP model, data encapsulation and decapsulation, and practical layer inspection on Linux.",
+    "type": "tutorial",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "networking",
+      "osi-model",
+      "tcp-ip"
+    ],
+    "searchableText": "OSI Model and TCP/IP Model Explore the seven-layer OSI model, the four-layer TCP/IP model, data encapsulation and decapsulation, and practical layer inspection on Linux. networking osi-model tcp-ip Learning Objectives By the end of this lesson, students will be able to: 1. Explain why networking models are important. 2. Identify and describe all seven layers of the OSI model. 3. Understand the responsibilities of each OSI layer. 4. Explain encapsulation and decapsulation. 5. Identify the four layers of the TCP/IP model. 6. Compare the OSI and TCP/IP models. 7. Use Linux commands to inspect interfaces, IP addresses, routing, and basic connectivity. Central analogy: Sending a parcel from your home to someone in another country. Each stage has a specific responsibility, just like each networking layer. Section 01 — Why Do We Need Networking Models? 1.1 Understanding Networking Models Imagine sending a parcel to someone in another country. Several things must happen: 1. You prepare the parcel. 2. You write the receiver's address. 3. The delivery company collects it. 4. Distribution centers handle and transport it. 5. The parcel reaches the destination. 6. The receiver collects it. Computer communication follows a similar process. When you send a message, open a website, or download a file, several networking operations happen behind the scenes. Different technologies and devices work together to make communication possible. But how do we organize all these operations? This is where networking models become important. 1.2 What Is a Networking Model? A networking model is a con",
+    "url": "/learn/lessons/osi-model-and-tcp-ip-model"
+  },
+  {
+    "id": "net-003",
+    "title": "IP Addressing and Subnetting",
+    "slug": "ip-addressing-and-subnetting",
+    "description": "Master IPv4 and IPv6 addressing, private vs. public IP ranges, static vs. dynamic assignment, subnet masks, CIDR notation, and subnet calculations.",
     "type": "tutorial",
     "category": "networking",
     "difficulty": "beginner",
     "tags": [
       "networking",
       "ipv4",
-      "routing"
+      "subnetting"
     ],
-    "searchableText": "IP Addressing, Subnets and Routing Basics Understand IPv4 addresses, CIDR subnet masks, default gateways, and how Linux decides where to send packets. networking ipv4 routing What You Will Learn - Distinguish private RFC 1918 IPv4 ranges from public routable addresses. - Read CIDR notation such as /24 and /16 without guessing. - Inspect local interfaces and routing tables using ip addr and ip route . Understanding IP Addresses and Subnets Every host on an IPv4 network is assigned a 32-bit address written as four octets, paired with a subnet mask that separates the network prefix from the host identifier . When two hosts share the same subnet prefix, frames travel directly over Layer 2 ARP + MAC addresses . When a destination lies outside the local subnet, the kernel forwards the packet to the default gateway . Expected Output Only inspect interfaces, routes, and ARP caches on machines and local networks you own or are explicitly authorized to administer. Summary Understanding prefix lengths and route tables lets you verify whether traffic stays local, exits through a VPN tunnel, or traverses a default gateway.",
-    "url": "/learn/lessons/ip-addressing-subnets-and-routing"
+    "searchableText": "IP Addressing and Subnetting Master IPv4 and IPv6 addressing, private vs. public IP ranges, static vs. dynamic assignment, subnet masks, CIDR notation, and subnet calculations. networking ipv4 subnetting Learning objective: Understand how devices are identified on networks, how IPv4 and IPv6 work, the difference between public and private IP addresses, and how subnetting divides networks into smaller networks. I’ve used your uploaded Lesson 03 material and followed the same structure as the previous lessons: 10 lesson sections, practical Linux exploration, a 10-question knowledge assessment, and a practical assignment. 1. Complete lesson content Lesson 03 — IP Addressing and Subnetting Course: Networking Fundamentals Level: Beginner / Essential Estimated reading time: 20–25 minutes Learning Objectives By the end of this lesson, students should be able to: - Explain what an IP address is and why networks need it. - Identify the differences between IPv4 and IPv6. - Distinguish between public and private IP addresses. - Explain static and dynamic IP assignment. - Understand subnet masks and CIDR notation. - Identify network addresses, broadcast addresses, and host addresses. - Perform basic IPv4 subnet calculations. - Inspect IP configuration using Linux commands. Central analogy: Think of a network as a country, IP addresses as postal addresses, and subnetting as dividing a large city into smaller neighborhoods. Section 01 — What Is an IP Address? An IP address Internet Protocol address is a logical address assigned to a network interface so that devices can communicate using the",
+    "url": "/learn/lessons/ip-addressing-and-subnetting"
   },
   {
-    "id": "net-002",
-    "title": "TCP, UDP and Service Ports in Practice",
-    "slug": "tcp-udp-and-service-ports",
-    "description": "Compare reliable TCP connections with stateless UDP datagrams and inspect listening sockets with ss.",
+    "id": "net-004",
+    "title": "MAC Address, ARP and Switching",
+    "slug": "mac-address-arp-and-switching",
+    "description": "Understand 48-bit Ethernet MAC addresses, Layer 2 switch MAC tables, ARP request/reply resolution, unicast/broadcast/multicast, and VLANs.",
     "type": "tutorial",
     "category": "networking",
     "difficulty": "beginner",
     "tags": [
-      "tcp",
-      "udp",
+      "networking",
+      "arp",
+      "switching"
+    ],
+    "searchableText": "MAC Address, ARP and Switching Understand 48-bit Ethernet MAC addresses, Layer 2 switch MAC tables, ARP request/reply resolution, unicast/broadcast/multicast, and VLANs. networking arp switching Learning Objectives By the end of this lesson, students should be able to: - Explain what a MAC address is and why networks use it. - Understand the basic structure of a MAC address. - Explain how network switches forward Ethernet frames. - Understand how ARP resolves IPv4 addresses into MAC addresses. - Inspect the ARP cache in Linux. - Distinguish between unicast, broadcast, and multicast communication. - Explain how a default gateway handles communication outside a local network. - Understand the basic purpose of VLANs. - Use Linux commands to inspect local network information. Central real-life analogy: Imagine a university campus. Every student has a unique ID card, the university has a reception desk that helps identify people, and internal delivery staff take messages to the correct rooms. This lesson connects the IP addressing concepts from Lesson 03 to actual local network communication. Section 01 — What Is a MAC Address? MAC stands for Media Access Control. A MAC address is a link-layer identifier associated with a network interface. It is commonly used to identify interfaces during communication on a local network. Example 00:1A:2B:3C:4D:5E A typical Ethernet MAC address is 48 bits long and is written as six hexadecimal pairs. Why Do We Need MAC Addresses? Remember: - IP addresses help identify network-layer destinations. - MAC addresses help identify link-layer des",
+    "url": "/learn/lessons/mac-address-arp-and-switching"
+  },
+  {
+    "id": "net-005",
+    "title": "TCP, UDP and Network Ports",
+    "slug": "tcp-udp-and-network-ports",
+    "description": "Compare connection-oriented TCP and connectionless UDP, trace the TCP three-way handshake, understand service and ephemeral ports, and inspect sockets with ss.",
+    "type": "tutorial",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "networking",
+      "tcp-udp",
       "ports"
     ],
-    "searchableText": "TCP, UDP and Service Ports in Practice Compare reliable TCP connections with stateless UDP datagrams and inspect listening sockets with ss. tcp udp ports What You Will Learn - Contrast connection-oriented TCP SYN , SYN-ACK , ACK against connectionless UDP. - Interpret listening ports 22 , 53 , 80 , 443 and socket states LISTEN , ESTABLISHED . - Audit open local ports safely using ss . Inspecting Active Sockets On modern Linux distributions, ss replaces legacy netstat for fast kernel socket inspection. Flag Meaning --- --- -t Show TCP sockets -u Show UDP sockets -l Show listening sockets only -n Display numeric ports instead of service names -p Show the owning process requires elevated privileges for other users Expected Output Binding internal services like PostgreSQL 5432 strictly to 127.0.0.1 prevents external network exposure. Summary Every listening socket represents reachable code. Auditing ss -tulnp is one of the fastest ways to verify what your machine exposes.",
-    "url": "/learn/lessons/tcp-udp-and-service-ports"
+    "searchableText": "TCP, UDP and Network Ports Compare connection-oriented TCP and connectionless UDP, trace the TCP three-way handshake, understand service and ephemeral ports, and inspect sockets with ss. networking tcp-udp ports Learning Objectives By the end of this lesson, students should be able to: 1. Explain why transport-layer protocols are needed. 2. Describe the main characteristics of TCP. 3. Explain the TCP three-way handshake. 4. Describe UDP and identify common use cases. 5. Compare TCP and UDP. 6. Explain how port numbers identify application endpoints. 7. Distinguish source ports, destination ports and listening ports. 8. Use Linux commands to inspect network sockets and connections. Central analogy: Imagine a large office building. The IP address identifies the building, while the port number identifies a particular office or department inside it. TCP and UDP are two different ways of delivering messages to those offices. Section 01 — Why Do We Need TCP and UDP? In previous lessons, we learned: - IP addresses identify network-layer destinations. - MAC addresses support communication within a local network. - Switches forward Ethernet frames. - Routers forward packets between networks. But consider this situation: You open a web browser, start a video call and download a file at the same time. All three activities use the network. How does your computer know which incoming data belongs to which application? This is where Transport Layer protocols become important. The Transport Layer provides communication services between applications running on different devices. It helps the operating ",
+    "url": "/learn/lessons/tcp-udp-and-network-ports"
   },
   {
-    "id": "net-003",
-    "title": "DNS Resolution and Diagnostic Queries",
-    "slug": "dns-resolution-and-diagnostics",
-    "description": "Trace how hostnames resolve to IP addresses using recursive resolvers, A/AAAA/MX/TXT records, and dig.",
+    "id": "net-006",
+    "title": "DNS, DHCP and NAT",
+    "slug": "dns-dhcp-and-nat",
+    "description": "Trace DNS hierarchy and record types (A, AAAA, MX, TXT, PTR), the DHCP DORA allocation sequence, and Network Address Translation (NAT/PAT).",
     "type": "tutorial",
     "category": "networking",
     "difficulty": "beginner",
     "tags": [
+      "networking",
       "dns",
-      "dig",
-      "diagnostics"
+      "dhcp-nat"
     ],
-    "searchableText": "DNS Resolution and Diagnostic Queries Trace how hostnames resolve to IP addresses using recursive resolvers, A/AAAA/MX/TXT records, and dig. dns dig diagnostics What You Will Learn - Explain the difference between /etc/hosts , local stub resolvers, recursive resolvers, and authoritative nameservers. - Query A , AAAA , MX , and TXT records using dig . - Spot DNS caching TTLs and resolution mismatches. Querying DNS Records Safely Use dig with +short for concise answers or omit it to inspect authoritative flags and TTL counters. Expected Output Summary DNS diagnostics help verify connectivity failures, mail-authentication TXT records SPF/DMARC , and unexpected host overrides before blaming higher-layer applications.",
-    "url": "/learn/lessons/dns-resolution-and-diagnostics"
+    "searchableText": "DNS, DHCP and NAT Trace DNS hierarchy and record types (A, AAAA, MX, TXT, PTR), the DHCP DORA allocation sequence, and Network Address Translation (NAT/PAT). networking dns dhcp-nat Learning Objectives By the end of this lesson, students should be able to: 1. Explain what DNS does and why it is needed. 2. Describe the basic DNS resolution process. 3. Identify common DNS record types. 4. Explain how DHCP automatically configures network devices. 5. Describe the DHCP DORA process. 6. Explain NAT and how it supports communication between private and external networks. 7. Distinguish NAT from PAT. 8. Use Linux commands to inspect DNS and network configuration. Central analogy: Imagine moving into a new apartment building. DNS is like a directory that helps you find the correct building, DHCP is like the reception desk assigning your apartment details, and NAT is like the building's shared mailing address. Section 01 — What Is DNS? DNS stands for Domain Name System. Computers communicate across networks using IP addresses, but humans generally prefer memorable domain names. For example: google.com is easier to remember than an IP address. DNS helps translate domain names into information that computers can use to locate network services. One common result of a DNS lookup is an IP address. How does DNS work? Suppose you enter: example.com into your browser. A simplified process looks like this: 1. Your computer checks available local DNS information, such as its cache. 2. If it does not already have the required information, it asks a configured DNS resolver. 3.",
+    "url": "/learn/lessons/dns-dhcp-and-nat"
+  },
+  {
+    "id": "net-007",
+    "title": "Linux Networking and Troubleshooting",
+    "slug": "linux-networking-and-troubleshooting",
+    "description": "Apply a structured Linux troubleshooting workflow across interfaces, routes, ICMP ping, traceroute, DNS lookups, listening sockets, and packet captures.",
+    "type": "tutorial",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "networking",
+      "troubleshooting",
+      "linux"
+    ],
+    "searchableText": "Linux Networking and Troubleshooting Apply a structured Linux troubleshooting workflow across interfaces, routes, ICMP ping, traceroute, DNS lookups, listening sockets, and packet captures. networking troubleshooting linux Learning Objective Learn how to inspect network interfaces, IP configurations, routing tables, DNS settings, and active connections using Linux. Develop a systematic approach to identifying common network problems. Central analogy: Imagine a mechanic diagnosing a car. Instead of replacing random parts, they inspect the engine, fuel system, battery, and sensors one by one. Network troubleshooting follows the same principle: check each component systematically. --- Section 01 — What Is Network Troubleshooting? Network troubleshooting is the process of identifying, analyzing, and resolving problems that prevent devices or applications from communicating correctly. Common networking problems include: - No Internet connection. - Incorrect IP configuration. - DNS resolution failures. - Incorrect default gateway. - Packet loss. - High latency. - Blocked network ports. - Firewall restrictions. Why Is Troubleshooting Important? Imagine your browser cannot open a website. Several things could be wrong: 1. Your Wi-Fi is disconnected. 2. Your device has no valid IP address. 3. Your default gateway is unreachable. 4. DNS cannot resolve the domain. 5. The destination server is unavailable. 6. A firewall blocks the connection. Restarting your computer without identifying the cause may not solve the problem. Real-life analogy: If a house has no electricity, you check the main supply, circuit b",
+    "url": "/learn/lessons/linux-networking-and-troubleshooting"
+  },
+  {
+    "id": "net-008",
+    "title": "Network Traffic Analysis",
+    "slug": "network-traffic-analysis",
+    "description": "Capture and analyze network packets using tcpdump and Wireshark, apply capture and display filters, and inspect ARP, DNS, TCP handshakes, and HTTPS metadata.",
+    "type": "tutorial",
+    "category": "networking",
+    "difficulty": "beginner",
+    "tags": [
+      "networking",
+      "tcpdump",
+      "wireshark"
+    ],
+    "searchableText": "Network Traffic Analysis Capture and analyze network packets using tcpdump and Wireshark, apply capture and display filters, and inspect ARP, DNS, TCP handshakes, and HTTPS metadata. networking tcpdump wireshark Learning Objectives By the end of this lesson, you will be able to: - Explain what network traffic analysis is and why it matters. - Understand the basic structure of network packets. - Capture network packets using tcpdump . - Open and inspect packet captures using Wireshark. - Recognize common network protocols such as ARP, DNS, TCP, ICMP, HTTP, and HTTPS. - Understand basic TCP flags and packet information. - Apply packet analysis to troubleshooting and cybersecurity investigations. Central analogy: Imagine a busy post office. Thousands of letters enter and leave every day. Each letter has a sender's address, a receiver's address, delivery information, and a message. A network works similarly. Instead of letters, computers exchange packets. --- Section 01 — What Is Network Traffic Analysis? Network traffic analysis is the process of capturing, inspecting, and interpreting network packets to understand what is happening inside a network. For example, suppose your computer cannot open a website. Traffic analysis can help you investigate: - Is your computer sending DNS queries? - Is the DNS server responding? - Is a TCP connection being established? - Is the server responding? - Is the connection being rejected or timing out? This skill is useful in: - Network administration. - Troubleshooting. - Security monitoring. - Incident response. - Protocol analysis. - Performance analy",
+    "url": "/learn/lessons/network-traffic-analysis"
   },
   {
     "id": "web-001",
@@ -259,7 +339,7 @@
     "id": "path:networking-fundamentals",
     "title": "Networking Fundamentals",
     "slug": "networking-fundamentals",
-    "description": "Build a rigorous foundation in IP addressing, subnetting, DNS resolution, TCP/UDP transport behavior, and local packet inspection.",
+    "description": "Master computer networking from core topologies, the OSI and TCP/IP models, IPv4/IPv6 subnetting, MAC/ARP switching, TCP/UDP ports, DNS/DHCP/NAT, and Linux troubleshooting to packet capture with tcpdump and Wireshark.",
     "type": "learning_path",
     "category": "networking",
     "difficulty": "beginner",
@@ -268,7 +348,7 @@
       "beginner",
       "learning-path"
     ],
-    "searchableText": "Networking Fundamentals Build a rigorous foundation in IP addressing, subnetting, DNS resolution, TCP/UDP transport behavior, and local packet inspection. Trace how IP packets move across local subnets and default gateways. Understand TCP three-way handshakes, UDP datagrams, and well-known service ports. Diagnose DNS resolution chains and inspect active socket states from the command line.",
+    "searchableText": "Networking Fundamentals Master computer networking from core topologies, the OSI and TCP/IP models, IPv4/IPv6 subnetting, MAC/ARP switching, TCP/UDP ports, DNS/DHCP/NAT, and Linux troubleshooting to packet capture with tcpdump and Wireshark. Understand LAN, WAN, WLAN, PAN topologies and how data travels across layered OSI and TCP/IP models. Calculate IPv4 CIDR subnets, distinguish public vs. private addresses, and trace ARP and Layer 2 switching. Analyze TCP three-way handshakes, UDP datagrams, service ports, DNS resolution, DHCP DORA, and NAT/PAT. Troubleshoot network connectivity systematically on Linux and inspect packet captures with tcpdump and Wireshark.",
     "url": "/learn/paths/networking-fundamentals"
   },
   {

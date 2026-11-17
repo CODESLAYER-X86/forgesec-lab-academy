@@ -123,6 +123,7 @@ export function QuizRunner({
       setResult(res.result);
 
       if (
+        res.result.percentage === 100 &&
         res.result.passed &&
         isAuthenticated &&
         lessonContext &&
@@ -164,15 +165,15 @@ export function QuizRunner({
             {previousBest ? (
               <span
                 className={`tabular-nums font-medium ${
-                  previousBest.passed ? "text-[#22C55E]" : "text-[#F59E0B]"
+                  previousBest.percentage === 100 ? "text-[#22C55E]" : "text-[#F59E0B]"
                 }`}
               >
                 Previous best: {previousBest.percentage}% ·{" "}
-                {previousBest.passed ? "Passed" : "Needs review"}
+                {previousBest.percentage === 100 ? "Completed (100%)" : "100% required to complete"}
               </span>
             ) : (
               <span className="text-[#7B8794] tabular-nums">
-                Pass threshold: {quiz.passPercentage}%
+                Required score to complete module: 100%
               </span>
             )}
           </div>
@@ -188,7 +189,7 @@ export function QuizRunner({
       {result ? (
         <div
           className={`rounded-xl border p-6 ${
-            result.passed
+            result.percentage === 100
               ? "border-[#22C55E]/40 bg-[#12221B]"
               : "border-[#F59E0B]/40 bg-[#211A11]"
           }`}
@@ -196,25 +197,29 @@ export function QuizRunner({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-sm font-semibold">
-                {result.passed ? (
+                {result.percentage === 100 ? (
                   <>
                     <CheckCircle2 className="h-5 w-5 text-[#22C55E]" />
                     <span className="text-[#BBF7D0]">
-                      Passed Assessment
-                      {autoCompletedModule ? " · Module Marked Complete" : ""}
+                      Perfect Score (100%)
+                      {autoCompletedModule || lessonContext?.isCompleted
+                        ? " · Module Marked Complete"
+                        : ""}
                     </span>
                   </>
                 ) : (
                   <>
                     <XCircle className="h-5 w-5 text-[#F59E0B]" />
-                    <span className="text-[#FDE68A]">Review Recommended</span>
+                    <span className="text-[#FDE68A]">
+                      100% Required to Complete Module — Review &amp; Retake
+                    </span>
                   </>
                 )}
               </div>
               <p className="text-sm text-[#AAB4BE] tabular-nums">
                 Score: {result.score} of {result.totalQuestions} correct ({result.percentage}%) ·{" "}
                 <span className="whitespace-nowrap">
-                  Pass threshold {quiz.passPercentage}%
+                  Required score: 100%
                 </span>
               </p>
               {!isAuthenticated ? (

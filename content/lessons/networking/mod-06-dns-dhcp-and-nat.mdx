@@ -1,0 +1,525 @@
+---
+id: net-006
+title: "DNS, DHCP and NAT"
+slug: dns-dhcp-and-nat
+description: "Trace DNS hierarchy and record types (A, AAAA, MX, TXT, PTR), the DHCP DORA allocation sequence, and Network Address Translation (NAT/PAT)."
+category: networking
+pathId: networking-fundamentals
+moduleNumber: 6
+difficulty: beginner
+estimatedMinutes: 25
+tags:
+  - networking
+  - dns
+  - dhcp-nat
+status: published
+updatedAt: "2026-11-17"
+quizSlug: net-dns-diagnostics-check
+assignmentSlug: investigate-dns-dhcp-and-nat
+---
+## Learning Objectives
+By the end of this lesson, students should be able to:
+1. Explain what DNS does and why it is needed.
+2. Describe the basic DNS resolution process.
+3. Identify common DNS record types.
+4. Explain how DHCP automatically configures network devices.
+5. Describe the DHCP DORA process.
+6. Explain NAT and how it supports communication between private and external networks.
+7. Distinguish NAT from PAT.
+8. Use Linux commands to inspect DNS and network configuration.
+Central analogy: Imagine moving into a new apartment building. DNS is like a directory that helps you find the correct building, DHCP is like the reception desk assigning your apartment details, and NAT is like the building's shared mailing address.
+
+## Section 01 — What Is DNS?
+
+DNS stands for Domain Name System.
+
+Computers communicate across networks using IP addresses, but humans generally prefer memorable domain names.
+
+For example:
+google.com
+is easier to remember than an IP address.
+
+DNS helps translate domain names into information that computers can use to locate network services. One common result of a DNS lookup is an IP address.
+How does DNS work?
+Suppose you enter:
+example.com
+into your browser.
+
+A simplified process looks like this:
+1. Your computer checks available local DNS information, such as its cache.
+2. If it does not already have the required information, it asks a configured DNS resolver.
+3. The resolver checks its cache or obtains the required DNS information from other DNS servers.
+4. The resolver returns the result to your computer.
+5. Your browser can use the returned address to connect to the destination.
+Real-life analogy: A phone directory
+Imagine searching for a friend's name in a phone directory.
+
+You know the person's name, but you need their phone number to contact them.
+
+DNS performs a similar lookup for domain names and network information.
+Why is DNS important?
+Without DNS, users would frequently need to remember IP addresses instead of website names.
+
+DNS is important for:
+- Website access.
+- Email delivery.
+- Service discovery.
+- Internal network naming.
+- Many cloud applications.
+Key takeaway: DNS helps applications find network services using memorable names instead of requiring users to remember IP addresses.
+
+## Section 02 — How DNS Resolution Works
+
+DNS resolution can involve several different components.
+Important DNS components
+1. DNS Client
+
+The device or application requesting DNS information.
+
+2. Recursive Resolver
+
+A DNS server that handles a lookup on behalf of a client. It may return a cached answer or query other DNS servers to find the required information.
+
+3. Root DNS Server
+
+Helps direct queries toward the appropriate top-level domain infrastructure.
+
+4. TLD DNS Server
+
+A Top-Level Domain server provides information about authoritative name servers for a domain extension, such as .com or .org.
+
+5. Authoritative DNS Server
+
+Provides authoritative DNS records for the domain it manages.
+Simplified lookup example
+Imagine you request:
+www.example.com
+If the resolver does not already have the answer cached, it may perform a sequence like this:
+1. Contact a root DNS server.
+2. Obtain information about the .com TLD servers.
+3. Ask a .com server for the domain's authoritative name servers.
+4. Query an authoritative server for the required record.
+5. Return the result to your device.
+DNS resolution diagram
+       Your Device
+            |
+            | DNS query
+            v
+    Recursive Resolver
+            |
+            | If answer is not cached:
+            v
+        Root Server
+            |
+            v
+        .com TLD
+            |
+            v
+   Authoritative Server
+            |
+            | DNS answer
+            v
+    Recursive Resolver
+            |
+            v
+       Your Device
+Important: This is a simplified explanation. Real DNS resolution often uses cached information, so every lookup does not require all these steps.
+DNS caching
+DNS responses can be cached to reduce repeated queries.
+
+A DNS record commonly has a TTL (Time to Live), which indicates how long a DNS response may be cached.
+
+For example, if a record has a TTL of 300 seconds, a resolver can generally cache that record for up to 300 seconds.
+Real-life analogy: Saving a phone number
+Instead of looking up someone's phone number in a directory every time, you save it temporarily.
+
+DNS caching works in a similar way.
+
+Key takeaway: DNS caching reduces repeated lookups and can make name resolution more efficient.
+
+## Section 03 — Common DNS Record Types
+
+DNS stores different types of records. Each record serves a particular purpose.
+
+| Record | Purpose | Example or use |
+| --- | --- | --- |
+| A | Maps a name to an IPv4 address | example.com → IPv4 address |
+| AAAA | Maps a name to an IPv6 address | example.com → IPv6 address |
+| CNAME | Creates an alias for another domain name | www points to another hostname |
+| MX | Identifies mail servers for a domain | Email delivery destination |
+| NS | Identifies authoritative name servers | Domain's DNS servers |
+| TXT | Stores text information | Domain verification, SPF |
+| PTR | Supports reverse DNS lookup | IP address → hostnameImportant examples |
+
+A record
+example.com → 93.184.216.34
+An A record maps a domain name to an IPv4 address.
+
+AAAA record
+
+An AAAA record maps a domain name to an IPv6 address.
+
+CNAME record
+
+A CNAME record makes one hostname an alias of another hostname.
+
+MX record
+
+An MX record tells other mail systems which mail servers receive email for a domain.
+
+NS record
+
+An NS record identifies name servers responsible for a DNS zone.
+
+TXT record
+
+A TXT record stores text information. It can be used for domain verification and email security policies such as SPF.
+
+PTR record
+
+A PTR record supports reverse DNS lookups.
+Real-life analogy: Different directory sections
+Think of DNS records as different sections in a directory:
+- One section lists network addresses.
+- Another lists mail destinations.
+- Another identifies DNS servers.
+- Another contains verification information.
+Reverse DNS
+A normal DNS lookup often follows this direction:
+Domain name → IP address
+A reverse DNS lookup follows the opposite direction:
+IP address → Hostname
+PTR records are used for reverse DNS.
+
+Key takeaway: Different DNS record types store different kinds of information. A and AAAA records are commonly used to find IP addresses, while MX records help direct email.
+
+## Section 04 — What Is DHCP?
+
+DHCP stands for Dynamic Host Configuration Protocol.
+
+It automatically provides network configuration to devices.
+
+When your laptop connects to Wi-Fi, it normally receives network settings without you manually entering every value.
+
+DHCP can provide:
+- IP address.
+- Subnet mask or prefix length.
+- Default gateway.
+- DNS server addresses.
+- Lease duration.
+Why do we need DHCP?
+Imagine a university with 500 students.
+
+Manually configuring the IP address, gateway and DNS settings on every student's device would be inefficient.
+
+DHCP automates the process and helps administrators manage network addresses.
+Real-life analogy: Hotel reception
+Imagine checking into a hotel.
+
+The receptionist assigns you an available room and provides the necessary access details.
+
+DHCP performs a similar role by providing devices with network configuration.
+DHCP DORA Process
+DHCP commonly uses a four-step process known as DORA.
+
+1. Discover
+
+The client broadcasts a DHCP Discover message to find available DHCP servers.
+
+2. Offer
+
+A DHCP server responds with an offer containing an available IP address and other configuration information.
+
+3. Request
+
+The client sends a DHCP Request to indicate that it wants to use the offered configuration.
+
+4. Acknowledge
+
+The server sends a DHCP Acknowledgement, confirming the assignment.
+DORA diagram
+Client                         DHCP Server
+
+```text
+  DISCOVER   -------------------->
+             <-------------------- OFFER
+  REQUEST    -------------------->
+             <-------------------- ACK
+```
+
+       Configuration assigned
+DHCP ports
+DHCP for IPv4 commonly uses UDP:
+
+| Device role | UDP port |
+| --- | --- |
+| DHCP Server | 67 |
+| DHCP Client | 68Remember: DORA means Discover, Offer, Request, Acknowledge. |
+
+DHCP lease
+A DHCP-assigned IP address is commonly provided for a limited period called a lease.
+
+The client can renew the lease to continue using the address.
+
+This helps administrators manage address allocation efficiently and reuse addresses when devices leave the network.
+
+Key takeaway: DHCP automatically provides network configuration, reducing the need for manual setup.
+
+## Section 05 — What Is NAT?
+
+NAT stands for Network Address Translation.
+
+NAT modifies IP address information as traffic passes through a network device, commonly a router or firewall.
+
+One common purpose is allowing devices using private IP addresses to communicate with external networks.
+
+Consider a home network:
+
+| Device | Private IP address |
+| --- | --- |
+| Laptop | 192.168.1.10 |
+| Phone | 192.168.1.11 |
+| Desktop | 192.168.1.12 |
+| Router's LAN interface | 192.168.1.1All these devices may access the Internet through the same router. |
+
+Why do we need NAT?
+Private IPv4 addresses are not directly routable across the public Internet.
+
+NAT allows a router to translate between private addressing and an externally usable address.
+Real-life analogy: Shared mailing address
+Imagine an apartment building where several residents share one official mailing address.
+
+The building receptionist identifies the intended resident and directs incoming deliveries appropriately.
+
+NAT performs address translation. When port translation is also used, additional connection information helps the router associate returning traffic with the correct internal device.
+
+Key takeaway: NAT allows private network devices to communicate with external networks by translating network addresses.
+
+## Section 06 — How NAT Works
+
+Suppose your laptop sends traffic to a public web server.
+
+For this example, we will use documentation addresses:
+Private IP: 192.168.1.10
+Router's public IP: 203.0.113.10
+Web server IP: 93.184.216.34
+Step 1 — Outgoing traffic
+Your laptop sends a packet toward the web server:
+Source:      192.168.1.10
+Destination: 93.184.216.34
+Step 2 — Router translates the source
+The router changes the source IP address to its public-facing address:
+Source:      203.0.113.10
+Destination: 93.184.216.34
+For many home networks, the router also changes the source port. This is called Port Address Translation (PAT).
+Step 3 — Response arrives
+The web server sends its response to the router's public address and translated port.
+Step 4 — Router forwards the response
+The router uses its translation state to identify the internal device and forward the response to the correct destination.
+Simplified NAT flow
+Laptop                 Router                 Web Server
+192.168.1.10            |
+     |                  |
+     | Request          |
+```text
+     |----------------->|
+     |                  |
+     |          Source address translated
+     |                  |
+     |                  |-------------------->|
+     |                  |                     |
+     |                  |<--------------------|
+     |                  |
+     |       Translation state checked
+     |                  |
+     |<-----------------|
+     |
+  Response received
+```
+NAT vs PAT
+- NAT: Translates network addresses.
+- PAT: Translates addresses and transport-layer port numbers, allowing multiple internal connections to share an external IP address.
+PAT is commonly used in home and small-office routers. It is also commonly called NAT overload.
+Important security note
+NAT is not the same thing as a firewall.
+
+NAT can affect network reachability, but it does not automatically provide comprehensive security. Firewalls apply traffic-filtering rules to control which communications are allowed.
+
+Key takeaway: NAT translates addresses. PAT additionally uses port translation to distinguish multiple connections sharing an external address.
+
+## Section 07 — Private IP, Public IP and NAT Together
+
+Let's connect this lesson with Lesson 03.
+Private IP addresses
+The three common private IPv4 ranges are:
+
+| Range | CIDR |
+| --- | --- |
+| 10.0.0.0 – 10.255.255.255 | 10.0.0.0/8 |
+| 172.16.0.0 – 172.31.255.255 | 172.16.0.0/12 |
+| 192.168.0.0 – 192.168.255.255 | 192.168.0.0/16These addresses are used inside private networks and are not directly routed across the public Internet. |
+
+Public IP addresses
+Public IP addresses are globally routable Internet addresses, subject to routing and allocation policies.
+
+Your router may have a public-facing IP address, while your laptop uses a private IP address.
+
+Some Internet providers use Carrier-Grade NAT (CGNAT). In that case, the router's externally observed address may belong to an upstream provider network rather than being a public address assigned directly to the router.
+Putting everything together
+When you connect your laptop to Wi-Fi and open a website:
+1. DHCP provides your laptop with an IP address and network configuration.
+2. DNS helps resolve the domain name you request.
+3. Your computer sends traffic toward its default gateway.
+4. The router may perform NAT/PAT for Internet-bound traffic.
+5. The response returns through the router to your laptop.
+Combined communication flow
+       DHCP
+  Assigns network settings
+          |
+          v
+      Your Laptop
+          |
+          | DNS lookup
+          v
+   DNS Resolver
+          |
+          | Returns DNS information
+          v
+      Your Laptop
+          |
+          | Sends traffic to gateway
+          v
+        Router
+          |
+          | NAT/PAT if configured
+          v
+     External Network
+          |
+          v
+      Web Server
+Real-life analogy: A university
+Think of a university:
+- DHCP assigns your room and network details.
+- DNS is the campus directory.
+- Default gateway is the campus exit.
+- NAT is the shared external mailing address.
+These technologies work together, but they perform different jobs.
+
+Key takeaway: DHCP configures your device, DNS helps it find services, and NAT can translate its traffic when communicating outside the private network.
+
+## Section 08 — Practical Linux Exploration
+
+Now inspect DNS configuration and network settings on your Linux system.
+
+### Task 1 — Check your DNS configuration
+
+Run:
+resolvectl status
+This displays DNS configuration information, including DNS servers and interface-specific settings where supported.
+
+If resolvectl is unavailable, inspect:
+cat /etc/resolv.conf
+Note that /etc/resolv.conf may be generated or managed by another network service.
+
+### Task 2 — Perform a DNS lookup
+
+Run:
+getent hosts example.com
+This asks the system's configured name-resolution service to resolve the hostname.
+
+You can also use:
+dig example.com
+If dig is not installed, install the appropriate DNS utilities package for your Linux distribution.
+
+### Task 3 — Inspect specific DNS records
+
+Look up an IPv4 record:
+dig A example.com
+Look up an IPv6 record:
+dig AAAA example.com
+Look up mail-server records:
+dig MX example.com
+Look up text records:
+dig TXT example.com
+Observe the ANSWER SECTION when records are returned.
+
+Some record types may return no answer for a particular domain. That does not necessarily mean DNS is broken.
+
+### Task 4 — Inspect DHCP-related network configuration
+
+Run:
+ip addr
+Identify your active interface and IPv4 address.
+
+Then run:
+ip route
+Identify the default gateway.
+
+If NetworkManager is available, run:
+nmcli device show
+Look for fields such as:
+- IP4.ADDRESS
+- IP4.GATEWAY
+- IP4.DNS
+These values help you understand the configuration assigned to your device.
+
+Note: These commands show current network configuration. They do not necessarily reveal the complete DHCP exchange or prove that DHCP assigned every displayed setting.
+
+### Task 5 — Compare local and externally observed IP information
+
+Check your local address:
+ip addr
+Check your externally observed public IP:
+curl -s https://icanhazip.com
+The address reported by the website is the address observed by that external service. It may be a NAT gateway address or an upstream shared address.
+
+Some ISPs use carrier-grade NAT, so the externally observed address may not be assigned directly to your router.
+Questions to consider
+1. Which interface has your active IP address?
+2. Which DNS server is configured?
+3. What is your default gateway?
+4. Is your local IPv4 address private?
+5. Does your externally observed IP match the address assigned to your router, if you can inspect it?
+6. What might explain a difference?
+Safety note
+Do not publicly share your public IP address, internal network configuration or sensitive network information. Only inspect systems and networks you own or are authorized to use.
+
+## Section 09 — Lesson Recap and Memory Map
+
+Important concepts
+DNS: Helps resolve domain names into DNS records, including IP addresses.
+
+Recursive Resolver: Handles DNS lookups on behalf of clients.
+
+DNS Records: A, AAAA, CNAME, MX, NS, TXT and PTR.
+
+DNS TTL: Indicates how long a DNS response may be cached.
+
+DHCP: Automatically provides network configuration.
+
+DORA: Discover → Offer → Request → Acknowledge.
+
+DHCP Lease: The period during which a client can use an assigned address under the lease terms.
+
+NAT: Translates network addresses.
+
+PAT: Uses port translation alongside address translation to distinguish multiple connections sharing an external address.
+
+Private IP: Used inside private networks and not directly routed across the public Internet.
+Memory map
+
+| Technology or concept | Everyday analogy |
+| --- | --- |
+| DNS | Phone directory |
+| A record | Name-to-IPv4-address listing |
+| AAAA record | Name-to-IPv6-address listing |
+| MX record | Mail delivery directory |
+| DHCP | Hotel receptionist assigning rooms |
+| DORA | Requesting and receiving a room |
+| NAT | Shared building mailing address |
+| PAT | Shared address with individual delivery tracking |
+| Default gateway | Building or campus exitFinal takeaway |
+
+DHCP configures your device, DNS helps it find services, and NAT can translate its traffic when communicating outside the private network.
+
+In the next lesson, we will explore Linux networking and troubleshooting using practical commands to inspect interfaces, routes, DNS, connectivity and network failures.

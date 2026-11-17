@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Bookmark, Check, CheckCircle2, Circle, Share2 } from "lucide-react";
+import { Bookmark, Check, CheckCircle2, Circle, Lock, Share2 } from "lucide-react";
 import {
   toggleBookmarkAction,
   toggleLessonCompletionAction,
@@ -16,6 +16,7 @@ export function LessonActions({
   initialCompleted,
   initialBookmarked,
   isAuthenticated,
+  hasQuiz = false,
 }: {
   lessonId: string;
   pathId: string;
@@ -24,6 +25,7 @@ export function LessonActions({
   initialCompleted: boolean;
   initialBookmarked: boolean;
   isAuthenticated: boolean;
+  hasQuiz?: boolean;
 }) {
   const [completed, setCompleted] = useState(initialCompleted);
   const [bookmarked, setBookmarked] = useState(initialBookmarked);
@@ -32,6 +34,10 @@ export function LessonActions({
   const [isPending, startTransition] = useTransition();
 
   const handleToggleComplete = () => {
+    if (hasQuiz) {
+      setNotice("Answer 100% of the module quiz correctly to complete this module.");
+      return;
+    }
     if (!isAuthenticated) {
       setNotice("Sign in to save lesson progress.");
       return;
@@ -90,18 +96,25 @@ export function LessonActions({
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          disabled={isPending}
+          disabled={isPending || hasQuiz}
           onClick={handleToggleComplete}
           className={`inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors whitespace-nowrap ${
             completed
-              ? "border border-[#22C55E]/40 bg-[#173D35] text-[#BBF7D0] hover:bg-[#1E4E44]"
+              ? "border border-[#22C55E]/40 bg-[#173D35] text-[#BBF7D0] disabled:opacity-90"
+              : hasQuiz
+              ? "cursor-not-allowed border border-[#303A44] bg-[#101418] text-[#7B8794]"
               : "bg-[#A3E635] text-[#101418] hover:bg-[#B4F04E]"
           }`}
         >
           {completed ? (
             <>
-              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-              <span>Completed (Click to undo)</span>
+              <CheckCircle2 className="h-4 w-4 text-[#22C55E]" aria-hidden="true" />
+              <span>{hasQuiz ? "Completed via Quiz (100%)" : "Completed (Click to undo)"}</span>
+            </>
+          ) : hasQuiz ? (
+            <>
+              <Lock className="h-4 w-4 text-[#7B8794]" aria-hidden="true" />
+              <span>Complete Quiz (100%) to Finish Module</span>
             </>
           ) : (
             <>
@@ -143,6 +156,12 @@ export function LessonActions({
           )}
         </button>
       </div>
+
+      {hasQuiz && !completed ? (
+        <p className="text-xs text-[#AAB4BE]">
+          To complete this module, answer 100% of the End-of-Module Knowledge Check questions correctly above.
+        </p>
+      ) : null}
 
       {notice ? (
         <div className="text-xs text-[#F59E0B]">

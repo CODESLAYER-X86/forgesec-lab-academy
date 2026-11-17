@@ -1,19 +1,25 @@
 id: networking-fundamentals
 slug: networking-fundamentals
 title: Networking Fundamentals
-description: Build a rigorous foundation in IP addressing, subnetting, DNS resolution, TCP/UDP transport behavior, and local packet inspection.
+description: Master computer networking from core topologies, the OSI and TCP/IP models, IPv4/IPv6 subnetting, MAC/ARP switching, TCP/UDP ports, DNS/DHCP/NAT, and Linux troubleshooting to packet capture with tcpdump and Wireshark.
 category: networking
 difficulty: beginner
-estimatedMinutes: 75
+estimatedMinutes: 195
 status: published
 instructor: FORGESEC LABS Curriculum Team
 objectives:
-  - Trace how IP packets move across local subnets and default gateways.
-  - Understand TCP three-way handshakes, UDP datagrams, and well-known service ports.
-  - Diagnose DNS resolution chains and inspect active socket states from the command line.
+  - Understand LAN, WAN, WLAN, PAN topologies and how data travels across layered OSI and TCP/IP models.
+  - Calculate IPv4 CIDR subnets, distinguish public vs. private addresses, and trace ARP and Layer 2 switching.
+  - Analyze TCP three-way handshakes, UDP datagrams, service ports, DNS resolution, DHCP DORA, and NAT/PAT.
+  - Troubleshoot network connectivity systematically on Linux and inspect packet captures with tcpdump and Wireshark.
 prerequisites:
-  - Basic familiarity with terminal commands (Linux Fundamentals Module 01–02 recommended).
+  - Basic familiarity with terminal commands (Linux Fundamentals recommended).
 lessons:
   - net-001
   - net-002
   - net-003
+  - net-004
+  - net-005
+  - net-006
+  - net-007
+  - net-008

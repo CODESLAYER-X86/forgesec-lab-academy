@@ -48,10 +48,71 @@ export function isPermanentAdminEmail(email: string | null | undefined): boolean
   return getAdminEmails().includes(email.trim().toLowerCase());
 }
 
-export function getSiteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-    process.env.APP_URL?.trim() ||
-    "http://localhost:3000"
-  );
+export function normalizeOriginUrl(raw?: string | null): string | null {
+  const trimmed = raw?.trim();
+  if (!trimmed || trimmed === "MY_APP_URL") {
+    return null;
+  }
+
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const parsed = new URL(withScheme);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return parsed.origin;
+  } catch {
+    return null;
+  }
 }
+
+export function isLocalhostOrigin(origin: string): boolean {
+  try {
+    const { hostname } = new URL(origin);
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "0.0.0.0" ||
+      hostname === "::1" ||
+      hostname === "[::1]"
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function getConfiguredSiteUrl(options?: { ignoreLocalhostInProd?: boolean }): string | null {
+  const vercelHost =
+    process.env.VERCEL_ENV === "preview"
+      ? process.env.VERCEL_URL
+      : process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+
+  const candidates = (
+    process.env.VERCEL_ENV === "preview"
+      ? [vercelHost, process.env.NEXT_PUBLIC_SITE_URL, process.env.APP_URL]
+      : [process.env.NEXT_PUBLIC_SITE_URL, process.env.APP_URL, vercelHost]
+  )
+    .map((value) => normalizeOriginUrl(value))
+    .filter((value): value is string => Boolean(value));
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    const nonLocal = candidates.find((origin) => !isLocalhostOrigin(origin));
+    if (nonLocal) {
+      return nonLocal;
+    }
+    if (options?.ignoreLocalhostInProd) {
+      return null;
+    }
+  }
+
+  return candidates[0];
+}
+
+export function getSiteUrl(): string {
+  return getConfiguredSiteUrl() || "http://localhost:3000";
+}
+

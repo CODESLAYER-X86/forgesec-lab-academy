@@ -1,5 +1,5 @@
 import { isSupabaseConfigured } from "@/lib/env";
-import { readPreviewDb, writePreviewDb } from "@/lib/store/preview-store";
+import { getCurriculumSeed, readPreviewDb, writePreviewDb } from "@/lib/store/preview-store";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
@@ -11,15 +11,28 @@ import type {
 } from "@/lib/types/domain";
 import { gradeQuizSubmission, toPublicQuiz } from "@/modules/quizzes/grading";
 
+function findCurriculumQuiz(slug: string, includeUnpublished = false): ServerQuiz | null {
+  const seed = getCurriculumSeed();
+  return (
+    seed.quizzes.find(
+      (q) => q.slug === slug && (includeUnpublished || q.status === "published")
+    ) ?? null
+  );
+}
+
 async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false): Promise<ServerQuiz | null> {
   const admin = createSupabaseAdminClient();
   const client = admin ?? (await createSupabaseServerClient());
-  if (!client) return null;
+  if (!client) {
+    return findCurriculumQuiz(slug, includeUnpublished);
+  }
 
   let query = client.from("quizzes").select("*").eq("slug", slug);
   if (!includeUnpublished) query = query.eq("status", "published");
   const { data: quizRow } = await query.maybeSingle();
-  if (!quizRow) return null;
+  if (!quizRow) {
+    return findCurriculumQuiz(slug, includeUnpublished);
+  }
 
   const { data: qRows } = await client
     .from("quiz_questions")
@@ -27,7 +40,11 @@ async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false):
     .eq("quiz_id", quizRow.id)
     .order("sort_order");
 
-  const questionIds = (qRows ?? []).map((q) => q.id);
+  if (!qRows || qRows.length === 0) {
+    return findCurriculumQuiz(slug, includeUnpublished);
+  }
+
+  const questionIds = qRows.map((q) => q.id);
   const { data: optRows } = questionIds.length
     ? await client.from("quiz_options").select("*").in("question_id", questionIds).order("sort_order")
     : { data: [] };
@@ -37,6 +54,8 @@ async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false):
       ? await admin.from("quiz_answer_keys").select("*").in("question_id", questionIds)
       : { data: [] };
 
+  // Map built-in curriculum answer keys to Supabase option UUIDs if SUPABASE_SERVICE_ROLE_KEY is omitted
+  const seedQuiz = findCurriculumQuiz(slug, true);
   const keyMap = new Map<
     string,
     { correctOptionIds: string[]; acceptedAnswers?: string[] }
@@ -54,6 +73,26 @@ async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false):
     ])
   );
 
+  if (keyMap.size === 0 && seedQuiz) {
+    for (const qRow of qRows) {
+      const seedQ = seedQuiz.questions.find((sq) => sq.sortOrder === qRow.sort_order);
+      if (!seedQ) continue;
+      const qOptRows = (optRows ?? []).filter((o) => o.question_id === qRow.id);
+      const correctLabels = new Set(
+        seedQ.options
+          .filter((so) => seedQ.correctOptionIds.includes(so.id))
+          .map((so) => so.label.toUpperCase())
+      );
+      const mappedOptionUuids = qOptRows
+        .filter((o) => correctLabels.has(String(o.label).toUpperCase()))
+        .map((o) => String(o.id));
+      keyMap.set(qRow.id, {
+        correctOptionIds: mappedOptionUuids,
+        acceptedAnswers: seedQ.acceptedAnswers,
+      });
+    }
+  }
+
   return {
     id: quizRow.id,
     slug: quizRow.slug,
@@ -62,11 +101,11 @@ async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false):
     category: quizRow.category,
     difficulty: quizRow.difficulty,
     lessonId: quizRow.lesson_id ?? undefined,
-    passPercentage: quizRow.pass_percentage,
+    passPercentage: Number(quizRow.pass_percentage ?? 100),
     status: quizRow.status,
     createdAt: quizRow.created_at,
     updatedAt: quizRow.updated_at,
-    questions: (qRows ?? []).map((q) => {
+    questions: qRows.map((q) => {
       const answerKey = keyMap.get(q.id);
       return {
         id: q.id,
@@ -93,36 +132,50 @@ async function loadSupabaseQuizBySlug(slug: string, includeUnpublished = false):
 export async function getPublishedQuizzes(): Promise<PublicQuiz[]> {
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient();
-    if (!supabase) return [];
-    const { data: rows } = await supabase
-      .from("quizzes")
-      .select("*, quiz_questions(*, quiz_options(*))")
-      .eq("status", "published")
-      .order("title");
-    return (rows ?? []).map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      title: row.title,
-      description: row.description,
-      category: row.category,
-      difficulty: row.difficulty,
-      lessonId: row.lesson_id ?? undefined,
-      passPercentage: row.pass_percentage,
-      status: row.status,
-      questions: ((row.quiz_questions as Array<Record<string, unknown>>) ?? []).map((q) => ({
-        id: String(q.id),
-        prompt: String(q.prompt),
-        questionType: q.question_type as QuestionType,
-        sortOrder: Number(q.sort_order ?? 0),
-        placeholder: q.placeholder ? String(q.placeholder) : undefined,
-        options: ((q.quiz_options as Array<Record<string, unknown>>) ?? []).map((o) => ({
-          id: String(o.id),
-          label: String(o.label),
-          optionText: String(o.option_text),
-          sortOrder: Number(o.sort_order ?? 0),
-        })),
-      })),
-    }));
+    const dbQuizzes: PublicQuiz[] = [];
+    if (supabase) {
+      const { data: rows } = await supabase
+        .from("quizzes")
+        .select("*, quiz_questions(*, quiz_options(*))")
+        .eq("status", "published")
+        .order("title");
+      for (const row of rows ?? []) {
+        const qList = (row.quiz_questions as Array<Record<string, unknown>>) ?? [];
+        if (qList.length === 0) continue;
+        dbQuizzes.push({
+          id: row.id,
+          slug: row.slug,
+          title: row.title,
+          description: row.description,
+          category: row.category,
+          difficulty: row.difficulty,
+          lessonId: row.lesson_id ?? undefined,
+          passPercentage: Number(row.pass_percentage ?? 100),
+          status: row.status,
+          questions: qList.map((q) => ({
+            id: String(q.id),
+            prompt: String(q.prompt),
+            questionType: q.question_type as QuestionType,
+            sortOrder: Number(q.sort_order ?? 0),
+            placeholder: q.placeholder ? String(q.placeholder) : undefined,
+            options: ((q.quiz_options as Array<Record<string, unknown>>) ?? []).map((o) => ({
+              id: String(o.id),
+              label: String(o.label),
+              optionText: String(o.option_text),
+              sortOrder: Number(o.sort_order ?? 0),
+            })),
+          })),
+        });
+      }
+    }
+
+    const bySlug = new Map<string, PublicQuiz>(dbQuizzes.map((q) => [q.slug, q]));
+    for (const seedQuiz of getCurriculumSeed().quizzes) {
+      if (seedQuiz.status === "published" && !bySlug.has(seedQuiz.slug)) {
+        bySlug.set(seedQuiz.slug, toPublicQuiz(seedQuiz));
+      }
+    }
+    return Array.from(bySlug.values());
   }
 
   const db = readPreviewDb();
@@ -139,6 +192,8 @@ export async function getPublicQuizBySlug(slug: string): Promise<PublicQuiz | nu
   return found ? toPublicQuiz(found) : null;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function submitQuizAttempt(params: {
   slug: string;
   userId: string | null;
@@ -151,10 +206,11 @@ export async function submitQuizAttempt(params: {
     const now = new Date().toISOString();
 
     let attemptId = `guest-${Date.now()}`;
-    if (params.userId) {
+    if (params.userId && UUID_REGEX.test(quiz.id)) {
       const admin = createSupabaseAdminClient();
-      if (admin) {
-        const { data: attempt } = await admin
+      const client = admin ?? (await createSupabaseServerClient());
+      if (client) {
+        const { data: attempt } = await client
           .from("quiz_attempts")
           .insert({
             quiz_id: quiz.id,
@@ -169,15 +225,18 @@ export async function submitQuizAttempt(params: {
           .single();
         if (attempt) {
           attemptId = attempt.id;
-          await admin.from("quiz_attempt_answers").insert(
-            result.reviews.map((r) => ({
-              attempt_id: attempt.id,
-              question_id: r.questionId,
-              selected_option_ids: r.selectedOptionIds,
-              submitted_text: r.submittedText ?? null,
-              is_correct: r.isCorrect,
-            }))
-          );
+          const validOptionQuestions = result.reviews.filter((r) => UUID_REGEX.test(r.questionId));
+          if (validOptionQuestions.length > 0) {
+            await client.from("quiz_attempt_answers").insert(
+              validOptionQuestions.map((r) => ({
+                attempt_id: attempt.id,
+                question_id: r.questionId,
+                selected_option_ids: r.selectedOptionIds.filter((id) => UUID_REGEX.test(id)),
+                submitted_text: r.submittedText ?? null,
+                is_correct: r.isCorrect,
+              }))
+            );
+          }
         }
       }
     }
